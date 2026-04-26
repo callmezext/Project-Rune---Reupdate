@@ -1,0 +1,16 @@
+{
+  "name": "project-rune-core",
+  "version": "1.0.0",
+  "description": "Project Rune - TikTok Multi-Tool Suite",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "puppeteer": "^23.0.0"
+  }
+}

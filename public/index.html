@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Project Rune — TikTok Profile & Video Intelligence Tool">
+  <title>🔮 RUNE — TikTok Intelligence Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-particles" id="bgParticles"></div>
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-container">
+        <div class="logo-glyph">🔮</div>
+        <div class="logo-text">
+          <h1>PROJECT <span class="accent">RUNE</span></h1>
+          <p class="tagline">TikTok Intelligence Suite</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Switcher -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="profile" id="tabProfile">
+        <span class="tab-icon">👤</span> Profile Stalk
+      </button>
+      <button class="tab-btn" data-tab="video" id="tabVideo">
+        <span class="tab-icon">🎬</span> Video Info
+      </button>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!--  TAB 1: PROFILE STALK                         -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-content active" id="tabContentProfile">
+      <section class="search-section">
+        <div class="search-card glass-card">
+          <div class="search-header">
+            <div class="feature-icon icon-profile">
+              <svg viewBox="0 0 48 48" width="24" height="24"><path d="M34.35 15.72A8.78 8.78 0 0 0 39.42 17.5V12.17a8.93 8.93 0 0 1-1.87-.2v4.19a8.78 8.78 0 0 1-5.07-1.78v8.15a10.63 10.63 0 0 1-10.63 10.63 10.56 10.56 0 0 1-6.1-1.93 10.63 10.63 0 0 0 17.73-7.93v-8.15a8.78 8.78 0 0 0 5.07 1.78V12.74a5.07 5.07 0 0 1-4.2-4.13V7.58h-4.3v19.95a4.75 4.75 0 1 1-3.27-4.53v-5.4a10.56 10.56 0 0 0-1.48-.1 10.63 10.63 0 0 0-4.52 20.24 10.56 10.56 0 0 0 6.1 1.93 10.63 10.63 0 0 0 10.63-10.63v-8.15" fill="currentColor"/></svg>
+            </div>
+            <h2>Stalk Profile</h2>
+          </div>
+          <p class="search-desc">Enter a TikTok username to reveal their public profile data</p>
+          <form id="searchForm" autocomplete="off">
+            <div class="input-wrapper">
+              <span class="input-prefix">@</span>
+              <input type="text" id="usernameInput" placeholder="username" required minlength="1" maxlength="30" spellcheck="false">
+              <button type="submit" id="searchBtn" class="search-btn">
+                <span class="btn-text">STALK</span>
+                <span class="btn-loader" id="btnLoader"><svg class="spinner" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.416" stroke-dashoffset="10" stroke-linecap="round"/></svg></span>
+              </button>
+            </div>
+          </form>
+          <div class="error-message" id="errorMessage" style="display:none;">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text" id="errorText"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Results -->
+      <section class="result-section" id="resultSection" style="display:none;">
+        <div class="profile-card glass-card" id="profileCard">
+          <div class="profile-banner"><div class="banner-pattern"></div></div>
+          <div class="avatar-container">
+            <div class="avatar-ring"><img id="profileAvatar" src="" alt="Avatar" class="avatar-img"></div>
+            <div class="verified-badge" id="verifiedBadge" style="display:none;">✓</div>
+          </div>
+          <div class="user-info">
+            <h2 class="user-nickname" id="userNickname">—</h2>
+            <p class="user-handle" id="userHandle">@—</p>
+            <p class="user-bio" id="userBio"></p>
+            <div class="user-badges">
+              <span class="badge badge-region" id="badgeRegion" style="display:none;"><span class="badge-icon">🌍</span><span id="regionText"></span></span>
+              <span class="badge badge-private" id="badgePrivate" style="display:none;">🔒 Private</span>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-item"><div class="stat-value" id="statFollowers">—</div><div class="stat-label">Followers</div></div>
+            <div class="stat-item"><div class="stat-value" id="statFollowing">—</div><div class="stat-label">Following</div></div>
+            <div class="stat-item"><div class="stat-value" id="statHearts">—</div><div class="stat-label">Likes</div></div>
+            <div class="stat-item"><div class="stat-value" id="statVideos">—</div><div class="stat-label">Videos</div></div>
+          </div>
+          <div class="action-bar">
+            <a id="openProfileLink" href="#" target="_blank" class="action-btn primary-action">🔗 Open Profile</a>
+            <button class="action-btn secondary-action" id="copyDataBtn">📋 Copy Data</button>
+          </div>
+          <div class="raw-data-section">
+            <button class="raw-toggle" id="rawToggleBtn">{ } View Raw JSON</button>
+            <pre class="raw-json" id="rawJson" style="display:none;"><code id="rawJsonContent"></code></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!--  TAB 2: VIDEO INFO                            -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-content" id="tabContentVideo">
+      <section class="search-section">
+        <div class="search-card glass-card">
+          <div class="search-header">
+            <div class="feature-icon icon-video">🎬</div>
+            <h2>Video Info</h2>
+          </div>
+          <p class="search-desc">Paste a TikTok video URL or Video ID to get detailed information</p>
+          <form id="videoSearchForm" autocomplete="off">
+            <div class="input-wrapper">
+              <span class="input-prefix">🔗</span>
+              <input type="text" id="videoUrlInput" placeholder="https://www.tiktok.com/@user/video/123... or Video ID" required spellcheck="false">
+              <button type="submit" id="videoSearchBtn" class="search-btn">
+                <span class="btn-text">SCAN</span>
+                <span class="btn-loader"><svg class="spinner" viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.416" stroke-dashoffset="10" stroke-linecap="round"/></svg></span>
+              </button>
+            </div>
+          </form>
+          <div class="error-message" id="videoErrorMessage" style="display:none;">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text" id="videoErrorText"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Video Results -->
+      <section class="result-section" id="videoResultSection" style="display:none;">
+        <div class="video-card glass-card">
+
+          <!-- Video Cover + Author -->
+          <div class="video-header-section">
+            <div class="video-cover-wrap">
+              <img id="videoCover" src="" alt="Video Cover" class="video-cover-img">
+              <div class="video-duration-badge" id="videoDuration">0:00</div>
+            </div>
+            <div class="video-author-bar">
+              <img id="videoAuthorAvatar" src="" alt="Author" class="video-author-avatar">
+              <div class="video-author-info">
+                <span class="video-author-nick" id="videoAuthorNick">—</span>
+                <span class="video-author-handle" id="videoAuthorHandle">@—</span>
+              </div>
+              <span class="video-verified-badge" id="videoVerifiedBadge" style="display:none;">✓</span>
+            </div>
+          </div>
+
+          <!-- Video Description -->
+          <div class="video-desc-section">
+            <p class="video-description" id="videoDescription">—</p>
+            <div class="video-hashtags" id="videoHashtags"></div>
+          </div>
+
+          <!-- Video Stats -->
+          <div class="video-stats-grid">
+            <div class="video-stat-item">
+              <span class="vstat-icon">👁️</span>
+              <span class="vstat-value" id="vstatViews">—</span>
+              <span class="vstat-label">Views</span>
+            </div>
+            <div class="video-stat-item">
+              <span class="vstat-icon">❤️</span>
+              <span class="vstat-value" id="vstatLikes">—</span>
+              <span class="vstat-label">Likes</span>
+            </div>
+            <div class="video-stat-item">
+              <span class="vstat-icon">💬</span>
+              <span class="vstat-value" id="vstatComments">—</span>
+              <span class="vstat-label">Comments</span>
+            </div>
+            <div class="video-stat-item">
+              <span class="vstat-icon">🔄</span>
+              <span class="vstat-value" id="vstatShares">—</span>
+              <span class="vstat-label">Shares</span>
+            </div>
+            <div class="video-stat-item">
+              <span class="vstat-icon">🔖</span>
+              <span class="vstat-value" id="vstatBookmarks">—</span>
+              <span class="vstat-label">Bookmarks</span>
+            </div>
+          </div>
+
+          <!-- Video Details Table -->
+          <div class="video-details-table">
+            <h3 class="details-title">📋 Video Details</h3>
+            <div class="detail-row">
+              <span class="detail-key">Video ID</span>
+              <span class="detail-val" id="detailVideoId">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Created At</span>
+              <span class="detail-val" id="detailCreatedAt">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Duration</span>
+              <span class="detail-val" id="detailDuration">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Resolution</span>
+              <span class="detail-val" id="detailResolution">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Author UID</span>
+              <span class="detail-val" id="detailAuthorUid">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Location</span>
+              <span class="detail-val" id="detailLocation">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Is Ad</span>
+              <span class="detail-val" id="detailIsAd">—</span>
+            </div>
+          </div>
+
+          <!-- Music Info -->
+          <div class="video-music-section" id="musicSection">
+            <h3 class="details-title">🎵 Music / Sound</h3>
+            <div class="music-card">
+              <img id="musicCover" src="" alt="Music Cover" class="music-cover-img">
+              <div class="music-info">
+                <div class="music-title" id="musicTitle">—</div>
+                <div class="music-artist" id="musicArtist">—</div>
+                <div class="music-duration" id="musicDuration">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-bar">
+            <a id="openVideoLink" href="#" target="_blank" class="action-btn primary-action">🔗 Open Video</a>
+            <button class="action-btn secondary-action" id="copyVideoDataBtn">📋 Copy Data</button>
+          </div>
+
+          <!-- Raw JSON -->
+          <div class="raw-data-section">
+            <button class="raw-toggle" id="videoRawToggleBtn">{ } View Raw JSON</button>
+            <pre class="raw-json" id="videoRawJson" style="display:none;"><code id="videoRawJsonContent"></code></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="app-footer"><p>Project Rune Core v1.1 — Built with 🔮</p></footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
