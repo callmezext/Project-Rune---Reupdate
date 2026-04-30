@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
-import SiteSetting from "@/models/SiteSetting";
-import { startBot, stopBot, getBotStatus } from "@/lib/discord-bot";
+import BotStatus from "@/models/BotStatus";
+
+// Helper: get or create bot status doc
+async function getBotDoc() {
+  let doc = await BotStatus.findOne({ botType: "discord" });
+  if (!doc) doc = await BotStatus.create({ botType: "discord" });
+  return doc;
+}
 
 // GET — bot status
 export async function GET() {
@@ -11,13 +17,41 @@ export async function GET() {
     if (!session.isLoggedIn || session.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
-    return NextResponse.json({ success: true, bot: getBotStatus() });
+
+    await connectDB();
+    const doc = await getBotDoc();
+
+    // Check if bot is stale (no heartbeat for 30s = probably dead)
+    const isStale = doc.status === "online" && doc.lastHeartbeat &&
+      Date.now() - new Date(doc.lastHeartbeat).getTime() > 30000;
+
+    if (isStale) {
+      doc.status = "offline";
+      doc.command = "idle";
+      await doc.save();
+    }
+
+    return NextResponse.json({
+      success: true,
+      bot: {
+        status: doc.status,
+        command: doc.command,
+        error: doc.error,
+        username: doc.username,
+        avatar: doc.avatar,
+        guildCount: doc.guildCount,
+        ping: doc.ping,
+        startedAt: doc.startedAt?.toISOString() || null,
+        uptime: doc.startedAt ? Math.floor((Date.now() - new Date(doc.startedAt).getTime()) / 1000) : 0,
+        lastHeartbeat: doc.lastHeartbeat?.toISOString() || null,
+      },
+    });
   } catch {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
 
-// POST — start or stop bot
+// POST — send command to bot
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
@@ -27,29 +61,41 @@ export async function POST(req: NextRequest) {
 
     const { action } = await req.json();
 
-    if (action === "start") {
-      await connectDB();
-      const settings = await SiteSetting.findOne().lean();
-      const token = settings?.discordBotToken || process.env.DISCORD_BOT_TOKEN || "";
-
-      if (!token) {
-        return NextResponse.json({ success: false, error: "Bot token belum di-set. Isi di Settings terlebih dahulu." }, { status: 400 });
-      }
-
-      const result = await startBot(token);
-      // Wait a moment for the bot to connect
-      if (result.success) {
-        await new Promise((r) => setTimeout(r, 2000));
-      }
-      return NextResponse.json({ success: result.success, error: result.error, bot: getBotStatus() });
+    if (!["start", "stop", "restart"].includes(action)) {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
+    await connectDB();
+    const doc = await getBotDoc();
+    doc.command = action;
+
+    // If starting, mark as connecting so UI shows immediately
+    if (action === "start" || action === "restart") {
+      doc.status = "connecting";
+      doc.error = "";
+    }
     if (action === "stop") {
-      await stopBot();
-      return NextResponse.json({ success: true, bot: getBotStatus() });
+      doc.status = "offline";
     }
 
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    await doc.save();
+
+    return NextResponse.json({
+      success: true,
+      message: `Command '${action}' sent to bot`,
+      bot: {
+        status: doc.status,
+        command: doc.command,
+        error: doc.error,
+        username: doc.username,
+        avatar: doc.avatar,
+        guildCount: doc.guildCount,
+        ping: doc.ping,
+        startedAt: doc.startedAt?.toISOString() || null,
+        uptime: doc.startedAt ? Math.floor((Date.now() - new Date(doc.startedAt).getTime()) / 1000) : 0,
+        lastHeartbeat: doc.lastHeartbeat?.toISOString() || null,
+      },
+    });
   } catch (error) {
     console.error("[BotAPI] Error:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

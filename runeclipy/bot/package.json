@@ -1,0 +1,14 @@
+{
+  "name": "runeclipy-discord-bot",
+  "version": "1.0.0",
+  "description": "RuneClipy Discord Bot — standalone service controlled via MongoDB",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "mongoose": "^8.13.2"
+  }
+}
