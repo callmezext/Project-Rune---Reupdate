@@ -18,7 +18,7 @@ const paymentMethods = [
   { type: "gopay", label: "GoPay", icon: "🟢", placeholder: "08xxxxxxxxxxxx" },
   { type: "ovo", label: "OVO", icon: "🟣", placeholder: "08xxxxxxxxxxxx" },
   { type: "paypal", label: "PayPal", icon: "🅿️", placeholder: "email@example.com" },
-  { type: "bank", label: "Bank Transfer", icon: "🏦", placeholder: "Nomor rekening" },
+  { type: "bank", label: "Bank Transfer", icon: "🏦", placeholder: "Nomor rekening + nama bank" },
 ];
 
 export default function BalancePage() {
@@ -30,6 +30,7 @@ export default function BalancePage() {
   const [methodDetail, setMethodDetail] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawResult, setWithdrawResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     fetchBalance();
@@ -79,9 +80,14 @@ export default function BalancePage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">My Balance</h1>
-        <button onClick={() => setShowWithdraw(true)} className="btn-gradient !rounded-xl text-sm !py-2.5">
-          💸 Withdraw
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setShowRules(true)} className="text-sm text-text-muted hover:text-accent-light transition-colors flex items-center gap-1">
+            📖 Rules & Info
+          </button>
+          <button onClick={() => setShowWithdraw(true)} className="btn-gradient !rounded-xl text-sm !py-2.5">
+            💸 Withdraw
+          </button>
+        </div>
       </div>
 
       {/* Balance Cards */}
@@ -104,20 +110,34 @@ export default function BalancePage() {
         </div>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid md:grid-cols-2 gap-4 mb-8">
-        <div className="glass-card p-5 flex items-start gap-3">
-          <span className="text-xl">⏱️</span>
+      {/* Rules & Info Cards */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="glass-card p-4 flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">💵</span>
           <div>
-            <div className="text-sm font-bold mb-1">Minimum Withdrawal</div>
-            <p className="text-xs text-text-muted">Minimum $10.00. Fee 3% dari total withdrawal.</p>
+            <div className="text-sm font-bold mb-0.5">Min. Withdraw</div>
+            <p className="text-xs text-text-muted">Minimum <span className="text-accent-light font-semibold">$10.00</span></p>
           </div>
         </div>
-        <div className="glass-card p-5 flex items-start gap-3">
-          <span className="text-xl">📋</span>
+        <div className="glass-card p-4 flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">💳</span>
           <div>
-            <div className="text-sm font-bold mb-1">Processing Time</div>
-            <p className="text-xs text-text-muted">1-3 hari kerja setelah admin approve.</p>
+            <div className="text-sm font-bold mb-0.5">Fee</div>
+            <p className="text-xs text-text-muted"><span className="text-accent-light font-semibold">3%</span> dari total withdrawal</p>
+          </div>
+        </div>
+        <div className="glass-card p-4 flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">⏱️</span>
+          <div>
+            <div className="text-sm font-bold mb-0.5">Processing</div>
+            <p className="text-xs text-text-muted">1-3 hari kerja setelah approve</p>
+          </div>
+        </div>
+        <div className="glass-card p-4 flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">🔄</span>
+          <div>
+            <div className="text-sm font-bold mb-0.5">Auto Check</div>
+            <p className="text-xs text-text-muted">Views dicek otomatis setiap hari</p>
           </div>
         </div>
       </div>
@@ -153,7 +173,7 @@ export default function BalancePage() {
       {/* Withdraw Modal */}
       {showWithdraw && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowWithdraw(false)}>
-          <div className="glass-card p-8 max-w-md w-full animate-fadeInUp" onClick={(e) => e.stopPropagation()}>
+          <div className="glass-card p-8 max-w-md w-full animate-fadeInUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold gradient-text">💸 Withdraw</h2>
               <button onClick={() => setShowWithdraw(false)} className="text-text-muted hover:text-text-primary text-xl">×</button>
@@ -229,6 +249,124 @@ export default function BalancePage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Rules & Information Modal */}
+      {showRules && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowRules(false)}>
+          <div className="glass-card p-8 max-w-lg w-full animate-fadeInUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold gradient-text">📖 Rules & Information</h2>
+              <button onClick={() => setShowRules(false)} className="text-text-muted hover:text-text-primary text-xl">×</button>
+            </div>
+
+            <div className="space-y-5">
+              {/* Withdrawal Rules */}
+              <div>
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2">💸 Ketentuan Withdrawal</h3>
+                <div className="space-y-2 text-xs text-text-secondary">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">1.</span>
+                    <span>Minimum withdrawal adalah <strong className="text-accent-light">$10.00</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">2.</span>
+                    <span>Biaya admin <strong className="text-accent-light">3%</strong> dari total jumlah withdrawal</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">3.</span>
+                    <span>Proses pembayaran <strong>1-3 hari kerja</strong> setelah admin approve</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">4.</span>
+                    <span>Metode yang didukung: <strong>Dana, GoPay, OVO, PayPal, Bank Transfer</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">5.</span>
+                    <span>Pastikan detail pembayaran (nomor HP/email/rekening) sudah benar sebelum request</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Earning Rules */}
+              <div>
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2">🎵 Ketentuan Earning</h3>
+                <div className="space-y-2 text-xs text-text-secondary">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">1.</span>
+                    <span>Earning dihitung berdasarkan <strong>views asli</strong> dari video yang disubmit</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">2.</span>
+                    <span>Rate per 1 juta views berbeda tiap campaign (lihat detail campaign)</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">3.</span>
+                    <span>Setiap campaign punya <strong>batas max earning per creator & per post</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">4.</span>
+                    <span>Views dicek <strong>otomatis setiap hari</strong> oleh sistem</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">5.</span>
+                    <span>Video harus memenuhi <strong>minimum views</strong> yang ditentukan campaign</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* General Rules */}
+              <div>
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2">⚠️ Peraturan Umum</h3>
+                <div className="space-y-2 text-xs text-text-secondary">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error/5 border border-error/20">
+                    <span className="text-error font-bold mt-0.5">!</span>
+                    <span>Dilarang menggunakan <strong>bot, fake views, atau manipulasi</strong> apapun. Akun akan di-<strong className="text-error">ban permanen</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error/5 border border-error/20">
+                    <span className="text-error font-bold mt-0.5">!</span>
+                    <span>Video harus <strong>konten original</strong>, bukan re-upload dari kreator lain</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error/5 border border-error/20">
+                    <span className="text-error font-bold mt-0.5">!</span>
+                    <span>Satu akun TikTok hanya boleh di-connect ke <strong>satu akun RuneClipy</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error/5 border border-error/20">
+                    <span className="text-error font-bold mt-0.5">!</span>
+                    <span>Video yang sudah dihapus dari TikTok tidak akan dihitung earningnya</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-error/5 border border-error/20">
+                    <span className="text-error font-bold mt-0.5">!</span>
+                    <span>Admin berhak <strong>menolak submission</strong> yang tidak sesuai ketentuan campaign</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Referral Info */}
+              <div>
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2">👥 Referral Program</h3>
+                <div className="space-y-2 text-xs text-text-secondary">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">•</span>
+                    <span>Dapatkan <strong className="text-accent-light">10%</strong> dari earning pertama setiap orang yang kamu ajak</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">•</span>
+                    <span>Tidak ada batasan jumlah orang yang bisa kamu referral</span>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-bg-primary/50 border border-border">
+                    <span className="text-accent-light font-bold mt-0.5">•</span>
+                    <span>Referral earning bisa di-withdraw bersamaan dengan campaign earning</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowRules(false)} className="btn-gradient w-full !rounded-xl !py-3 text-sm mt-6">
+              Mengerti
+            </button>
           </div>
         </div>
       )}

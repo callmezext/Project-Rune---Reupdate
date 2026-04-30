@@ -9,12 +9,21 @@ export async function GET() {
     if (!session.isLoggedIn) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     await connectDB();
-    const user = await User.findById(session.userId)
-      .select("-password -googleId -discordId")
-      .lean();
+    const user = await User.findById(session.userId).lean();
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-    return NextResponse.json({ success: true, user });
+
+    // Build safe response with bind status
+    const { password, googleId, discordId, ...safeUser } = user as Record<string, unknown>;
+    return NextResponse.json({
+      success: true,
+      user: {
+        ...safeUser,
+        hasPassword: !!(password && (password as string).length > 0),
+        hasGoogle: !!googleId,
+        hasDiscord: !!discordId,
+      },
+    });
   } catch (error) {
     console.error("Profile GET error:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
