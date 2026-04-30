@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface Settings {
   platformFeePercent: number;
@@ -29,6 +29,53 @@ export default function AdminSettingsPage() {
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState("");
   const [resetResult, setResetResult] = useState<Record<string, number> | null>(null);
+
+  // Discord Bot state
+  const [bot, setBot] = useState<{
+    status: string; error: string | null; startedAt: string | null;
+    uptime: number; guildCount: number; ping: number;
+    username: string | null; avatar: string | null;
+  }>({ status: "offline", error: null, startedAt: null, uptime: 0, guildCount: 0, ping: 0, username: null, avatar: null });
+  const [botLoading, setBotLoading] = useState(false);
+
+  const fetchBotStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/discord-bot");
+      const data = await res.json();
+      if (data.success) setBot(data.bot);
+    } catch { /* silent */ }
+  }, []);
+
+  // Poll bot status
+  useEffect(() => {
+    fetchBotStatus();
+    const interval = setInterval(fetchBotStatus, 5000);
+    return () => clearInterval(interval);
+  }, [fetchBotStatus]);
+
+  const handleBotToggle = async () => {
+    setBotLoading(true);
+    try {
+      const action = bot.status === "online" ? "stop" : "start";
+      const res = await fetch("/api/admin/discord-bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (data.bot) setBot(data.bot);
+      if (!data.success && data.error) alert(data.error);
+    } catch (err) { console.error(err); }
+    finally { setBotLoading(false); }
+  };
+
+  const formatUptime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${h}h ${m}m`;
+  };
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -97,6 +144,66 @@ export default function AdminSettingsPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-8">Platform Settings</h1>
+
+      {/* ═══ Discord Bot Control ═══ */}
+      <div className="glass-card p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${bot.status === "online" ? "bg-success animate-pulse" : bot.status === "connecting" ? "bg-warning animate-pulse" : "bg-text-muted"}`} />
+            <h3 className="font-bold">🤖 Discord Bot</h3>
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              bot.status === "online" ? "bg-success/20 text-success" :
+              bot.status === "connecting" ? "bg-warning/20 text-warning" :
+              bot.status === "error" ? "bg-error/20 text-error" :
+              "bg-bg-tertiary text-text-muted"
+            }`}>
+              {bot.status.toUpperCase()}
+            </span>
+          </div>
+          <button
+            onClick={handleBotToggle}
+            disabled={botLoading || bot.status === "connecting"}
+            className={`px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-50 ${
+              bot.status === "online"
+                ? "bg-error/20 text-error border border-error/30 hover:bg-error/30"
+                : "bg-success/20 text-success border border-success/30 hover:bg-success/30"
+            }`}
+          >
+            {botLoading ? "⏳" : bot.status === "online" ? "⏹ Stop Bot" : "▶ Start Bot"}
+          </button>
+        </div>
+
+        {bot.status === "online" && (
+          <div className="grid grid-cols-4 gap-3">
+            <div className="p-3 rounded-xl bg-bg-primary/50 border border-border text-center">
+              <div className="text-xs text-text-muted mb-0.5">Bot</div>
+              <div className="text-sm font-bold text-text-primary truncate">{bot.username || "—"}</div>
+            </div>
+            <div className="p-3 rounded-xl bg-bg-primary/50 border border-border text-center">
+              <div className="text-xs text-text-muted mb-0.5">Uptime</div>
+              <div className="text-sm font-bold text-success">{formatUptime(bot.uptime)}</div>
+            </div>
+            <div className="p-3 rounded-xl bg-bg-primary/50 border border-border text-center">
+              <div className="text-xs text-text-muted mb-0.5">Ping</div>
+              <div className="text-sm font-bold text-accent-light">{bot.ping}ms</div>
+            </div>
+            <div className="p-3 rounded-xl bg-bg-primary/50 border border-border text-center">
+              <div className="text-xs text-text-muted mb-0.5">Servers</div>
+              <div className="text-sm font-bold text-info">{bot.guildCount}</div>
+            </div>
+          </div>
+        )}
+
+        {bot.status === "error" && bot.error && (
+          <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs">
+            ⚠️ {bot.error}
+          </div>
+        )}
+
+        {bot.status === "offline" && !settings.discordBotToken && (
+          <p className="text-xs text-text-muted">⚠️ Bot Token belum di-set. Isi di section bawah lalu Save dulu sebelum start bot.</p>
+        )}
+      </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* ═══ Financial ═══ */}
