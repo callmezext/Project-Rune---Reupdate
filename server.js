@@ -1,29 +1,29 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const { scrapeTikTokProfile } = require('./modules/tiktok-stalk');
-const { scrapeTikTokVideo } = require('./modules/tiktok-video');
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const { scrapeTikTokProfile } = require("./modules/tiktok-stalk");
+const { scrapeTikTokVideo } = require("./modules/tiktok-video");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 // ═══════════════════════════════════════════════════════
 //  API ROUTES — TikTok Profile Stalk
 // ═══════════════════════════════════════════════════════
 
-app.get('/api/tiktok/stalk/:username', async (req, res) => {
+app.get("/api/tiktok/stalk/:username", async (req, res) => {
   const { username } = req.params;
-  const cleanUsername = username.replace(/^@/, '').trim();
+  const cleanUsername = username.replace(/^@/, "").trim();
 
   if (!cleanUsername) {
     return res.status(400).json({
       success: false,
-      error: 'Username is required'
+      error: "Username is required",
     });
   }
 
@@ -33,13 +33,13 @@ app.get('/api/tiktok/stalk/:username', async (req, res) => {
 
     res.json({
       success: true,
-      data: profileData
+      data: profileData,
     });
   } catch (error) {
     console.error(`[RUNE] Error stalking @${cleanUsername}:`, error.message);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to fetch profile data'
+      error: error.message || "Failed to fetch profile data",
     });
   }
 });
@@ -48,13 +48,13 @@ app.get('/api/tiktok/stalk/:username', async (req, res) => {
 //  API ROUTES — TikTok Video Info
 // ═══════════════════════════════════════════════════════
 
-app.post('/api/tiktok/video', async (req, res) => {
+app.post("/api/tiktok/video", async (req, res) => {
   const { url } = req.body;
 
   if (!url || !url.trim()) {
     return res.status(400).json({
       success: false,
-      error: 'Video URL or ID is required'
+      error: "Video URL or ID is required",
     });
   }
 
@@ -64,43 +64,44 @@ app.post('/api/tiktok/video', async (req, res) => {
 
     res.json({
       success: true,
-      data: videoData
+      data: videoData,
     });
   } catch (error) {
     console.error(`[RUNE] Error fetching video:`, error.message);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to fetch video data'
+      error: error.message || "Failed to fetch video data",
     });
   }
 });
 
 // Proxy avatar images to avoid CORS issues
-app.get('/api/proxy-image', async (req, res) => {
+app.get("/api/proxy-image", async (req, res) => {
   const { url } = req.query;
-  if (!url) return res.status(400).send('URL required');
+  if (!url) return res.status(400).send("URL required");
 
   try {
-    const axios = require('axios');
+    const axios = require("axios");
     const response = await axios.get(url, {
-      responseType: 'arraybuffer',
+      responseType: "arraybuffer",
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://www.tiktok.com/'
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Referer: "https://www.tiktok.com/",
       },
-      timeout: 10000
+      timeout: 10000,
     });
-    res.set('Content-Type', response.headers['content-type'] || 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set("Content-Type", response.headers["content-type"] || "image/jpeg");
+    res.set("Cache-Control", "public, max-age=3600");
     res.send(Buffer.from(response.data));
   } catch {
-    res.status(502).send('Failed to proxy image');
+    res.status(502).send("Failed to proxy image");
   }
 });
 
 // Serve frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => {

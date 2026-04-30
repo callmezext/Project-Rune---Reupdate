@@ -5,12 +5,13 @@
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test-tiktok.js"
   },
   "dependencies": {
     "axios": "^1.7.0",
     "cors": "^2.8.5",
-    "express": "^4.21.0",
-    "puppeteer": "^23.0.0"
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0"
   }
 }
