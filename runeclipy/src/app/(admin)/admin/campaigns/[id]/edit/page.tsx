@@ -194,12 +194,12 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
               <input type="checkbox" checked={f.allowOldVideos as boolean}
                 onChange={(e) => setForm({ ...f, allowOldVideos: e.target.checked })} className="sr-only peer" />
               <div className="w-5 h-5 rounded-md border-2 border-border peer-checked:border-accent peer-checked:bg-accent/20 transition-all flex items-center justify-center">
-                {f.allowOldVideos && <span className="text-accent text-xs">✓</span>}
+                {Boolean(f.allowOldVideos) && <span className="text-accent text-xs">✓</span>}
               </div>
             </div>
             <span className="text-sm">Bolehkan video lama</span>
           </label>
-          {!f.allowOldVideos && (
+          {!Boolean(f.allowOldVideos) && (
             <div className="ml-8 max-w-xs">
               <label className="block text-sm text-text-secondary mb-1.5">Batas Usia Video (jam)</label>
               <input type="number" value={f.maxVideoAgeHours as number}
@@ -213,7 +213,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                 <input type="checkbox" checked={f.autoApprove as boolean}
                   onChange={(e) => setForm({ ...f, autoApprove: e.target.checked })} className="sr-only peer" />
                 <div className="w-5 h-5 rounded-md border-2 border-border peer-checked:border-success peer-checked:bg-success/20 transition-all flex items-center justify-center group-hover:border-border-hover">
-                  {f.autoApprove && <span className="text-success text-xs">✓</span>}
+                  {Boolean(f.autoApprove) && <span className="text-success text-xs">✓</span>}
                 </div>
               </div>
               <div>
@@ -223,7 +223,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                 </p>
               </div>
             </label>
-            {f.autoApprove && (
+            {Boolean(f.autoApprove) && (
               <div className="ml-8 max-w-xs mt-3">
                 <label className="block text-sm text-text-secondary mb-1.5">Min Engagement Rate (%)</label>
                 <input type="number" value={f.minEngagementRate as number}

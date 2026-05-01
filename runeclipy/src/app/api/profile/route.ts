@@ -222,12 +222,7 @@ export async function PUT(req: NextRequest) {
       await ConnectedAccount.deleteMany({ userId: user._id });
 
       // Destroy session
-      session.isLoggedIn = false;
-      session.userId = undefined;
-      session.email = undefined;
-      session.username = undefined;
-      session.role = undefined;
-      await session.save();
+      session.destroy();
 
       return NextResponse.json({ success: true, message: "Account deleted successfully" });
     }

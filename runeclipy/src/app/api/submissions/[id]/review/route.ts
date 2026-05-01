@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       submission.rejectReason = rejectReason;
     }
     submission.reviewedAt = new Date();
-    submission.reviewedBy = session.userId;
+    submission.reviewedBy = session.userId as any; // Temporary fix or properly cast to ObjectId if mongoose is imported
 
     // Calculate earnings if approved
     if (status === "approved") {
