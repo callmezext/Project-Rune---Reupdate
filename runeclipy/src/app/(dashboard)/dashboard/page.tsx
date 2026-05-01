@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState("All");
   const [sort, setSort] = useState("newest");
+  const [activePlatforms, setActivePlatforms] = useState<Set<string>>(new Set(platformFilters));
 
   useEffect(() => {
     fetchCampaigns();
@@ -49,8 +50,18 @@ export default function DashboardPage() {
     }
   };
 
+  const togglePlatform = (platform: string) => {
+    setActivePlatforms((prev) => {
+      const next = new Set(prev);
+      if (next.has(platform)) next.delete(platform);
+      else next.add(platform);
+      return next;
+    });
+  };
+
   const filteredCampaigns = campaigns
     .filter((c) => activeType === "All" || c.type === activeType.toLowerCase())
+    .filter((c) => activePlatforms.size === 0 || c.supportedPlatforms?.some((p) => activePlatforms.has(p)))
     .sort((a, b) => {
       if (sort === "budget") return b.totalBudget - a.totalBudget;
       if (sort === "rate") return b.ratePerMillionViews - a.ratePerMillionViews;
@@ -100,7 +111,12 @@ export default function DashboardPage() {
       <div className="flex flex-wrap gap-4 mb-6">
         {platformFilters.map((platform) => (
           <label key={platform} className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
-            <input type="checkbox" defaultChecked className="w-4 h-4 rounded bg-bg-tertiary border-border accent-accent" />
+            <input
+              type="checkbox"
+              checked={activePlatforms.has(platform)}
+              onChange={() => togglePlatform(platform)}
+              className="w-4 h-4 rounded bg-bg-tertiary border-border accent-accent"
+            />
             {platform}
           </label>
         ))}

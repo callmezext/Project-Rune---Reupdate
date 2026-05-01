@@ -186,7 +186,7 @@ export default function PublicCampaignPage({ params }: { params: Promise<{ id: s
               <div className="glass-card p-8 text-center bg-gradient-to-br from-accent/10 to-pink/10">
                 <h3 className="text-xl font-bold mb-2">Ready to earn? 🚀</h3>
                 <p className="text-sm text-text-muted mb-6">Submit your TikTok video using the required sound and start earning!</p>
-                <Link href={`/campaigns/${id}`} className="btn-gradient !rounded-xl text-sm !py-3 !px-8 inline-block">
+                <Link href={`/dashboard/detail/${id}`} className="btn-gradient !rounded-xl text-sm !py-3 !px-8 inline-block">
                   Submit Video →
                 </Link>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, MeshDistortMaterial, Sphere, Stars } from "@react-three/drei";
+import { Float, MeshDistortMaterial, Sphere, Stars, OrbitControls } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
 
@@ -82,7 +82,7 @@ function SmallOrbs() {
 
 export default function HeroScene() {
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full cursor-grab active:cursor-grabbing">
       <Canvas camera={{ position: [0, 0, 6], fov: 45 }} dpr={[1, 2]}>
         <ambientLight intensity={0.3} />
         <pointLight position={[10, 10, 10]} intensity={1} color="#8B5CF6" />
@@ -95,6 +95,16 @@ export default function HeroScene() {
         <FloatingRing radius={3.6} color="#A78BFA" speed={0.15} />
         <SmallOrbs />
         <Stars radius={50} depth={50} count={1000} factor={3} saturation={0} fade speed={1} />
+
+        {/* OrbitControls — enables drag-to-rotate interaction */}
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          autoRotate
+          autoRotateSpeed={0.5}
+          maxPolarAngle={Math.PI / 1.5}
+          minPolarAngle={Math.PI / 3}
+        />
       </Canvas>
     </div>
   );

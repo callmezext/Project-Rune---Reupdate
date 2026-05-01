@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface ConnectedAccountAdmin {
@@ -21,29 +21,34 @@ interface ConnectedAccountAdmin {
   };
 }
 
+type Toast = { message: string; type: "success" | "error" } | null;
+
 export default function AdminAccountsPage() {
   const [accounts, setAccounts] = useState<ConnectedAccountAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "verified" | "pending">("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast>(null);
 
-  const fetchAccounts = () => {
-    fetch("/api/admin/accounts")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setAccounts(d.accounts);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchAccounts();
+  const showToast = useCallback((message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   }, []);
 
+  useEffect(() => {
+    fetch("/api/admin/accounts")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setAccounts(d.accounts); })
+      .catch((err) => {
+        console.error(err);
+        showToast("Failed to load accounts", "error");
+      })
+      .finally(() => setLoading(false));
+  }, [showToast]);
+
   const handleAction = async (accountId: string, action: "verify" | "unverify" | "delete") => {
-    if (action === "delete" && !confirm("Yakin mau hapus akun ini?")) return;
+    if (action === "delete" && !confirm("Delete this connected account?")) return;
 
     setActionLoading(accountId);
     try {
@@ -56,6 +61,7 @@ export default function AdminAccountsPage() {
       if (data.success) {
         if (action === "delete") {
           setAccounts((prev) => prev.filter((a) => a._id !== accountId));
+          showToast("Account deleted");
         } else {
           setAccounts((prev) =>
             prev.map((a) =>
@@ -68,12 +74,13 @@ export default function AdminAccountsPage() {
                 : a
             )
           );
+          showToast(action === "verify" ? "Account verified!" : "Verification revoked");
         }
       } else {
-        alert(data.error || "Gagal");
+        showToast(data.error || "Action failed", "error");
       }
     } catch {
-      alert("Request failed");
+      showToast("Request failed", "error");
     } finally {
       setActionLoading(null);
     }
@@ -97,12 +104,24 @@ export default function AdminAccountsPage() {
   const pendingCount = accounts.filter((a) => !a.isVerified).length;
   const verifiedCount = accounts.filter((a) => a.isVerified).length;
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="admin-shimmer h-8 w-48 mb-6" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="glass-card p-4"><div className="admin-shimmer h-20 w-full" /></div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-2">Connected Accounts</h1>
-      <p className="text-sm text-text-muted mb-6">
-        {accounts.length} total • {verifiedCount} verified • {pendingCount} pending
-      </p>
+    <div className="animate-fadeIn">
+      {/* Header */}
+      <div className="admin-page-header">
+        <h1>Connected Accounts</h1>
+        <p>{accounts.length} total • {verifiedCount} verified • {pendingCount} pending</p>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -113,17 +132,12 @@ export default function AdminAccountsPage() {
           className="input-field max-w-md"
           placeholder="🔍 Search by username, email, name..."
         />
-        <div className="flex gap-2">
+        <div className="admin-filter-tabs">
           {(["all", "pending", "verified"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={cn(
-                "px-3 py-2 rounded-xl text-xs font-medium transition-all capitalize",
-                filter === f
-                  ? "bg-accent/20 text-accent-light"
-                  : "bg-bg-tertiary text-text-muted hover:bg-bg-tertiary/80"
-              )}
+              className={cn("admin-filter-tab", filter === f && "admin-filter-tab--active")}
             >
               {f === "pending" ? `⏳ Pending (${pendingCount})` : f === "verified" ? `✅ Verified (${verifiedCount})` : "All"}
             </button>
@@ -131,12 +145,10 @@ export default function AdminAccountsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-20 text-text-muted">Loading...</div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-4xl mb-3">🔗</div>
-          <p className="text-text-muted">No connected accounts found</p>
+      {filtered.length === 0 ? (
+        <div className="admin-empty">
+          <div className="admin-empty-icon">🔗</div>
+          <p className="admin-empty-text">No connected accounts found</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -144,92 +156,105 @@ export default function AdminAccountsPage() {
             <div
               key={acc._id}
               className={cn(
-                "glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-4 transition-all",
-                !acc.isVerified && "border-l-2 border-l-warning"
+                "glass-card p-5 transition-all",
+                !acc.isVerified && "border-l-3 border-l-warning"
               )}
             >
-              {/* Account Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">
-                    {acc.platform === "tiktok" ? "🎵" : "🔗"}
-                  </span>
-                  <span className="font-bold text-sm">@{acc.username}</span>
-                  <span
-                    className={cn(
-                      "badge text-[10px]",
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                {/* Account Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">
+                      {acc.platform === "tiktok" ? "🎵" : "🔗"}
+                    </span>
+                    <span className="font-bold text-sm">@{acc.username}</span>
+                    <span className={cn("status-dot",
+                      acc.isVerified ? "status-dot--active" : "status-dot--pending"
+                    )} />
+                    <span className={cn("badge text-[10px]",
                       acc.isVerified ? "badge-active" : "badge-paused"
-                    )}
-                  >
-                    {acc.isVerified ? "✅ Verified" : "⏳ Pending"}
-                  </span>
-                </div>
-
-                {/* User info */}
-                {acc.user && (
-                  <div className="text-xs text-text-muted flex items-center gap-2 mb-1">
-                    <span>👤 {acc.user.name || "Unknown"}</span>
-                    <span className="text-text-muted/50">•</span>
-                    <span className="font-mono">{acc.user.email}</span>
+                    )}>
+                      {acc.isVerified ? "✅ Verified" : "⏳ Pending"}
+                    </span>
                   </div>
-                )}
 
-                {/* Verification code */}
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-text-muted">Code:</span>
-                  <code className="bg-bg-tertiary px-2 py-0.5 rounded font-mono text-accent-light font-bold tracking-widest">
-                    {acc.verificationCode}
-                  </code>
-                </div>
-
-                {/* Dates */}
-                <div className="flex gap-4 mt-1 text-[10px] text-text-muted">
-                  <span>Connected: {new Date(acc.connectedAt).toLocaleDateString("id-ID")}</span>
-                  {acc.verifiedAt && (
-                    <span>Verified: {new Date(acc.verifiedAt).toLocaleDateString("id-ID")}</span>
+                  {/* User info */}
+                  {acc.user && (
+                    <div className="text-xs text-text-muted flex items-center gap-2 mb-1.5">
+                      <span>👤 {acc.user.name || "Unknown"}</span>
+                      <span className="text-text-muted/30">•</span>
+                      <span className="font-mono">{acc.user.email}</span>
+                    </div>
                   )}
+
+                  {/* Verification code */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-text-muted">Code:</span>
+                    <code className="bg-bg-tertiary px-2.5 py-1 rounded-lg font-mono text-accent-light font-bold tracking-widest text-xs border border-border/50">
+                      {acc.verificationCode}
+                    </code>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="flex gap-4 mt-2 text-[10px] text-text-muted font-mono">
+                    <span>Connected: {new Date(acc.connectedAt).toLocaleDateString("id-ID")}</span>
+                    {acc.verifiedAt && (
+                      <span className="text-success">Verified: {new Date(acc.verifiedAt).toLocaleDateString("id-ID")}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 shrink-0">
-                <a
-                  href={acc.profileUrl || `https://tiktok.com/@${acc.username}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-2 rounded-xl text-xs font-medium bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/80 transition-all"
-                >
-                  🔗 Open Profile
-                </a>
-
-                {!acc.isVerified ? (
-                  <button
-                    onClick={() => handleAction(acc._id, "verify")}
-                    disabled={actionLoading === acc._id}
-                    className="px-3 py-2 rounded-xl text-xs font-medium bg-success/20 text-success hover:bg-success/30 transition-all disabled:opacity-50"
+                {/* Actions */}
+                <div className="flex gap-2 shrink-0">
+                  <a
+                    href={acc.profileUrl || `https://tiktok.com/@${acc.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-btn admin-btn--ghost"
                   >
-                    {actionLoading === acc._id ? "..." : "✅ Manual Verify"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleAction(acc._id, "unverify")}
-                    disabled={actionLoading === acc._id}
-                    className="px-3 py-2 rounded-xl text-xs font-medium bg-warning/20 text-warning hover:bg-warning/30 transition-all disabled:opacity-50"
-                  >
-                    {actionLoading === acc._id ? "..." : "↩️ Unverify"}
-                  </button>
-                )}
+                    🔗 Profile
+                  </a>
 
-                <button
-                  onClick={() => handleAction(acc._id, "delete")}
-                  disabled={actionLoading === acc._id}
-                  className="px-3 py-2 rounded-xl text-xs font-medium bg-error/20 text-error hover:bg-error/30 transition-all disabled:opacity-50"
-                >
-                  🗑️
-                </button>
+                  {!acc.isVerified ? (
+                    <button
+                      type="button"
+                      onClick={() => handleAction(acc._id, "verify")}
+                      disabled={actionLoading === acc._id}
+                      className="admin-btn admin-btn--success"
+                    >
+                      {actionLoading === acc._id ? "⏳" : "✅ Verify"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleAction(acc._id, "unverify")}
+                      disabled={actionLoading === acc._id}
+                      className="admin-btn admin-btn--warning"
+                    >
+                      {actionLoading === acc._id ? "⏳" : "↩️ Unverify"}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleAction(acc._id, "delete")}
+                    disabled={actionLoading === acc._id}
+                    className="admin-btn admin-btn--danger"
+                  >
+                    {actionLoading === acc._id ? "⏳" : "🗑️"}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={cn("admin-toast", toast.type === "success" ? "admin-toast--success" : "admin-toast--error")}>
+          <span>{toast.type === "success" ? "✅" : "❌"}</span>
+          <span>{toast.message}</span>
         </div>
       )}
     </div>

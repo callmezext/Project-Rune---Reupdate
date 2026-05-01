@@ -15,33 +15,82 @@ const FROM = `"RuneClipy" <${process.env.SMTP_USER || "noreply@runeclipy.com"}>`
 // ─── Shared layout wrapper ──────────────────────────────
 function emailWrapper(title: string, content: string) {
   return `
-    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:480px;margin:0 auto;background:#0B0E14;border-radius:16px;overflow:hidden;border:1px solid #1E293B">
-      <div style="background:linear-gradient(135deg,#8B5CF6,#EC4899);padding:32px;text-align:center">
-        <h1 style="color:#fff;margin:0;font-size:28px;letter-spacing:2px">🔮 RuneClipy</h1>
-        <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:13px">${title}</p>
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;background:#0B0E14;border-radius:20px;overflow:hidden;border:1px solid #1E293B">
+      <div style="background:linear-gradient(135deg,#7C3AED 0%,#8B5CF6 30%,#EC4899 70%,#DB2777 100%);padding:40px 32px;text-align:center;position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2220%22 cy=%2230%22 r=%2240%22 fill=%22rgba(255,255,255,0.03)%22/><circle cx=%2280%22 cy=%2270%22 r=%2250%22 fill=%22rgba(255,255,255,0.02)%22/></svg>')"></div>
+        <h1 style="color:#fff;margin:0;font-size:32px;letter-spacing:3px;font-weight:800;position:relative">🔮 RuneClipy</h1>
+        <p style="color:rgba(255,255,255,0.85);margin:10px 0 0;font-size:14px;font-weight:500;letter-spacing:0.5px;position:relative">${title}</p>
       </div>
-      <div style="padding:32px;text-align:center">
+      <div style="padding:36px 32px;text-align:center">
         ${content}
       </div>
-      <div style="background:#111827;padding:16px;text-align:center;border-top:1px solid #1E293B">
-        <p style="color:#4B5563;font-size:11px;margin:0">© 2026 RuneClipy. All rights reserved.</p>
+      <div style="background:#111827;padding:20px 32px;text-align:center;border-top:1px solid #1E293B">
+        <p style="color:#4B5563;font-size:11px;margin:0;letter-spacing:0.3px">© 2026 RuneClipy — Creator Music Promotion Platform</p>
       </div>
     </div>
   `;
 }
 
-// ─── OTP Email ───────────────────────────────────────────
+// ─── OTP Email — Beautified ─────────────────────────────
 export async function sendOTPEmail(to: string, otp: string) {
+  const digits = otp.split("");
+  const digitBoxes = digits.map(d =>
+    `<td style="width:48px;height:56px;background:linear-gradient(180deg,#1F2937 0%,#111827 100%);border:2px solid #8B5CF6;border-radius:12px;text-align:center;vertical-align:middle;margin:0 4px">
+      <span style="font-size:28px;font-weight:800;color:#F9FAFB;font-family:'Courier New',monospace;line-height:56px">${d}</span>
+    </td>`
+  ).join('<td style="width:8px"></td>');
+
   const html = emailWrapper("Verification Code", `
-    <p style="color:#9CA3AF;font-size:14px;margin:0 0 24px">Your OTP verification code is:</p>
-    <div style="background:#1F2937;border:2px solid #8B5CF6;border-radius:12px;padding:20px;display:inline-block">
-      <span style="font-size:36px;font-weight:800;letter-spacing:12px;color:#F9FAFB;font-family:monospace">${otp}</span>
+    <div style="margin-bottom:28px">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;line-height:64px;text-align:center">
+        <span style="font-size:28px;display:block;line-height:64px">🔐</span>
+      </div>
+      <p style="color:#F9FAFB;font-size:16px;font-weight:600;margin:0 0 4px">Your Verification Code</p>
+      <p style="color:#6B7280;font-size:13px;margin:0">Enter this code to verify your identity</p>
     </div>
-    <p style="color:#6B7280;font-size:12px;margin:24px 0 0">This code expires in <strong style="color:#F59E0B">5 minutes</strong></p>
-    <p style="color:#6B7280;font-size:12px;margin:8px 0 0">If you didn't request this, please ignore this email.</p>
+
+    <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;border-collapse:separate;border-spacing:6px 0">
+      <tr>${digitBoxes}</tr>
+    </table>
+
+    <div style="background:#1F2937;border-radius:12px;padding:16px;margin:0 0 20px;border-left:3px solid #F59E0B">
+      <p style="color:#F59E0B;font-size:12px;font-weight:600;margin:0 0 4px;text-align:left">⏱ Expires in 5 minutes</p>
+      <p style="color:#6B7280;font-size:11px;margin:0;text-align:left">If you didn't request this code, you can safely ignore this email.</p>
+    </div>
   `);
 
   await transporter.sendMail({ from: FROM, to, subject: "🔮 RuneClipy — Your Verification Code", html });
+}
+
+// ─── Reset Password Email ───────────────────────────────
+export async function sendResetPasswordEmail(to: string, otp: string) {
+  const digits = otp.split("");
+  const digitBoxes = digits.map(d =>
+    `<td style="width:48px;height:56px;background:linear-gradient(180deg,#1F2937 0%,#111827 100%);border:2px solid #EF4444;border-radius:12px;text-align:center;vertical-align:middle">
+      <span style="font-size:28px;font-weight:800;color:#F9FAFB;font-family:'Courier New',monospace;line-height:56px">${d}</span>
+    </td>`
+  ).join('<td style="width:8px"></td>');
+
+  const html = emailWrapper("Password Reset", `
+    <div style="margin-bottom:28px">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#F59E0B);margin:0 auto 16px;line-height:64px;text-align:center">
+        <span style="font-size:28px;display:block;line-height:64px">🔑</span>
+      </div>
+      <p style="color:#F9FAFB;font-size:16px;font-weight:600;margin:0 0 4px">Reset Your Password</p>
+      <p style="color:#6B7280;font-size:13px;margin:0">Use this code to set a new password</p>
+    </div>
+
+    <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;border-collapse:separate;border-spacing:6px 0">
+      <tr>${digitBoxes}</tr>
+    </table>
+
+    <div style="background:#1F2937;border-radius:12px;padding:16px;margin:0 0 20px;border-left:3px solid #EF4444">
+      <p style="color:#EF4444;font-size:12px;font-weight:600;margin:0 0 4px;text-align:left">⚠️ Security Alert</p>
+      <p style="color:#6B7280;font-size:11px;margin:0;text-align:left">If you didn't request a password reset, your account may be at risk. Change your password immediately.</p>
+    </div>
+  `);
+
+  await transporter.sendMail({ from: FROM, to, subject: "🔑 RuneClipy — Password Reset Code", html });
 }
 
 // ─── Welcome Email ───────────────────────────────────────

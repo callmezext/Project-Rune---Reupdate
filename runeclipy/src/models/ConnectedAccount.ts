@@ -26,6 +26,7 @@ const ConnectedAccountSchema = new Schema<IConnectedAccount>(
 );
 
 ConnectedAccountSchema.index({ userId: 1, platform: 1 });
+ConnectedAccountSchema.index({ platform: 1, username: 1 }, { unique: true });
 
 const ConnectedAccount: Model<IConnectedAccount> =
   mongoose.models.ConnectedAccount || mongoose.model<IConnectedAccount>("ConnectedAccount", ConnectedAccountSchema);

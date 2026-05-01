@@ -17,6 +17,26 @@ interface TopCampaign { _id: string; title: string; totalSubmissions: number; to
 interface RecentSub { _id: string; userName: string; campaignTitle: string; status: string; views: number; submittedAt: string }
 interface CampaignBreakdown { _id: string; count: number; totalBudget: number; budgetUsed: number }
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-8 animate-fadeIn">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="admin-stat-card">
+            <div className="admin-shimmer h-5 w-10 mb-3" />
+            <div className="admin-shimmer h-8 w-24 mb-2" />
+            <div className="admin-shimmer h-3 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass-card p-6"><div className="admin-shimmer h-40 w-full" /></div>
+        <div className="glass-card p-6"><div className="admin-shimmer h-40 w-full" /></div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [charts, setCharts] = useState<{ submissionsPerDay: ChartDay[]; usersPerDay: ChartDay[] }>({ submissionsPerDay: [], usersPerDay: [] });
@@ -41,18 +61,17 @@ export default function AdminDashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="text-4xl animate-pulse">📊</div></div>;
+  if (loading) return <LoadingSkeleton />;
 
   const statCards = [
-    { label: "Total Users", value: formatNumber(stats?.totalUsers || 0), icon: "👥", color: "from-blue-500/20 to-blue-600/5" },
-    { label: "Active Campaigns", value: stats?.activeCampaigns?.toString() || "0", icon: "🎵", color: "from-green-500/20 to-green-600/5" },
-    { label: "Total Submissions", value: formatNumber(stats?.totalSubmissions || 0), icon: "🎬", color: "from-purple-500/20 to-purple-600/5" },
-    { label: "Pending Review", value: stats?.pendingSubmissions?.toString() || "0", icon: "⏳", color: "from-yellow-500/20 to-yellow-600/5" },
-    { label: "Pending Payouts", value: stats?.pendingPayouts?.toString() || "0", icon: "💸", color: "from-pink-500/20 to-pink-600/5" },
-    { label: "Platform Revenue", value: formatCurrency(stats?.totalRevenue || 0), icon: "💰", color: "from-emerald-500/20 to-emerald-600/5" },
+    { label: "Total Users", value: formatNumber(stats?.totalUsers || 0), icon: "👥", gradient: "from-blue-500/20 via-blue-600/10 to-transparent" },
+    { label: "Active Campaigns", value: stats?.activeCampaigns?.toString() || "0", icon: "🎵", gradient: "from-green-500/20 via-green-600/10 to-transparent" },
+    { label: "Total Submissions", value: formatNumber(stats?.totalSubmissions || 0), icon: "🎬", gradient: "from-purple-500/20 via-purple-600/10 to-transparent" },
+    { label: "Pending Review", value: stats?.pendingSubmissions?.toString() || "0", icon: "⏳", gradient: "from-yellow-500/20 via-yellow-600/10 to-transparent" },
+    { label: "Pending Payouts", value: stats?.pendingPayouts?.toString() || "0", icon: "💸", gradient: "from-pink-500/20 via-pink-600/10 to-transparent" },
+    { label: "Platform Revenue", value: formatCurrency(stats?.totalRevenue || 0), icon: "💰", gradient: "from-emerald-500/20 via-emerald-600/10 to-transparent" },
   ];
 
-  // Fill missing days for chart
   const fillDays = (data: ChartDay[]) => {
     const days: { date: string; count: number }[] = [];
     for (let i = 29; i >= 0; i--) {
@@ -70,22 +89,35 @@ export default function AdminDashboardPage() {
   const maxUser = Math.max(...userDays.map((d) => d.count), 1);
 
   const typeEmoji: Record<string, string> = { music: "🎵", clipping: "🎬", logo: "🏷️", ugc: "📦" };
-  const statusColor: Record<string, string> = { active: "text-success", paused: "text-warning", ended: "text-text-muted" };
+  const statusColor: Record<string, string> = {
+    active: "text-success",
+    paused: "text-warning",
+    ended: "text-text-muted"
+  };
+  const statusDot: Record<string, string> = {
+    active: "status-dot--active",
+    paused: "status-dot--paused",
+    ended: "status-dot--ended"
+  };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
-      <p className="text-sm text-text-muted mb-8">Overview platform activity & analytics</p>
+    <div className="animate-fadeIn">
+      {/* Header */}
+      <div className="admin-page-header">
+        <h1>Dashboard Overview</h1>
+        <p>Real-time platform analytics & performance metrics</p>
+      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {statCards.map((card) => (
-          <div key={card.label} className={`glass-card p-5 bg-gradient-to-br ${card.color}`}>
-            <div className="flex justify-between items-start mb-2">
+        {statCards.map((card, i) => (
+          <div key={card.label} className={`admin-stat-card admin-grid-item bg-gradient-to-br ${card.gradient}`}
+            style={{ animationDelay: `${i * 60}ms` }}>
+            <div className="flex justify-between items-start mb-3">
               <span className="text-2xl">{card.icon}</span>
             </div>
-            <div className="text-2xl font-extrabold mb-0.5">{card.value}</div>
-            <div className="text-[10px] text-text-muted uppercase tracking-wider">{card.label}</div>
+            <div className="text-2xl font-extrabold tracking-tight mb-1">{card.value}</div>
+            <div className="text-[10px] text-text-muted uppercase tracking-widest font-medium">{card.label}</div>
           </div>
         ))}
       </div>
@@ -94,22 +126,27 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Submissions Chart */}
         <div className="glass-card p-6">
-          <h3 className="font-bold text-sm mb-1">📊 Submissions (30 Hari)</h3>
-          <p className="text-[10px] text-text-muted mb-4">Total: {submissionDays.reduce((a, b) => a + b.count, 0)}</p>
-          <div className="flex items-end gap-[2px] h-28">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="font-bold text-sm">Submissions</h3>
+              <p className="text-[11px] text-text-muted">Last 30 days • Total: {submissionDays.reduce((a, b) => a + b.count, 0)}</p>
+            </div>
+            <span className="text-xs font-mono text-accent-light bg-accent/10 px-2 py-1 rounded-lg">📊</span>
+          </div>
+          <div className="flex items-end gap-[2px] h-32">
             {submissionDays.map((d, i) => (
-              <div key={i} className="flex-1 group relative">
+              <div key={i} className="admin-chart-bar">
                 <div
-                  className="w-full bg-accent/60 hover:bg-accent rounded-t transition-all cursor-pointer"
+                  className="admin-chart-bar-fill bg-accent/60"
                   style={{ height: `${(d.count / maxSub) * 100}%`, minHeight: d.count > 0 ? "4px" : "1px" }}
                 />
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-bg-secondary border border-border rounded-lg px-2 py-1 text-[10px] whitespace-nowrap z-10">
-                  {d.date.slice(5)}: {d.count}
+                <div className="admin-chart-tooltip">
+                  {d.date.slice(5)}: <strong>{d.count}</strong>
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-[9px] text-text-muted">
+          <div className="flex justify-between mt-2 text-[9px] text-text-muted font-mono">
             <span>{submissionDays[0]?.date.slice(5)}</span>
             <span>{submissionDays[submissionDays.length - 1]?.date.slice(5)}</span>
           </div>
@@ -117,22 +154,27 @@ export default function AdminDashboardPage() {
 
         {/* Users Chart */}
         <div className="glass-card p-6">
-          <h3 className="font-bold text-sm mb-1">👥 New Users (30 Hari)</h3>
-          <p className="text-[10px] text-text-muted mb-4">Total: {userDays.reduce((a, b) => a + b.count, 0)}</p>
-          <div className="flex items-end gap-[2px] h-28">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="font-bold text-sm">New Users</h3>
+              <p className="text-[11px] text-text-muted">Last 30 days • Total: {userDays.reduce((a, b) => a + b.count, 0)}</p>
+            </div>
+            <span className="text-xs font-mono text-pink bg-pink/10 px-2 py-1 rounded-lg">👥</span>
+          </div>
+          <div className="flex items-end gap-[2px] h-32">
             {userDays.map((d, i) => (
-              <div key={i} className="flex-1 group relative">
+              <div key={i} className="admin-chart-bar">
                 <div
-                  className="w-full bg-pink/60 hover:bg-pink rounded-t transition-all cursor-pointer"
+                  className="admin-chart-bar-fill bg-pink/60"
                   style={{ height: `${(d.count / maxUser) * 100}%`, minHeight: d.count > 0 ? "4px" : "1px" }}
                 />
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-bg-secondary border border-border rounded-lg px-2 py-1 text-[10px] whitespace-nowrap z-10">
-                  {d.date.slice(5)}: {d.count}
+                <div className="admin-chart-tooltip">
+                  {d.date.slice(5)}: <strong>{d.count}</strong>
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-[9px] text-text-muted">
+          <div className="flex justify-between mt-2 text-[9px] text-text-muted font-mono">
             <span>{userDays[0]?.date.slice(5)}</span>
             <span>{userDays[userDays.length - 1]?.date.slice(5)}</span>
           </div>
@@ -143,23 +185,26 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Campaign Status Breakdown */}
         <div className="glass-card p-6">
-          <h3 className="font-bold text-sm mb-4">🎯 Campaign Breakdown</h3>
+          <h3 className="font-bold text-sm mb-5">🎯 Campaign Breakdown</h3>
           {breakdown.length === 0 ? (
             <p className="text-text-muted text-sm">No campaigns yet</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {breakdown.map((b) => {
                 const pct = b.totalBudget > 0 ? Math.round((b.budgetUsed / b.totalBudget) * 100) : 0;
                 return (
-                  <div key={b._id} className="flex items-center gap-4">
-                    <span className={cn("text-sm font-bold capitalize w-16", statusColor[b._id] || "text-text-primary")}>{b._id}</span>
-                    <span className="text-xs text-text-muted w-8 text-center">{b.count}</span>
-                    <div className="flex-1">
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${pct}%` }} />
+                  <div key={b._id}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("status-dot", statusDot[b._id])} />
+                        <span className={cn("text-sm font-semibold capitalize", statusColor[b._id] || "text-text-primary")}>{b._id}</span>
+                        <span className="text-xs text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-lg">{b.count}</span>
                       </div>
+                      <span className="text-xs text-text-muted font-mono">{formatCurrency(b.budgetUsed)} / {formatCurrency(b.totalBudget)}</span>
                     </div>
-                    <span className="text-xs text-text-muted w-20 text-right">{formatCurrency(b.budgetUsed)} / {formatCurrency(b.totalBudget)}</span>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${pct}%` }} />
+                    </div>
                   </div>
                 );
               })}
@@ -169,14 +214,17 @@ export default function AdminDashboardPage() {
 
         {/* Top Campaigns */}
         <div className="glass-card p-6">
-          <h3 className="font-bold text-sm mb-4">🏆 Top Campaigns</h3>
+          <h3 className="font-bold text-sm mb-5">🏆 Top Campaigns</h3>
           {topCampaigns.length === 0 ? (
             <p className="text-text-muted text-sm">No active campaigns</p>
           ) : (
             <div className="space-y-3">
               {topCampaigns.map((c, i) => (
-                <div key={c._id} className="flex items-center gap-3">
-                  <span className={cn("text-lg w-8 text-center", i === 0 ? "trophy-gold" : i === 1 ? "trophy-silver" : i === 2 ? "trophy-bronze" : "text-text-muted")}>
+                <div key={c._id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-bg-primary/30 transition-colors">
+                  <span className={cn(
+                    "text-lg w-8 text-center font-bold",
+                    i === 0 ? "trophy-gold" : i === 1 ? "trophy-silver" : i === 2 ? "trophy-bronze" : "text-text-muted"
+                  )}>
                     {i < 3 ? "🏆" : `#${i + 1}`}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -184,7 +232,7 @@ export default function AdminDashboardPage() {
                     <div className="text-[10px] text-text-muted">{c.totalCreators} creators • {c.totalSubmissions} submissions</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-bold">{formatCurrency(c.budgetUsed)}</div>
+                    <div className="text-xs font-bold font-mono">{formatCurrency(c.budgetUsed)}</div>
                     <div className="text-[10px] text-text-muted">/ {formatCurrency(c.totalBudget)}</div>
                   </div>
                 </div>
@@ -196,25 +244,30 @@ export default function AdminDashboardPage() {
 
       {/* Recent Submissions */}
       <div className="glass-card p-6">
-        <h3 className="font-bold text-sm mb-4">🕐 Recent Submissions</h3>
+        <h3 className="font-bold text-sm mb-5">🕐 Recent Submissions</h3>
         {recentSubs.length === 0 ? (
           <p className="text-text-muted text-sm">No submissions yet</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {recentSubs.map((s) => (
-              <div key={s._id} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
+              <div key={s._id} className="flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-bg-primary/30 transition-colors border-b border-border/20 last:border-0">
+                <span className={cn("status-dot",
+                  s.status === "approved" ? "status-dot--active" :
+                  s.status === "rejected" ? "status-dot--error" :
+                  "status-dot--pending"
+                )} />
                 <span className={cn("badge text-[9px]",
                   s.status === "approved" ? "badge-active" :
                   s.status === "rejected" ? "bg-error/20 text-error" :
                   "badge-paused"
                 )}>{s.status}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium">@{s.userName}</span>
-                  <span className="text-text-muted text-xs mx-2">→</span>
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                  <span className="text-sm font-semibold">@{s.userName}</span>
+                  <span className="text-text-muted/40">→</span>
                   <span className="text-xs text-text-secondary truncate">{s.campaignTitle}</span>
                 </div>
-                <span className="text-xs text-text-muted">{formatNumber(s.views)} views</span>
-                <span className="text-[10px] text-text-muted">{new Date(s.submittedAt).toLocaleDateString()}</span>
+                <span className="text-xs text-text-muted font-mono">{formatNumber(s.views)} views</span>
+                <span className="text-[10px] text-text-muted">{new Date(s.submittedAt).toLocaleDateString("id-ID")}</span>
               </div>
             ))}
           </div>

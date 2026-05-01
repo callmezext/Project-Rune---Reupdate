@@ -111,10 +111,24 @@ export default function AccountsPage() {
     } finally { setActionLoading(false); }
   };
 
-  const handleRequestManualVerify = () => {
-    setManualRequested(true);
+  const handleRequestManualVerify = async () => {
+    setActionLoading(true);
     setError("");
     setHint("");
+    try {
+      const res = await fetch("/api/accounts/request-manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileUrl: profileLink }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setManualRequested(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Request failed");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleDisconnect = async (id: string) => {

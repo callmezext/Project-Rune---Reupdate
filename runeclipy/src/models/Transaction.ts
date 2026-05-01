@@ -5,7 +5,7 @@ export interface ITransaction extends Document {
   type: "campaign_earning" | "referral_earning" | "payout" | "refund";
   amount: number;
   currency: string;
-  status: "pending" | "completed" | "failed";
+  status: "pending" | "completed" | "failed" | "rejected";
   paymentMethod?: { type: string; email?: string; phone?: string };
   paymentFee: number;
   netAmount: number;
@@ -23,7 +23,7 @@ const TransactionSchema = new Schema<ITransaction>(
     type: { type: String, enum: ["campaign_earning", "referral_earning", "payout", "refund"], required: true },
     amount: { type: Number, required: true },
     currency: { type: String, default: "USD" },
-    status: { type: String, enum: ["pending", "completed", "failed"], default: "pending" },
+    status: { type: String, enum: ["pending", "completed", "failed", "rejected"], default: "pending" },
     paymentMethod: {
       type: { type: String },
       email: String,

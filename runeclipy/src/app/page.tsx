@@ -1,5 +1,6 @@
 import Link from "next/link";
 import HeroScene from "@/components/landing/HeroScene";
+import GlitchText from "@/components/landing/GlitchText";
 
 export default function LandingPage() {
   return (
@@ -39,7 +40,7 @@ export default function LandingPage() {
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] mb-6">
               Turn your <span className="gradient-text">content</span> into{" "}
-              <span className="gradient-text">real earnings</span>
+              <GlitchText>real earnings</GlitchText>
             </h1>
             <p className="text-lg text-text-secondary leading-relaxed mb-8 max-w-lg">
               Join thousands of creators. Use trending sounds, create short-form videos,

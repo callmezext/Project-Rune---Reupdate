@@ -19,11 +19,16 @@ export async function POST(req: NextRequest) {
     // Extract username from URL
     const match = profileUrl.match(/@([a-zA-Z0-9._]+)/);
     if (!match) return NextResponse.json({ error: "Could not extract username from URL" }, { status: 400 });
-    const username = match[1];
+    const username = match[1].toLowerCase();
 
-    // Check duplicate
-    const existing = await ConnectedAccount.findOne({ userId: session.userId, username });
-    if (existing) return NextResponse.json({ error: "This account is already connected" }, { status: 400 });
+    // Check if this TikTok account is already connected by ANY user (global duplicate)
+    const globalExisting = await ConnectedAccount.findOne({ platform: "tiktok", username });
+    if (globalExisting) {
+      if (globalExisting.userId.toString() === session.userId) {
+        return NextResponse.json({ error: "Kamu sudah menghubungkan akun TikTok ini" }, { status: 400 });
+      }
+      return NextResponse.json({ error: "Akun TikTok ini sudah terhubung oleh user lain" }, { status: 400 });
+    }
 
     const verificationCode = generateVerificationCode();
 
@@ -38,6 +43,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, verificationCode });
   } catch (error) {
     console.error("Account connect error:", error);
+    // Handle MongoDB duplicate key error
+    if ((error as { code?: number }).code === 11000) {
+      return NextResponse.json({ error: "Akun TikTok ini sudah terhubung" }, { status: 400 });
+    }
     return NextResponse.json({ error: "Connection failed" }, { status: 500 });
   }
 }
