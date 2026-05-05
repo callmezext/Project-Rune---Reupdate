@@ -36,7 +36,7 @@ export async function GET() {
     }
 
     // Build safe response
-    const { password, googleId, discordId, ...safeUser } = user as unknown as Record<string, unknown>;
+    const { password, googleId, discordId, discordUsername, ...safeUser } = user as unknown as Record<string, unknown>;
     return NextResponse.json({
       success: true,
       user: {
@@ -44,6 +44,7 @@ export async function GET() {
         hasPassword: !!(password && (password as string).length > 0),
         hasGoogle: !!googleId,
         hasDiscord: !!discordId,
+        discordUsername: discordUsername || "",
         tierInfo,
         badges,
       },

@@ -70,9 +70,7 @@ export async function GET(req: NextRequest) {
         { _id: session.userId },
         {
           discordId: discordUser.id,
-          ...(discordUser.avatar
-            ? {} // Don't overwrite avatar if already set
-            : {}),
+          discordUsername: discordUser.username || discordUser.global_name || "",
         }
       );
 
@@ -94,6 +92,7 @@ export async function GET(req: NextRequest) {
       // Update discordId if not set
       if (!user.discordId) {
         user.discordId = discordUser.id;
+        user.discordUsername = discordUser.username || discordUser.global_name || "";
         await user.save();
       }
 

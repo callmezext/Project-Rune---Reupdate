@@ -14,6 +14,7 @@ interface UserProfile {
   hasPassword: boolean;
   hasGoogle: boolean;
   hasDiscord: boolean;
+  discordUsername?: string;
   stats: { totalVideos: number; totalEarned: number; totalViews: number };
   tierInfo?: {
     tier: string;
@@ -411,7 +412,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <div className="text-sm font-medium">Discord</div>
-                <div className="text-xs text-text-muted">{profile.hasDiscord ? "Account linked" : "Not connected"}</div>
+                <div className="text-xs text-text-muted">{profile.hasDiscord ? `@${profile.discordUsername || "linked"}` : "Not connected"}</div>
               </div>
             </div>
             {profile.hasDiscord ? (
