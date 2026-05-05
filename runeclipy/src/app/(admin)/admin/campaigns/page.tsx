@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatCurrency, cn } from "@/lib/utils";
 
 interface Campaign {
@@ -19,6 +20,7 @@ interface Campaign {
 type Toast = { message: string; type: "success" | "error" } | null;
 
 export default function AdminCampaignsPage() {
+  const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -95,6 +97,57 @@ export default function AdminCampaignsPage() {
       }
     } catch (err) {
       console.error("Delete campaign error:", err);
+      showToast("Request failed", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const duplicateCampaign = async (id: string) => {
+    setActionLoading(id);
+    try {
+      // Fetch full campaign data
+      const detailRes = await fetch(`/api/campaigns/${id}`);
+      const detailData = await detailRes.json();
+      if (!detailRes.ok || !detailData.success) {
+        showToast("Failed to fetch campaign data", "error");
+        return;
+      }
+
+      const orig = detailData.campaign;
+      // Create duplicate with reset counters
+      const res = await fetch("/api/admin/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${orig.title} (Copy)`,
+          description: orig.description || "",
+          type: orig.type,
+          soundUrl: orig.soundUrl || "",
+          requirements: orig.requirements || "",
+          totalBudget: orig.totalBudget,
+          ratePerMillionViews: orig.ratePerMillionViews || 0,
+          maxEarningsPerPost: orig.maxEarningsPerPost || 0,
+          earningType: orig.earningType || "per_view",
+          fixedRatePerPost: orig.fixedRatePerPost || 0,
+          maxSubmissionsPerUser: orig.maxSubmissionsPerUser || 1,
+          status: "paused",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("Campaign duplicated! Redirecting to edit...");
+        const newId = data.campaign?._id || data.campaignId;
+        if (newId) {
+          router.push(`/admin/campaigns/${newId}/edit`);
+        } else {
+          fetchCampaigns();
+        }
+      } else {
+        showToast(data.error || "Failed to duplicate", "error");
+      }
+    } catch (err) {
+      console.error("Duplicate campaign error:", err);
       showToast("Request failed", "error");
     } finally {
       setActionLoading(null);
@@ -203,6 +256,14 @@ export default function AdminCampaignsPage() {
                     >
                       ✏️ Edit
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => duplicateCampaign(c._id)}
+                      disabled={isDisabled}
+                      className="admin-btn admin-btn--ghost"
+                    >
+                      {isDisabled ? "⏳" : "📋 Duplicate"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => deleteCampaign(c._id)}
