@@ -233,7 +233,6 @@ export default function AdminSubmissionsPage() {
                 sub.suspicious && sub.status === "pending" && "!border-warning/40 ring-1 ring-warning/20",
                 selected.has(sub._id) && "!border-accent/50 ring-1 ring-accent/30 bg-accent/5"
               )}>
-                {/* Checkbox + Suspicious banner */}
                 <div className="flex items-start gap-3">
                   {sub.status === "pending" && (
                     <input type="checkbox" checked={selected.has(sub._id)}
@@ -241,98 +240,99 @@ export default function AdminSubmissionsPage() {
                       className="mt-1 accent-accent w-4 h-4 flex-shrink-0 cursor-pointer" />
                   )}
                   <div className="flex-1 min-w-0">
-                {/* Suspicious banner */}
-                {sub.suspicious && sub.status === "pending" && (
-                  <div className="mb-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/20 text-warning text-xs font-medium flex items-center gap-2">
-                    <span>⚠️</span>
-                    <span>{sub.rejectReason?.replace("⚠️ SUSPICIOUS: ", "")}</span>
-                  </div>
-                )}
+                    {/* Suspicious banner */}
+                    {sub.suspicious && sub.status === "pending" && (
+                      <div className="mb-3 px-3 py-2 rounded-xl bg-warning/10 border border-warning/20 text-warning text-xs font-medium flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>{sub.rejectReason?.replace("⚠️ SUSPICIOUS: ", "")}</span>
+                      </div>
+                    )}
 
-                <div className="flex flex-col lg:flex-row justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    {/* Campaign + User */}
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-lg">{sub.campaignTitle}</span>
-                    </div>
-                    <div className="font-bold text-sm mb-1.5">@{sub.userName}</div>
-                    <a href={sub.videoUrl} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-accent-light hover:text-accent hover:underline break-all transition-colors">
-                      {sub.videoUrl}
-                    </a>
-
-                    {/* Stats */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {[
-                        { icon: "👁️", val: formatNumber(sub.views || 0), label: "views" },
-                        { icon: "❤️", val: formatNumber(sub.likes || 0), label: "likes" },
-                        { icon: "💬", val: formatNumber(sub.comments || 0), label: "comments" },
-                        { icon: "🔄", val: formatNumber(sub.shares || 0), label: "shares" },
-                      ].map((s) => (
-                        <div key={s.label} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-primary/50 border border-border/30 text-xs">
-                          <span>{s.icon}</span>
-                          <span className="font-semibold">{s.val}</span>
+                    <div className="flex flex-col lg:flex-row justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        {/* Campaign + User */}
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-lg">{sub.campaignTitle}</span>
                         </div>
-                      ))}
-                      <div className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border",
-                        engRate < 1 ? "bg-error/10 text-error border-error/20" :
-                        engRate < 3 ? "bg-warning/10 text-warning border-warning/20" :
-                        "bg-success/10 text-success border-success/20"
-                      )}>
-                        <span>📊</span>
-                        <span>{sub.engagementRate || "0"}%</span>
+                        <div className="font-bold text-sm mb-1.5">@{sub.userName}</div>
+                        <a href={sub.videoUrl} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-accent-light hover:text-accent hover:underline break-all transition-colors">
+                          {sub.videoUrl}
+                        </a>
+
+                        {/* Stats */}
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {[
+                            { icon: "👁️", val: formatNumber(sub.views || 0), label: "views" },
+                            { icon: "❤️", val: formatNumber(sub.likes || 0), label: "likes" },
+                            { icon: "💬", val: formatNumber(sub.comments || 0), label: "comments" },
+                            { icon: "🔄", val: formatNumber(sub.shares || 0), label: "shares" },
+                          ].map((s) => (
+                            <div key={s.label} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-primary/50 border border-border/30 text-xs">
+                              <span>{s.icon}</span>
+                              <span className="font-semibold">{s.val}</span>
+                            </div>
+                          ))}
+                          <div className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border",
+                            engRate < 1 ? "bg-error/10 text-error border-error/20" :
+                            engRate < 3 ? "bg-warning/10 text-warning border-warning/20" :
+                            "bg-success/10 text-success border-success/20"
+                          )}>
+                            <span>📊</span>
+                            <span>{sub.engagementRate || "0"}%</span>
+                          </div>
+                        </div>
+
+                        {sub.earned > 0 && (
+                          <div className="mt-2 text-xs text-success font-semibold">💰 Earned: {formatCurrency(sub.earned)}</div>
+                        )}
+
+                        {sub.status === "rejected" && sub.rejectReason && !sub.suspicious && (
+                          <div className="mt-2 text-xs text-error bg-error/5 px-2.5 py-1.5 rounded-lg border border-error/10">
+                            Reason: {sub.rejectReason}
+                          </div>
+                        )}
+
+                        <div className="mt-2 text-[10px] text-text-muted font-mono">{new Date(sub.submittedAt).toLocaleString("id-ID")}</div>
+                      </div>
+
+                      <div className="flex items-start gap-2 shrink-0">
+                        {sub.status === "pending" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleReview(sub._id, "approved")}
+                              disabled={isDisabled}
+                              className="admin-btn admin-btn--success"
+                            >
+                              {isDisabled ? "⏳" : "✅ Approve"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const reason = prompt("Reject reason:");
+                                if (reason !== null) handleReview(sub._id, "rejected", reason);
+                              }}
+                              disabled={isDisabled}
+                              className="admin-btn admin-btn--danger"
+                            >
+                              {isDisabled ? "⏳" : "❌ Reject"}
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className={cn("status-dot",
+                              sub.status === "approved" ? "status-dot--active" : "status-dot--error"
+                            )} />
+                            <span className={`badge ${sub.status === "approved" ? "badge-active" : "bg-error/20 text-error"} text-[10px]`}>
+                              {sub.status}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {sub.earned > 0 && (
-                      <div className="mt-2 text-xs text-success font-semibold">💰 Earned: {formatCurrency(sub.earned)}</div>
-                    )}
-
-                    {sub.status === "rejected" && sub.rejectReason && !sub.suspicious && (
-                      <div className="mt-2 text-xs text-error bg-error/5 px-2.5 py-1.5 rounded-lg border border-error/10">
-                        Reason: {sub.rejectReason}
-                      </div>
-                    )}
-
-                    <div className="mt-2 text-[10px] text-text-muted font-mono">{new Date(sub.submittedAt).toLocaleString("id-ID")}</div>
                   </div>
-
-                  <div className="flex items-start gap-2 shrink-0">
-                    {sub.status === "pending" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleReview(sub._id, "approved")}
-                          disabled={isDisabled}
-                          className="admin-btn admin-btn--success"
-                        >
-                          {isDisabled ? "⏳" : "✅ Approve"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const reason = prompt("Reject reason:");
-                            if (reason !== null) handleReview(sub._id, "rejected", reason);
-                          }}
-                          disabled={isDisabled}
-                          className="admin-btn admin-btn--danger"
-                        >
-                          {isDisabled ? "⏳" : "❌ Reject"}
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className={cn("status-dot",
-                          sub.status === "approved" ? "status-dot--active" : "status-dot--error"
-                        )} />
-                        <span className={`badge ${sub.status === "approved" ? "badge-active" : "bg-error/20 text-error"} text-[10px]`}>
-                          {sub.status}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
                 </div>
               </div>
             );
