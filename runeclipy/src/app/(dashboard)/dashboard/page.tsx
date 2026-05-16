@@ -107,25 +107,29 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {/* ═══ Welcome Header ═══ */}
+      <h1 className="text-xl sm:text-2xl font-bold mb-5">
+        Welcome Back, <span className="gradient-text">{profile?.nickname || profile?.username || "Creator"}</span>
+      </h1>
+
       {/* ═══ Profile Summary Card ═══ */}
       {profileLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 animate-pulse">
-          <div className="glass-card p-6 h-48 bg-bg-tertiary/30" />
-          <div className="glass-card p-6 h-48 bg-bg-tertiary/30" />
+          <div className="glass-card p-6 h-52 bg-bg-tertiary/30" />
+          <div className="glass-card p-6 h-52 bg-bg-tertiary/30" />
         </div>
-      ) : profile && (
+      ) : profile ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           {/* ── Left: User Identity Card ── */}
           <div className="glass-card p-0 overflow-hidden relative">
             {/* Glossy gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] via-transparent to-transparent pointer-events-none" />
-            <div className="absolute top-0 right-0 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-transparent pointer-events-none" />
 
             <div className="relative p-5 sm:p-6">
               {/* User info row */}
               <div className="flex items-center gap-4 mb-5">
                 {/* Avatar */}
-                <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center text-3xl font-bold flex-shrink-0 border border-border/50 shadow-lg shadow-black/20">
+                <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center text-3xl font-bold flex-shrink-0 border border-border/50">
                   {profile.nickname.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
@@ -146,31 +150,25 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Stats row */}
+              {/* Stats row — matches reference: Followers | Pages | Campaigns */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <svg className="w-3.5 h-3.5 text-info" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-[10px] text-text-muted font-medium">Views</span>
+                    <span className="text-info text-xs">👁️</span>
+                    <span className="text-[10px] text-text-muted font-medium">Total Views</span>
                   </div>
                   <div className="text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
                 </div>
                 <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <svg className="w-3.5 h-3.5 text-accent-light" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+                    <span className="text-accent-light text-xs">📄</span>
                     <span className="text-[10px] text-text-muted font-medium">Videos</span>
                   </div>
                   <div className="text-lg font-extrabold">{profile.stats.totalVideos}</div>
                 </div>
                 <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <svg className="w-3.5 h-3.5 text-pink" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
+                    <span className="text-pink text-xs">🎬</span>
                     <span className="text-[10px] text-text-muted font-medium">Campaigns</span>
                   </div>
                   <div className="text-lg font-extrabold">{campaigns.length}</div>
@@ -179,13 +177,12 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── Right: Earnings + Actions Card ── */}
+          {/* ── Right: Earnings + Quick Stats ── */}
           <div className="flex flex-col gap-4">
-            {/* Earnings Section */}
+            {/* Earnings Card */}
             <div className="glass-card p-5 sm:p-6 relative overflow-hidden flex-1">
-              <div className="absolute top-0 left-0 w-32 h-32 bg-success/5 rounded-full blur-3xl pointer-events-none" />
-              <div className="relative flex items-start justify-between">
-                <div>
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium text-text-muted">💰 Total Earnings</span>
                     <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
@@ -200,10 +197,10 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                {/* My Campaigns Button */}
+                {/* My Campaigns Button — green like reference */}
                 <Link
                   href="/campaigns"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent/15 text-accent-light text-xs font-bold hover:bg-accent/25 transition-all border border-accent/20 hover:border-accent/40 flex-shrink-0"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success/15 text-success text-xs font-bold hover:bg-success/25 transition-all border border-success/20 flex-shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -212,7 +209,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              {/* Tier badge if available */}
+              {/* Tier info if available */}
               {profile.tierInfo && (
                 <div className="mt-4 pt-4 border-t border-border/50">
                   <div className="flex items-center gap-3">
@@ -248,35 +245,37 @@ export default function DashboardPage() {
               <div className="glass-card p-4 text-center">
                 <div className="text-xs text-text-muted mb-1">Total Views</div>
                 <div className="text-xl font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
-                <div className="flex justify-center gap-2 mt-2">
+                <div className="flex justify-center gap-3 mt-2">
                   <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success" /> Organic
+                    👁️ {formatNumber(profile.stats.totalViews)}
                   </span>
                   <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <span className="w-1.5 h-1.5 rounded-full bg-warning" /> Paid
+                    😎 0
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
+                    🔥 0
                   </span>
                 </div>
               </div>
               <div className="glass-card p-4 text-center">
                 <div className="text-xs text-text-muted mb-1">Submissions</div>
                 <div className="text-xl font-extrabold">{profile.stats.totalVideos}</div>
-                <div className="flex justify-center gap-2 mt-2">
-                  {profile.badges && profile.badges.length > 0 && (
-                    <div className="flex -space-x-1">
-                      {profile.badges.slice(0, 3).map((b) => (
-                        <span key={b.id} className="text-sm" title={b.label}>{b.emoji}</span>
-                      ))}
-                      {profile.badges.length > 3 && (
-                        <span className="text-[9px] text-text-muted ml-1">+{profile.badges.length - 3}</span>
-                      )}
-                    </div>
-                  )}
+                <div className="flex justify-center gap-3 mt-2">
+                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
+                    💬 0
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
+                    🎯 0
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
+                    📊 0
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* ═══ Campaign Section Header ═══ */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -304,7 +303,7 @@ export default function DashboardPage() {
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-medium transition-all",
               activeType === type
-                ? "bg-accent/20 text-accent-light border border-accent/30"
+                ? "bg-accent/15 text-accent-light border border-border-hover"
                 : "text-text-muted hover:text-text-secondary hover:bg-bg-tertiary/50 border border-transparent"
             )}
           >

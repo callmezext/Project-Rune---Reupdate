@@ -67,7 +67,7 @@ export default function MyCampaignsPage() {
         {["all", "pending", "approved", "rejected", "paid_out"].map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={cn("px-4 py-2 rounded-lg text-xs font-medium transition-all capitalize",
-              filter === f ? "bg-accent/20 text-accent-light border border-accent/30" : "text-text-muted hover:bg-bg-tertiary border border-transparent"
+              filter === f ? "bg-accent/15 text-accent-light border border-border-hover" : "text-text-muted hover:bg-bg-tertiary border border-transparent"
             )}>
             {f.replace("_", " ")}
           </button>
