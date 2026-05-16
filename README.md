@@ -17,6 +17,8 @@
 ### 🎬 Video Info
 - Video ID, Description, Creation Date
 - Author info (username, nickname, UID, avatar)
+- - trigger deploy
+  - 
 - Views, Likes, Comments, Shares, Bookmarks
 - Video duration, resolution, cover image
 - Music/Sound info (title, artist, duration)
