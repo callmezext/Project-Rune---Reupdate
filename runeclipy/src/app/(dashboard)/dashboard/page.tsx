@@ -19,6 +19,23 @@ interface Campaign {
   createdAt: string;
 }
 
+interface UserProfile {
+  nickname: string;
+  username: string;
+  memberSince: string;
+  stats: { totalVideos: number; totalEarned: number; totalViews: number };
+  tierInfo?: {
+    tier: string;
+    label: string;
+    emoji: string;
+    color: string;
+    rateBonus: number;
+    minApproved: number;
+    nextTier?: { tier: string; required: number };
+  };
+  badges?: { id: string; label: string; emoji: string; description: string }[];
+}
+
 const typeFilters = ["All", "Music", "Clipping", "Logo", "UGC"];
 const platformFilters = ["TikTok", "Instagram", "YouTube"];
 const sortOptions = [
@@ -33,9 +50,12 @@ export default function DashboardPage() {
   const [activeType, setActiveType] = useState("All");
   const [sort, setSort] = useState("newest");
   const [activePlatforms, setActivePlatforms] = useState<Set<string>>(new Set(platformFilters));
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     fetchCampaigns();
+    fetchProfile();
   }, []);
 
   const fetchCampaigns = async () => {
@@ -47,6 +67,18 @@ export default function DashboardPage() {
       console.error("Failed to fetch campaigns:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("/api/profile");
+      const data = await res.json();
+      if (data.success) setProfile(data.user);
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -70,9 +102,183 @@ export default function DashboardPage() {
 
   const budgetPercent = (c: Campaign) => c.totalBudget > 0 ? Math.round((c.budgetUsed / c.totalBudget) * 100) : 0;
 
+  // Calculate pending earnings (from submissions that are approved but not paid out)
+  const pendingEarnings = 0; // This would come from API if available
+
   return (
     <div>
-      {/* Header */}
+      {/* ═══ Profile Summary Card ═══ */}
+      {profileLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 animate-pulse">
+          <div className="glass-card p-6 h-48 bg-bg-tertiary/30" />
+          <div className="glass-card p-6 h-48 bg-bg-tertiary/30" />
+        </div>
+      ) : profile && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          {/* ── Left: User Identity Card ── */}
+          <div className="glass-card p-0 overflow-hidden relative">
+            {/* Glossy gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative p-5 sm:p-6">
+              {/* User info row */}
+              <div className="flex items-center gap-4 mb-5">
+                {/* Avatar */}
+                <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center text-3xl font-bold flex-shrink-0 border border-border/50 shadow-lg shadow-black/20">
+                  {profile.nickname.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-lg sm:text-xl font-bold truncate">{profile.nickname}</h2>
+                    <span className="text-base">✏️</span>
+                  </div>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    member since {new Date(profile.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                  </p>
+                  {/* Approval Rate Badge */}
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/10 border border-success/20">
+                    <span className="text-success text-xs">✅</span>
+                    <span className="text-xs font-semibold text-success">
+                      Approval Rate: {profile.stats.totalVideos > 0 ? "Active" : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+                  <div className="flex items-center justify-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 text-info" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-[10px] text-text-muted font-medium">Views</span>
+                  </div>
+                  <div className="text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
+                </div>
+                <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+                  <div className="flex items-center justify-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 text-accent-light" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span className="text-[10px] text-text-muted font-medium">Videos</span>
+                  </div>
+                  <div className="text-lg font-extrabold">{profile.stats.totalVideos}</div>
+                </div>
+                <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+                  <div className="flex items-center justify-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 text-pink" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-[10px] text-text-muted font-medium">Campaigns</span>
+                  </div>
+                  <div className="text-lg font-extrabold">{campaigns.length}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Right: Earnings + Actions Card ── */}
+          <div className="flex flex-col gap-4">
+            {/* Earnings Section */}
+            <div className="glass-card p-5 sm:p-6 relative overflow-hidden flex-1">
+              <div className="absolute top-0 left-0 w-32 h-32 bg-success/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-medium text-text-muted">💰 Total Earnings</span>
+                    <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-extrabold gradient-text mb-3">
+                    {formatCurrency(profile.stats.totalEarned)}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-warning" />
+                    <span className="text-xs text-text-muted">
+                      Pending Earnings <span className="text-warning font-bold">{formatCurrency(pendingEarnings)}</span>
+                    </span>
+                  </div>
+                </div>
+                {/* My Campaigns Button */}
+                <Link
+                  href="/campaigns"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent/15 text-accent-light text-xs font-bold hover:bg-accent/25 transition-all border border-accent/20 hover:border-accent/40 flex-shrink-0"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  My Campaigns
+                </Link>
+              </div>
+
+              {/* Tier badge if available */}
+              {profile.tierInfo && (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{profile.tierInfo.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold">{profile.tierInfo.label} Creator</span>
+                        {profile.tierInfo.rateBonus > 0 && (
+                          <span className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-full">
+                            +{profile.tierInfo.rateBonus}% bonus
+                          </span>
+                        )}
+                      </div>
+                      {profile.tierInfo.nextTier && (
+                        <div className="mt-1.5">
+                          <div className="flex justify-between text-[10px] text-text-muted mb-1">
+                            <span>Next: {profile.tierInfo.nextTier.tier.charAt(0).toUpperCase() + profile.tierInfo.nextTier.tier.slice(1)}</span>
+                            <span>{profile.stats.totalVideos}/{profile.tierInfo.nextTier.required}</span>
+                          </div>
+                          <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${Math.min(100, (profile.stats.totalVideos / profile.tierInfo.nextTier.required) * 100)}%` }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass-card p-4 text-center">
+                <div className="text-xs text-text-muted mb-1">Total Views</div>
+                <div className="text-xl font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
+                <div className="flex justify-center gap-2 mt-2">
+                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success" /> Organic
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-warning" /> Paid
+                  </span>
+                </div>
+              </div>
+              <div className="glass-card p-4 text-center">
+                <div className="text-xs text-text-muted mb-1">Submissions</div>
+                <div className="text-xl font-extrabold">{profile.stats.totalVideos}</div>
+                <div className="flex justify-center gap-2 mt-2">
+                  {profile.badges && profile.badges.length > 0 && (
+                    <div className="flex -space-x-1">
+                      {profile.badges.slice(0, 3).map((b) => (
+                        <span key={b.id} className="text-sm" title={b.label}>{b.emoji}</span>
+                      ))}
+                      {profile.badges.length > 3 && (
+                        <span className="text-[9px] text-text-muted ml-1">+{profile.badges.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Campaign Section Header ═══ */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">CAMPAIGNS</h1>
         <div className="flex items-center gap-2">
