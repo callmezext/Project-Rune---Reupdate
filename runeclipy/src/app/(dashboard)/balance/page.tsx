@@ -78,9 +78,9 @@ export default function BalancePage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-2xl font-bold">My Balance</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
           <button onClick={() => setShowRules(true)} className="text-sm text-text-muted hover:text-accent-light transition-colors flex items-center gap-1">
             📖 Rules & Info
           </button>
@@ -150,15 +150,15 @@ export default function BalancePage() {
         ) : (
           <div className="space-y-1">
             {data.transactions.map((tx) => (
-              <div key={tx._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-bg-primary/30 transition-colors">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">{typeIcons[tx.type] || "📄"}</span>
-                  <div>
-                    <div className="text-sm font-medium capitalize">{tx.type.replace(/_/g, " ")}</div>
-                    <div className="text-xs text-text-muted">{tx.description || timeAgo(new Date(tx.createdAt))}</div>
+              <div key={tx._id} className="flex items-center justify-between p-3 rounded-xl hover:bg-bg-primary/30 transition-colors gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-lg flex-shrink-0">{typeIcons[tx.type] || "📄"}</span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium capitalize truncate">{tx.type.replace(/_/g, " ")}</div>
+                    <div className="text-xs text-text-muted truncate">{tx.description || timeAgo(new Date(tx.createdAt))}</div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-shrink-0">
                   <div className={cn("font-bold text-sm", tx.type === "payout" ? "text-warning" : "text-success")}>
                     {tx.type === "payout" ? "-" : "+"}{formatCurrency(tx.amount)}
                   </div>
@@ -173,7 +173,7 @@ export default function BalancePage() {
       {/* Withdraw Modal */}
       {showWithdraw && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowWithdraw(false)}>
-          <div className="glass-card p-8 max-w-md w-full animate-fadeInUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="glass-card p-5 sm:p-8 max-w-md w-full animate-fadeInUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold gradient-text">💸 Withdraw</h2>
               <button onClick={() => setShowWithdraw(false)} className="text-text-muted hover:text-text-primary text-xl">×</button>
@@ -213,7 +213,7 @@ export default function BalancePage() {
                 {/* Payment Method */}
                 <div>
                   <label className="block text-sm text-text-secondary mb-2">Metode Pembayaran</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {paymentMethods.map((m) => (
                       <button key={m.type} type="button"
                         onClick={() => setSelectedMethod(m.type)}

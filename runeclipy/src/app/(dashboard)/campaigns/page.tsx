@@ -122,10 +122,10 @@ export default function MyCampaignsPage() {
                 <div className="font-bold text-sm truncate">{sub.campaignTitle}</div>
                 <a href={sub.videoUrl} target="_blank" className="text-xs text-accent-light hover:underline truncate block">{sub.videoUrl}</a>
               </div>
-              <div className="flex items-center gap-6 text-xs">
-                <div className="text-center"><div className="text-text-muted">Views</div><div className="font-bold">{formatNumber(sub.views)}</div></div>
-                <div className="text-center"><div className="text-text-muted">Earned</div><div className="font-bold text-success">{formatCurrency(sub.earned)}</div></div>
-                <span className={`badge ${statusColors[sub.status] || ""}`}>{sub.status.replace("_", " ")}</span>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs w-full sm:w-auto justify-between sm:justify-start">
+                <div className="text-center sm:text-left"><div className="text-text-muted">Views</div><div className="font-bold">{formatNumber(sub.views)}</div></div>
+                <div className="text-center sm:text-left"><div className="text-text-muted">Earned</div><div className="font-bold text-success">{formatCurrency(sub.earned)}</div></div>
+                <span className={`badge ${statusColors[sub.status] || ""} text-center`}>{sub.status.replace("_", " ")}</span>
               </div>
             </div>
           ))}

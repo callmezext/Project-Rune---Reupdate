@@ -228,18 +228,18 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 p-4 rounded-xl bg-bg-primary/50 border border-border">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 rounded-xl bg-bg-primary/50 border border-border">
           <div className="text-center">
-            <div className="text-lg font-extrabold">{formatNumber(profile.stats.totalVideos)}</div>
-            <div className="text-[10px] text-text-muted uppercase tracking-wider">Videos</div>
+            <div className="text-base sm:text-lg font-extrabold">{formatNumber(profile.stats.totalVideos)}</div>
+            <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider">Videos</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-extrabold gradient-text">{formatCurrency(profile.stats.totalEarned)}</div>
-            <div className="text-[10px] text-text-muted uppercase tracking-wider">Earned</div>
+            <div className="text-base sm:text-lg font-extrabold gradient-text">{formatCurrency(profile.stats.totalEarned)}</div>
+            <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider">Earned</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
-            <div className="text-[10px] text-text-muted uppercase tracking-wider">Views</div>
+            <div className="text-base sm:text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
+            <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider">Views</div>
           </div>
         </div>
 

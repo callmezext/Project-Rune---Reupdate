@@ -115,7 +115,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Live Stats — Glass Cards */}
-          <div className="animate-fadeInUp grid grid-cols-3 gap-4 max-w-xl mx-auto" style={{ animationDelay: "0.4s" }}>
+          <div className="animate-fadeInUp grid grid-cols-3 gap-2 sm:gap-4 max-w-xl mx-auto" style={{ animationDelay: "0.4s" }}>
             {[
               {
                 value: stats.creators > 0 ? formatStat(stats.creators) : "0",
@@ -145,12 +145,12 @@ export default async function LandingPage() {
                 ),
               },
             ].map((stat) => (
-              <div key={stat.label} className="glass-card p-4 text-center group hover:border-accent/20">
+              <div key={stat.label} className="glass-card p-2 sm:p-4 text-center group hover:border-accent/20">
                 <div className="flex justify-center mb-2 opacity-60 group-hover:opacity-100 transition-opacity">
                   {stat.icon}
                 </div>
-                <div className="text-2xl md:text-3xl font-extrabold gradient-text mb-1">{stat.value}</div>
-                <div className="text-[10px] text-text-muted uppercase tracking-widest font-semibold">{stat.label}</div>
+                <div className="text-base sm:text-2xl md:text-3xl font-extrabold gradient-text mb-1">{stat.value}</div>
+                <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-widest font-semibold">{stat.label}</div>
               </div>
             ))}
           </div>

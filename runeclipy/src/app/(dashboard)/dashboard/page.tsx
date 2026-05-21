@@ -153,27 +153,27 @@ export default function DashboardPage() {
               </div>
 
               {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 mb-4">
+                <div className="text-center p-2 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-info"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span className="text-[10px] text-text-muted font-medium">Total Views</span>
+                    <span className="text-[9px] sm:text-[10px] text-text-muted font-medium">Views</span>
                   </div>
-                  <div className="text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
+                  <div className="text-sm sm:text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+                <div className="text-center p-2 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-light"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                    <span className="text-[10px] text-text-muted font-medium">Videos</span>
+                    <span className="text-[9px] sm:text-[10px] text-text-muted font-medium">Videos</span>
                   </div>
-                  <div className="text-lg font-extrabold">{profile.stats.totalVideos}</div>
+                  <div className="text-sm sm:text-lg font-extrabold">{profile.stats.totalVideos}</div>
                 </div>
-                <div className="text-center p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+                <div className="text-center p-2 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink"><path d="M9 18V5l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                    <span className="text-[10px] text-text-muted font-medium">Campaigns</span>
+                    <span className="text-[9px] sm:text-[10px] text-text-muted font-medium">Campaigns</span>
                   </div>
-                  <div className="text-lg font-extrabold">{campaigns.length}</div>
+                  <div className="text-sm sm:text-lg font-extrabold">{campaigns.length}</div>
                 </div>
               </div>
 
@@ -221,7 +221,7 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-4">
             {/* Earnings Card */}
             <div className="glass-card p-5 sm:p-6 relative overflow-hidden flex-1">
-              <div className="relative flex items-start justify-between gap-3">
+              <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium text-text-muted flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Total Earnings</span>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                 {/* My Campaigns Button — green like reference */}
                 <Link
                   href="/campaigns"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success/15 text-success text-xs font-bold hover:bg-success/25 transition-all border border-success/20 flex-shrink-0"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success/15 text-success text-xs font-bold hover:bg-success/25 transition-all border border-success/20 flex-shrink-0 self-start sm:self-auto w-fit"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
