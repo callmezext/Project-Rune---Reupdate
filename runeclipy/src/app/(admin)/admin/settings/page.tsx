@@ -14,8 +14,6 @@ interface Settings {
   supportEmail: string;
 }
 
-interface Channel { id: string; name: string; }
-
 type Toast = { message: string; type: "success" | "error" | "info" } | null;
 
 export default function AdminSettingsPage() {
@@ -26,72 +24,15 @@ export default function AdminSettingsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [loadingChannels, setLoadingChannels] = useState(true);
-  const [testingWebhook, setTestingWebhook] = useState(false);
-  const [webhookTestResult, setWebhookTestResult] = useState<"success" | "fail" | null>(null);
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState("");
   const [resetResult, setResetResult] = useState<Record<string, number> | null>(null);
   const [toast, setToast] = useState<Toast>(null);
-  const [channelError, setChannelError] = useState("");
-
-  // Discord Bot state
-  const [bot, setBot] = useState<{
-    status: string; error: string | null; startedAt: string | null;
-    uptime: number; guildCount: number; ping: number;
-    username: string | null; avatar: string | null;
-  }>({ status: "offline", error: null, startedAt: null, uptime: 0, guildCount: 0, ping: 0, username: null, avatar: null });
-  const [botLoading, setBotLoading] = useState(false);
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
-
-  const fetchBotStatus = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/discord-bot");
-      const data = await res.json();
-      if (data.success) setBot(data.bot);
-    } catch { /* silent */ }
-  }, []);
-
-  // Poll bot status
-  useEffect(() => {
-    fetchBotStatus();
-    const interval = setInterval(fetchBotStatus, 5000);
-    return () => clearInterval(interval);
-  }, [fetchBotStatus]);
-
-  const handleBotToggle = async () => {
-    setBotLoading(true);
-    try {
-      const action = bot.status === "online" ? "stop" : "start";
-      const res = await fetch("/api/admin/discord-bot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
-      const data = await res.json();
-      if (data.bot) setBot(data.bot);
-      if (!data.success && data.error) showToast(data.error, "error");
-      else showToast(`Bot ${action === "start" ? "starting..." : "stopped"}`, action === "start" ? "info" : "success");
-    } catch (err) {
-      console.error(err);
-      showToast("Failed to toggle bot", "error");
-    } finally {
-      setBotLoading(false);
-    }
-  };
-
-  const formatUptime = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
-  };
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -99,15 +40,6 @@ export default function AdminSettingsPage() {
       .then((d) => { if (d.success && d.settings) setSettings(d.settings); })
       .catch(console.error)
       .finally(() => setLoading(false));
-
-    fetch("/api/admin/discord-channels")
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) { setChannels(d.channels); setChannelError(""); }
-        else setChannelError(d.error || "Failed to load channels");
-      })
-      .catch(() => setChannelError("Failed to load channels"))
-      .finally(() => setLoadingChannels(false));
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -130,22 +62,6 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleTestWebhook = async () => {
-    setTestingWebhook(true);
-    setWebhookTestResult(null);
-    try {
-      const res = await fetch("/api/admin/test-webhook", { method: "POST" });
-      const data = await res.json();
-      setWebhookTestResult(data.success ? "success" : "fail");
-      showToast(data.success ? "Webhook test sent!" : "Webhook test failed", data.success ? "success" : "error");
-    } catch {
-      setWebhookTestResult("fail");
-      showToast("Webhook test failed", "error");
-    }
-    setTestingWebhook(false);
-    setTimeout(() => setWebhookTestResult(null), 4000);
   };
 
   const handleReset = async () => {
@@ -191,7 +107,7 @@ export default function AdminSettingsPage() {
             ))}
           </div>
           <div className="space-y-6">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 2 }).map((_, i) => (
               <div key={i} className="glass-card p-6"><div className="admin-shimmer h-32 w-full" /></div>
             ))}
           </div>
@@ -204,7 +120,7 @@ export default function AdminSettingsPage() {
     <div className="animate-fadeIn">
       <div className="admin-page-header">
         <h1>Platform Settings</h1>
-        <p>Configure platform behavior, integrations, and credentials</p>
+        <p>Configure platform behavior and credentials</p>
       </div>
 
       {/* 2-Column Grid */}
@@ -212,60 +128,6 @@ export default function AdminSettingsPage() {
 
         {/* LEFT COLUMN */}
         <div className="space-y-6">
-          {/* Discord Bot Control */}
-          <div className="glass-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={cn("w-3 h-3 rounded-full",
-                  bot.status === "online" ? "bg-success animate-pulse" :
-                  bot.status === "connecting" ? "bg-warning animate-pulse" :
-                  "bg-text-muted"
-                )} />
-                <h3 className="font-bold">🤖 Discord Bot</h3>
-                <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full",
-                  bot.status === "online" ? "bg-success/20 text-success" :
-                  bot.status === "connecting" ? "bg-warning/20 text-warning" :
-                  bot.status === "error" ? "bg-error/20 text-error" :
-                  "bg-bg-tertiary text-text-muted"
-                )}>
-                  {bot.status.toUpperCase()}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleBotToggle}
-                disabled={botLoading || bot.status === "connecting"}
-                className={cn("admin-btn",
-                  bot.status === "online" ? "admin-btn--danger" : "admin-btn--success"
-                )}
-              >
-                {botLoading ? "⏳" : bot.status === "online" ? "⏹ Stop" : "▶ Start"}
-              </button>
-            </div>
-
-            {bot.status === "online" && (
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: "Bot", value: bot.username || "—", color: "text-text-primary" },
-                  { label: "Uptime", value: formatUptime(bot.uptime), color: "text-success" },
-                  { label: "Ping", value: `${bot.ping}ms`, color: "text-accent-light" },
-                  { label: "Servers", value: bot.guildCount.toString(), color: "text-info" },
-                ].map((stat) => (
-                  <div key={stat.label} className="p-2.5 rounded-xl bg-bg-primary/50 border border-border text-center">
-                    <div className="text-[10px] text-text-muted">{stat.label}</div>
-                    <div className={cn("text-xs font-bold truncate", stat.color)}>{stat.value}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {bot.status === "error" && bot.error && (
-              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs">
-                ⚠️ {bot.error}
-              </div>
-            )}
-          </div>
-
           {/* Financial */}
           <div className="glass-card p-6 space-y-4">
             <h3 className="font-bold mb-2">💰 Financial</h3>
@@ -318,90 +180,6 @@ export default function AdminSettingsPage() {
 
         {/* RIGHT COLUMN */}
         <div className="space-y-6">
-          {/* Discord Bot Config */}
-          <div className="glass-card p-6 space-y-4">
-            <h3 className="font-bold mb-2">🤖 Discord Integration</h3>
-            <p className="text-xs text-text-muted -mt-2 mb-3">
-              Bot token & Guild ID are configured via environment variables on the server.
-            </p>
-
-            {/* Notification Channel */}
-            <div>
-              <label className="block text-sm text-text-secondary mb-1.5">📢 Notification Channel</label>
-              {loadingChannels ? (
-                <div className="admin-shimmer h-10 w-full rounded-lg" />
-              ) : channelError ? (
-                <div className="space-y-2">
-                  <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs">
-                    ⚠️ {channelError}
-                  </div>
-                  <select disabled className="input-field text-xs opacity-50 cursor-not-allowed">
-                    <option>— Channels unavailable —</option>
-                  </select>
-                </div>
-              ) : (
-                <select 
-                  value={settings.discordNotifChannelId} 
-                  onChange={(e) => setSettings({ ...settings, discordNotifChannelId: e.target.value })}
-                  className="input-field text-xs"
-                >
-                  <option value="">— Disable Auto Notifications —</option>
-                  {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
-                </select>
-              )}
-              <p className="text-[10px] text-text-muted mt-1">Select channel for automatic new campaign notifications.</p>
-            </div>
-          </div>
-
-          {/* Discord Webhook */}
-          <div className="glass-card p-6 space-y-4">
-            <h3 className="font-bold mb-2">🔔 Discord Webhook</h3>
-            <p className="text-xs text-text-muted -mt-2 mb-3">
-              Webhook URL for automatic notifications (submissions, approvals, payouts, etc).
-            </p>
-
-            <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Webhook URL</label>
-              <input
-                type="url"
-                value={settings.discordWebhookUrl}
-                onChange={(e) => setSettings({ ...settings, discordWebhookUrl: e.target.value })}
-                className="input-field text-xs"
-                placeholder="https://discord.com/api/webhooks/..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Discord Invite URL</label>
-              <input
-                type="url"
-                value={settings.discordInviteUrl}
-                onChange={(e) => setSettings({ ...settings, discordInviteUrl: e.target.value })}
-                className="input-field text-xs"
-                placeholder="https://discord.gg/runeclipy"
-              />
-            </div>
-
-            {settings.discordWebhookUrl && (
-              <button
-                type="button"
-                onClick={handleTestWebhook}
-                disabled={testingWebhook}
-                className="admin-btn admin-btn--accent"
-              >
-                {testingWebhook ? (
-                  <>⏳ Sending...</>
-                ) : webhookTestResult === "success" ? (
-                  <>✅ Test Sent!</>
-                ) : webhookTestResult === "fail" ? (
-                  <>❌ Failed</>
-                ) : (
-                  <>🧪 Test Webhook</>
-                )}
-              </button>
-            )}
-          </div>
-
           {/* CRON / View Tracking */}
           <div className="glass-card p-6">
             <h3 className="font-bold mb-1">🔄 Auto View Tracking</h3>
@@ -425,6 +203,21 @@ export default function AdminSettingsPage() {
             >
               🔄 Run Manual Check Now
             </button>
+          </div>
+
+          {/* Quick Links */}
+          <div className="glass-card p-6">
+            <h3 className="font-bold mb-2">🔗 Quick Links</h3>
+            <p className="text-xs text-text-muted mb-3">Discord settings have moved to their own page.</p>
+            <a href="/admin/discord"
+              className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-accent/30 hover:bg-accent/5 transition-all text-sm font-medium">
+              <span className="text-lg">💬</span>
+              <div>
+                <div className="font-semibold">Discord Hub</div>
+                <div className="text-xs text-text-muted">Bot control, webhook, notifications, send messages</div>
+              </div>
+              <span className="ml-auto text-text-muted">→</span>
+            </a>
           </div>
         </div>
       </div>
