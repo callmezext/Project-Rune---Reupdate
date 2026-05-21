@@ -436,7 +436,7 @@ export default function DashboardPage() {
                   <img
                     src={campaign.coverImage}
                     alt={campaign.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover md:group-hover:scale-105 transition-transform duration-500 [backface-visibility:hidden]"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center opacity-30"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-muted"><path d="M9 18V5l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>

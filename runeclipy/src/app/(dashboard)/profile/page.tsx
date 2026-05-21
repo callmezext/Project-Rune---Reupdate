@@ -458,7 +458,7 @@ export default function ProfilePage() {
 
       {/* ═══ MODALS ═══ */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setModal(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={() => setModal(null)}>
           <div className="glass-card w-full max-w-md mx-4 p-6 animate-fadeInUp" onClick={(e) => e.stopPropagation()}>
 
             {/* ── Change Password Modal ── */}
@@ -565,7 +565,7 @@ export default function ProfilePage() {
 
       {/* ═══ Delete Account Confirmation Modal ═══ */}
       {modal === "delete-account" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setModal(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={() => setModal(null)}>
           <div className="glass-card w-full max-w-md mx-4 p-6 animate-fadeInUp" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-error mb-1">⚠️ Delete Account</h3>
             <p className="text-xs text-text-muted mb-5">
