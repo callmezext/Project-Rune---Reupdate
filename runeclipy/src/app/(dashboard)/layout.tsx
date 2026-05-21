@@ -250,7 +250,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* ═══ Main Area ═══ */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Top bar (mobile hamburger + notification) */}
         <header className="sticky top-0 z-40 bg-bg-secondary/80 backdrop-blur-xl border-b border-border px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
