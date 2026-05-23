@@ -18,6 +18,7 @@ export interface ISiteSetting extends Document {
 
   // AI Assistant
   geminiApiKey: string;
+  geminiModel: string;
 
   updatedAt: Date;
 }
@@ -41,6 +42,7 @@ const SiteSettingSchema = new Schema<ISiteSetting>(
 
     // AI Assistant
     geminiApiKey: { type: String, default: "" },
+    geminiModel: { type: String, default: "gemini-2.0-flash" },
   },
   { timestamps: true }
 );

@@ -13,6 +13,7 @@ interface Settings {
   discordNotifChannelId: string;
   supportEmail: string;
   geminiApiKey: string;
+  geminiModel: string;
 }
 
 type Toast = { message: string; type: "success" | "error" | "info" } | null;
@@ -23,6 +24,7 @@ export default function AdminSettingsPage() {
     referralCommissionPercent: 5, discordWebhookUrl: "",
     discordInviteUrl: "", discordNotifChannelId: "", supportEmail: "",
     geminiApiKey: "",
+    geminiModel: "gemini-2.0-flash",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,6 +55,7 @@ export default function AdminSettingsPage() {
             discordNotifChannelId: d.settings.discordNotifChannelId ?? "",
             supportEmail: d.settings.supportEmail ?? "",
             geminiApiKey: d.settings.geminiApiKey ?? "",
+            geminiModel: d.settings.geminiModel ?? "gemini-2.0-flash",
           });
         }
       })
@@ -114,7 +117,7 @@ export default function AdminSettingsPage() {
       const res = await fetch("/api/admin/ai/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: settings.geminiApiKey }),
+        body: JSON.stringify({ apiKey: settings.geminiApiKey, model: settings.geminiModel }),
       });
       const data = await res.json();
       if (data.valid) {
@@ -235,7 +238,7 @@ export default function AdminSettingsPage() {
               </span>
               <div>
                 <h3 className="font-bold">AI Assistant</h3>
-                <p className="text-[11px] text-text-muted">Google AI Studio (Gemini 2.0 Flash)</p>
+                <p className="text-[11px] text-text-muted">Google AI Studio ({settings.geminiModel})</p>
               </div>
               {keyStatus === "valid" && (
                 <span className="ml-auto text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20">● Connected</span>
@@ -281,6 +284,33 @@ export default function AdminSettingsPage() {
               </div>
               <p className="text-[11px] text-text-muted mt-1.5">
                 API key disimpan di database. Setelah save, AI bubble chat akan muncul di admin panel.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm text-text-secondary mb-1.5">
+                Model AI Gemini
+              </label>
+              <div className="relative">
+                <select
+                  value={settings.geminiModel}
+                  onChange={(e) => {
+                    setSettings({ ...settings, geminiModel: e.target.value });
+                    setKeyStatus("idle");
+                  }}
+                  className="input-field w-full text-sm bg-bg-primary pr-10 border border-border/80 focus:border-accent/40 rounded-xl py-2 px-3 focus:outline-none appearance-none"
+                >
+                  <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Sangat Cepat &amp; Hemat - Default)</option>
+                  <option value="gemini-2.0-pro-exp-02-05">🧠 Gemini 2.0 Pro Experimental (Sangat Pintar &amp; Akurat)</option>
+                  <option value="gemini-2.5-flash">🌀 Gemini 2.5 Flash (Terbaru, Seimbang &amp; Cepat)</option>
+                  <option value="gemini-2.5-pro">👑 Gemini 2.5 Pro (Tercanggih, Penalaran Tingkat Tinggi)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
+                  ▼
+                </div>
+              </div>
+              <p className="text-[11px] text-text-muted mt-1.5">
+                Gunakan Gemini 2.0 Flash untuk kecepatan maksimal, atau Pro untuk tugas penalaran analitis yang kompleks.
               </p>
             </div>
 

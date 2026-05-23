@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { runAIChat, getStoredApiKey, ChatMessage } from "@/lib/gemini";
+import { runAIChat, getStoredAIConfig, ChatMessage } from "@/lib/gemini";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
     }
 
-    const apiKey = await getStoredApiKey();
+    const { apiKey, model } = await getStoredAIConfig();
     if (!apiKey) {
       return NextResponse.json({
         error: "API key Gemini belum dikonfigurasi. Silakan set di Settings → AI Assistant.",
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
 
     const reply = await runAIChat(
       apiKey,
+      model,
       chatHistory,
       message,
       session.userId,

@@ -433,6 +433,7 @@ export interface ChatMessage {
 
 export async function runAIChat(
   apiKey: string,
+  modelName: string,
   history: ChatMessage[],
   newMessage: string,
   actorId: string,
@@ -440,7 +441,7 @@ export async function runAIChat(
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: modelName || "gemini-2.0-flash",
     systemInstruction: SYSTEM_PROMPT,
     tools: [{ functionDeclarations: tools }],
   });
@@ -478,10 +479,10 @@ export async function runAIChat(
 }
 
 // ─── Verify API Key ───────────────────────────────────────────────────────────
-export async function verifyGeminiApiKey(apiKey: string): Promise<{ valid: boolean; error?: string }> {
+export async function verifyGeminiApiKey(apiKey: string, modelName?: string): Promise<{ valid: boolean; error?: string }> {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: modelName || "gemini-2.0-flash" });
     const result = await model.generateContent("Say 'OK' in one word.");
     const text = result.response.text();
     if (text) return { valid: true };
@@ -492,10 +493,18 @@ export async function verifyGeminiApiKey(apiKey: string): Promise<{ valid: boole
   }
 }
 
-// ─── Get stored API key from DB ──────────────────────────────────────────────
-export async function getStoredApiKey(): Promise<string | null> {
+// ─── Get stored API key and Model from DB ────────────────────────────────────
+export async function getStoredAIConfig(): Promise<{ apiKey: string | null; model: string }> {
   await connectDB();
-  const settings = await SiteSetting.findOne().select("geminiApiKey").lean();
-  if (!settings || !settings.geminiApiKey) return null;
-  return settings.geminiApiKey;
+  const settings = await SiteSetting.findOne().select("geminiApiKey geminiModel").lean();
+  return {
+    apiKey: settings?.geminiApiKey || null,
+    model: settings?.geminiModel || "gemini-2.0-flash",
+  };
+}
+
+// Retained for backward compatibility
+export async function getStoredApiKey(): Promise<string | null> {
+  const config = await getStoredAIConfig();
+  return config.apiKey;
 }

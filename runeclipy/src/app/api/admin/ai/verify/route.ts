@@ -9,12 +9,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { apiKey } = await req.json();
+    const { apiKey, model } = await req.json();
     if (!apiKey || typeof apiKey !== "string" || apiKey.trim().length < 10) {
       return NextResponse.json({ valid: false, error: "API key tidak valid" });
     }
 
-    const result = await verifyGeminiApiKey(apiKey.trim());
+    const result = await verifyGeminiApiKey(apiKey.trim(), model);
     return NextResponse.json(result);
   } catch (error) {
     console.error("AI verify error:", error);
