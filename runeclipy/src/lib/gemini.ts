@@ -6,26 +6,30 @@ import Submission from "@/models/Submission";
 import Transaction from "@/models/Transaction";
 import ActivityLog from "@/models/ActivityLog";
 import SiteSetting from "@/models/SiteSetting";
+import BotStatus from "@/models/BotStatus";
 
 // ─── System Prompt ───────────────────────────────────────────────────────────
 export const SYSTEM_PROMPT = `Kamu adalah AI Admin Assistant untuk platform RuneClipy — sebuah platform TikTok creator marketing.
 Kamu membantu admin mengelola platform secara efisien.
 
 Kemampuanmu:
-- Mencari dan menganalisis data user, campaign, submission, dan transaksi
+- Mencari dan menganalisis data user, campaign, submission, transaksi, setting platform, dan status bot
 - Mengedit data user (role, tier, balance, ban/unban)
 - Mengelola campaign (edit status, budget)  
 - Approve/reject submission
-- Melihat statistik dan laporan platform
+- Melihat dan mengubah setting platform (platform fee, minimum withdrawal, dll)
+- Melihat status dan mengontrol Discord Bot (start, stop, restart)
 - Menganalisis tren dan memberikan insight
 
-Panduan:
-- Selalu respond dalam Bahasa Indonesia
-- Untuk aksi yang mengubah data, konfirmasi dulu jika tidak jelas
-- Sertakan data yang relevan dalam responsmu
-- Jika ada error, jelaskan dengan jelas apa yang terjadi
-- Gunakan format yang rapi (list, tabel jika perlu)
-- Jangan pernah menghapus data secara permanen kecuali diminta eksplisit
+Panduan Gaya Bicara & Perilaku (SANGAT PENTING):
+1. TO THE POINT: Berikan jawaban yang langsung ke inti masalah, singkat, padat, dan profesional. JANGAN gunakan basa-basi, jangan beri salam pembuka/penutup yang panjang, dan hilangkan obrolan santai yang tidak perlu.
+2. PROSEDUR KONFIRMASI WAJIB (SEBELUM EKSEKUSI): Untuk semua aksi memodifikasi data, sensitif, atau berbahaya (seperti 'edit_user', 'edit_campaign', 'update_submission', 'edit_site_settings', 'send_bot_command'):
+   - Kamu TIDAK BOLEH langsung memanggil/mengeksekusi tool tersebut pada request pertama admin.
+   - Kamu harus menjawab terlebih dahulu secara to-the-point: sebutkan aksi apa yang akan dilakukan, parameter perubahannya, dampaknya secara ringkas, dan meminta konfirmasi eksplisit dari admin (misal: 'Saya akan menonaktifkan kampanye X. Apakah Anda yakin? Jawab Ya atau Tidak').
+   - Hanya setelah admin membalas 'Ya', 'Ya, silakan', atau persetujuan eksplisit sejenisnya pada percakapan berikutnya, kamu diperbolehkan memanggil tool yang bersangkutan.
+   - JANGAN memanggil tool pengubah data sebelum admin mengonfirmasi 'Ya' di riwayat pesan sebelumnya!
+3. Sertakan data yang relevan dalam responsmu menggunakan format yang rapi (list, tabel jika perlu).
+4. Jika ada error, jelaskan dengan jelas apa yang terjadi.
 
 Platform context:
 - User memiliki tier: bronze, silver, gold, diamond
@@ -182,6 +186,56 @@ export const tools: FunctionDeclaration[] = [
         limit: { type: SchemaType.NUMBER, description: "Jumlah maksimal hasil (default: 10)" },
       },
       required: [],
+    },
+  },
+  {
+    name: "get_site_settings",
+    description: "Ambil pengaturan situs / platform (platform fee, minimum withdrawal, support email, dll).",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "edit_site_settings",
+    description: "Ubah pengaturan situs / platform (seperti platformFeePercent, minCampaignWithdrawal, minReferralWithdrawal, referralCommissionPercent, supportEmail).",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        updates: {
+          type: SchemaType.OBJECT,
+          description: "Pengaturan baru yang ingin disimpan",
+          properties: {
+            platformFeePercent: { type: SchemaType.NUMBER, description: "Fee platform dalam persen (misal: 3)" },
+            minCampaignWithdrawal: { type: SchemaType.NUMBER, description: "Minimal penarikan campaign dalam USD" },
+            minReferralWithdrawal: { type: SchemaType.NUMBER, description: "Minimal penarikan referral dalam USD" },
+            referralCommissionPercent: { type: SchemaType.NUMBER, description: "Komisi referral dalam persen (misal: 5)" },
+            supportEmail: { type: SchemaType.STRING, description: "Email dukungan/support baru" },
+          },
+        },
+      },
+      required: ["updates"],
+    },
+  },
+  {
+    name: "get_bot_status",
+    description: "Ambil status dan statistik Discord Bot (online, ping, server count, heartbeat).",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "send_bot_command",
+    description: "Kirim perintah kontrol ke Discord Bot: start, stop, atau restart.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        command: { type: SchemaType.STRING, description: "Perintah: start, stop, restart" },
+      },
+      required: ["command"],
     },
   },
 ];
@@ -418,6 +472,73 @@ export async function executeTool(
         .limit(args.limit || 10)
         .lean();
       return { count: logs.length, logs };
+    }
+
+    case "get_site_settings": {
+      let settings = await SiteSetting.findOne().lean();
+      if (!settings) {
+        settings = (await SiteSetting.create({})).toObject();
+      }
+      return { success: true, settings };
+    }
+
+    case "edit_site_settings": {
+      let settings = await SiteSetting.findOne();
+      if (!settings) {
+        settings = new SiteSetting();
+      }
+      const updates = args.updates || {};
+      Object.assign(settings, updates);
+      await settings.save();
+
+      await ActivityLog.create({
+        actor: actorUsername,
+        actorId,
+        action: "ai_edit_site_settings",
+        target: settings._id.toString(),
+        targetType: "settings",
+        details: `AI Assistant mengedit platform settings: ${JSON.stringify(updates)}`,
+      });
+
+      return { success: true, message: "Pengaturan situs berhasil disimpan", settings };
+    }
+
+    case "get_bot_status": {
+      const status = await BotStatus.findOne({ botType: "discord" }).lean();
+      if (!status) {
+        return { success: true, message: "Bot Discord belum pernah diaktifkan", status: null };
+      }
+      return { success: true, status };
+    }
+
+    case "send_bot_command": {
+      const command = args.command;
+      if (!["start", "stop", "restart"].includes(command)) {
+        return { error: "Perintah bot tidak valid. Gunakan 'start', 'stop', atau 'restart'." };
+      }
+
+      let status = await BotStatus.findOne({ botType: "discord" });
+      if (!status) {
+        status = new BotStatus({ botType: "discord" });
+      }
+
+      status.command = command as "start" | "stop" | "restart";
+      await status.save();
+
+      await ActivityLog.create({
+        actor: actorUsername,
+        actorId,
+        action: `ai_bot_${command}`,
+        target: "discord_bot",
+        targetType: "bot",
+        details: `AI Assistant mengirim perintah '${command}' ke Bot Discord`,
+      });
+
+      return {
+        success: true,
+        message: `Perintah '${command}' berhasil dikirim ke Bot Discord. Bot akan memprosesnya dalam beberapa detik.`,
+        status,
+      };
     }
 
     default:
