@@ -41,7 +41,21 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     fetch("/api/admin/settings")
       .then((r) => r.json())
-      .then((d) => { if (d.success && d.settings) setSettings(d.settings); })
+      .then((d) => {
+        if (d.success && d.settings) {
+          setSettings({
+            platformFeePercent: d.settings.platformFeePercent ?? 3,
+            minCampaignWithdrawal: d.settings.minCampaignWithdrawal ?? 10,
+            minReferralWithdrawal: d.settings.minReferralWithdrawal ?? 30,
+            referralCommissionPercent: d.settings.referralCommissionPercent ?? 5,
+            discordWebhookUrl: d.settings.discordWebhookUrl ?? "",
+            discordInviteUrl: d.settings.discordInviteUrl ?? "",
+            discordNotifChannelId: d.settings.discordNotifChannelId ?? "",
+            supportEmail: d.settings.supportEmail ?? "",
+            geminiApiKey: d.settings.geminiApiKey ?? "",
+          });
+        }
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -90,7 +104,7 @@ export default function AdminSettingsPage() {
   };
 
   const handleVerifyKey = async () => {
-    if (!settings.geminiApiKey.trim()) {
+    if (!settings.geminiApiKey?.trim()) {
       showToast("Masukkan API key terlebih dahulu", "error");
       return;
     }
@@ -254,7 +268,7 @@ export default function AdminSettingsPage() {
                 <button
                   type="button"
                   onClick={handleVerifyKey}
-                  disabled={verifyingKey || !settings.geminiApiKey.trim()}
+                  disabled={verifyingKey || !settings.geminiApiKey?.trim()}
                   className={cn(
                     "admin-btn shrink-0 !px-4 !py-2 !text-xs transition-all",
                     keyStatus === "valid" ? "!border-emerald-400/30 !text-emerald-400" :
