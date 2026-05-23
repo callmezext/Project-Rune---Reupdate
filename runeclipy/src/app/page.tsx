@@ -37,143 +37,175 @@ export default async function LandingPage() {
   const stats = await getPlatformStats();
 
   return (
-    <main className="min-h-screen bg-bg-primary relative overflow-hidden">
-      {/* ═══ Animated Background ═══ */}
+    <main className="min-h-screen bg-[#07050f] text-gray-100 relative overflow-hidden font-sans">
+      
+      {/* ═══ Futuristic Background Grid & Ambient Lighting ═══ */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-accent/5 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-pink/5 blur-[120px]" />
-        <div className="absolute top-[30%] right-[20%] w-[300px] h-[300px] rounded-full bg-accent/3 blur-[100px] animate-pulse" />
+        {/* Cyber Neon Gradient Orbs */}
+        <div className="absolute top-[-25%] left-[-15%] w-[700px] h-[700px] rounded-full bg-purple-600/10 blur-[130px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[130px] animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute top-[35%] right-[15%] w-[400px] h-[400px] rounded-full bg-pink-500/8 blur-[110px] animate-pulse" style={{ animationDuration: '6s' }} />
+        
+        {/* Matrix Grid Effect */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.003)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.003)_1px,transparent_1px)] bg-[size:45px_45px] opacity-80" />
+        
+        {/* Parallax Starfield/Flares */}
         <ParallaxBg />
       </div>
 
-      {/* ═══ Navbar ═══ */}
-      <nav className="relative z-20 flex items-center justify-between px-6 md:px-12 py-5 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-pink flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-            </svg>
+      {/* ═══ Header Navbar (Glassmorphic Floating) ═══ */}
+      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-[#07050f]/65 border-b border-white/[0.04]">
+        <nav className="flex items-center justify-between px-6 md:px-12 py-4.5 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 p-[1.5px] shadow-lg shadow-purple-500/25">
+              <div className="w-full h-full bg-[#0d091e] rounded-[10px] flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <defs>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#c084fc" />
+                      <stop offset="100%" stopColor="#22d3ee" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+            </div>
+            <span className="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-300">
+              RUNECLIPY
+            </span>
           </div>
-          <span className="text-xl font-bold tracking-wider">
-            <span className="gradient-text">RuneClipy</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="px-5 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors rounded-xl hover:bg-bg-tertiary/50">
-            Log in
-          </Link>
-          <Link href="/register" className="btn-gradient text-sm !py-2.5 !px-6 !rounded-xl">
-            Sign up
-          </Link>
-        </div>
-      </nav>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="px-5 py-2.5 text-sm font-semibold text-gray-400 hover:text-white transition-colors duration-300">
+              Log in
+            </Link>
+            <Link href="/register" className="relative group overflow-hidden px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-sm font-bold text-white shadow-lg shadow-purple-600/20 hover:shadow-cyan-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0">
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <span className="relative z-10">Sign up</span>
+            </Link>
+          </div>
+        </nav>
+      </header>
 
-      {/* ═══ Hero Section — Redesigned ═══ */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-16 md:pt-28 pb-24">
+      {/* ═══ Hero Section ═══ */}
+      <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-20 md:pt-32 pb-24">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Status Badge */}
-          <div className="animate-fadeInUp inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent/10 to-pink/10 border border-accent/20 text-sm font-medium mb-8 backdrop-blur-sm">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success" />
+          
+          {/* Pulsing Status Badge */}
+          <div className="animate-fadeInUp inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.02] border border-purple-500/20 text-sm font-medium mb-10 backdrop-blur-md shadow-xl">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400" />
             </span>
-            <span className="text-text-secondary">
+            <span className="text-gray-300 tracking-wide">
               {stats.paidOut > 0 ? (
-                <>Creators have earned <span className="text-accent-light font-bold">${formatStat(stats.paidOut)}</span> on campaigns</>
-              ) : "Platform is live — join and start earning"}
+                <>Paid out <span className="text-cyan-400 font-extrabold">${formatStat(stats.paidOut)}</span> to creators worldwide</>
+              ) : "RuneClipy Network is active — Link & Start Earning"}
             </span>
           </div>
 
-          {/* Main Heading */}
-          <h1 className="animate-fadeInUp text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[1.05] mb-8 tracking-tight" style={{ animationDelay: "0.1s" }}>
-            Turn your{" "}
-            <span className="gradient-text">content</span>
+          {/* Main Title with futuristic glowing highlights */}
+          <h1 className="animate-fadeInUp text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.05] mb-8 tracking-tight text-white" style={{ animationDelay: "0.1s" }}>
+            Turn your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">short videos</span>
             <br className="hidden sm:block" />
-            into <GlitchText>real earnings</GlitchText>
+            into <GlitchText>passive wealth</GlitchText>
           </h1>
 
-          {/* Subheading */}
-          <p className="animate-fadeInUp text-lg md:text-xl text-text-secondary leading-relaxed mb-10 max-w-2xl mx-auto" style={{ animationDelay: "0.2s" }}>
-            Join creators worldwide. Use trending sounds, create short-form videos,
-            and get paid for every verified view your content generates.
+          {/* Subtitle */}
+          <p className="animate-fadeInUp text-lg md:text-xl text-gray-400 leading-relaxed mb-12 max-w-2xl mx-auto" style={{ animationDelay: "0.2s" }}>
+            The ultimate TikTok automation and earning suite. Link your account, use trending sounds, and get paid automatically for every verified view you generate.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="animate-fadeInUp flex flex-wrap justify-center gap-4 mb-16" style={{ animationDelay: "0.3s" }}>
-            <Link href="/register" className="btn-gradient text-base !py-4 !px-10 !rounded-2xl flex items-center gap-2.5 group">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform">
+          {/* CTA Buttons with cool micro-animations */}
+          <div className="animate-fadeInUp flex flex-wrap justify-center gap-5 mb-20" style={{ animationDelay: "0.3s" }}>
+            <Link href="/register" className="relative group overflow-hidden px-10 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-base font-extrabold text-white shadow-xl shadow-purple-600/30 hover:shadow-cyan-500/40 transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-3">
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform duration-300">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
-              Start Earning Now
+              <span className="relative z-10">Start Earning Now</span>
             </Link>
-            <Link href="/dashboard" className="px-10 py-4 rounded-2xl border border-border text-text-secondary hover:text-text-primary hover:border-accent/30 hover:bg-accent/5 transition-all font-medium flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            
+            <Link href="/dashboard" className="px-10 py-4 rounded-2xl border border-white/[0.07] bg-white/[0.01] hover:bg-white/[0.04] text-gray-300 hover:text-white hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 font-bold flex items-center gap-2.5 transform hover:-translate-y-1">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               Explore Campaigns
             </Link>
           </div>
 
-          {/* Live Stats — Glass Cards */}
-          <div className="animate-fadeInUp grid grid-cols-3 gap-2 sm:gap-4 max-w-xl mx-auto" style={{ animationDelay: "0.4s" }}>
+          {/* Platform Performance metrics */}
+          <div className="animate-fadeInUp grid grid-cols-3 gap-3 md:gap-6 max-w-2xl mx-auto" style={{ animationDelay: "0.4s" }}>
             {[
               {
                 value: stats.creators > 0 ? formatStat(stats.creators) : "0",
-                label: "Creators",
+                label: "Creators Joined",
+                colorClass: "from-cyan-400 to-blue-500",
+                shadowClass: "shadow-cyan-500/10",
                 icon: (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-light">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
                 ),
               },
               {
                 value: stats.paidOut > 0 ? `$${formatStat(stats.paidOut)}` : "$0",
-                label: "Paid Out",
+                label: "Total Paid Out",
+                colorClass: "from-emerald-400 to-teal-500",
+                shadowClass: "shadow-emerald-500/10",
                 icon: (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
                     <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                   </svg>
                 ),
               },
               {
                 value: stats.campaigns > 0 ? formatStat(stats.campaigns) : "0",
-                label: "Campaigns",
+                label: "Active Campaigns",
+                colorClass: "from-purple-400 to-pink-500",
+                shadowClass: "shadow-purple-500/10",
                 icon: (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-400">
                     <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
                   </svg>
                 ),
               },
             ].map((stat) => (
-              <div key={stat.label} className="glass-card p-2 sm:p-4 text-center group hover:border-accent/20">
-                <div className="flex justify-center mb-2 opacity-60 group-hover:opacity-100 transition-opacity">
+              <div key={stat.label} className={`backdrop-blur-md bg-white/[0.02] border border-white/[0.04] p-4 md:p-6 rounded-2xl text-center group hover:border-purple-500/30 hover:-translate-y-1 transition-all duration-300 shadow-lg ${stat.shadowClass}`}>
+                <div className="flex justify-center mb-3 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
                   {stat.icon}
                 </div>
-                <div className="text-base sm:text-2xl md:text-3xl font-extrabold gradient-text mb-1">{stat.value}</div>
-                <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-widest font-semibold">{stat.label}</div>
+                <div className={`text-xl sm:text-2xl md:text-3xl font-black bg-gradient-to-r ${stat.colorClass} bg-clip-text text-transparent mb-1.5`}>
+                  {stat.value}
+                </div>
+                <div className="text-[9px] md:text-[10px] text-gray-500 uppercase tracking-widest font-bold group-hover:text-gray-400 transition-colors duration-300">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══ How It Works ═══ */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-20">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-4">
-          The easiest way to <span className="gradient-text">get paid</span>
+      {/* ═══ How It Works (Scroll-Animated) ═══ */}
+      <section className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 py-24">
+        <h2 className="text-3.5xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
+          How to claim your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">earnings</span>
         </h2>
-        <p className="text-text-secondary text-center mb-16 max-w-lg mx-auto">
-          Three simple steps to start earning from your content
+        <p className="text-gray-400 text-center mb-20 max-w-md mx-auto text-base scroll-animate scroll-animate-delay-1">
+          Our fully automated system handles everything in three transparent steps.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {[
             {
               step: "01",
               title: "Link Account",
-              desc: "Connect your TikTok profile to verify ownership of your content.",
+              desc: "Link your TikTok profile via a quick secure verification code to establish content ownership.",
+              color: "border-cyan-500/25",
+              glow: "group-hover:border-cyan-400/40",
+              delayClass: "",
               icon: (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent-light">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
               ),
@@ -181,9 +213,12 @@ export default async function LandingPage() {
             {
               step: "02",
               title: "Submit Content",
-              desc: "Create videos using campaign sounds, then submit your link to start tracking.",
+              desc: "Create and publish short clips containing active campaign sounds. Paste your link in the app.",
+              color: "border-pink-500/25",
+              glow: "group-hover:border-pink-400/40",
+              delayClass: "scroll-animate-delay-1",
               icon: (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-pink">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-pink-400">
                   <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
               ),
@@ -191,148 +226,194 @@ export default async function LandingPage() {
             {
               step: "03",
               title: "Get Paid",
-              desc: "Earn automatically for every verified view your content generates.",
+              desc: "Our automated scraper scans view statistics every hour, instantly depositing money into your wallet.",
+              color: "border-emerald-500/25",
+              glow: "group-hover:border-emerald-400/40",
+              delayClass: "scroll-animate-delay-2",
               icon: (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-success">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
                   <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                 </svg>
               ),
             },
           ].map((item) => (
-            <div key={item.step} className="glass-card p-8 text-center group">
-              <div className="text-xs font-mono text-accent-light mb-4 tracking-widest">STEP {item.step}</div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center mx-auto mb-5 border border-border/50 group-hover:scale-110 group-hover:border-accent/30 transition-all duration-300">
+            <div key={item.step} className={`backdrop-blur-md bg-white/[0.015] border ${item.color} ${item.glow} p-8 rounded-3xl text-center group hover:-translate-y-2 transition-all duration-500 shadow-xl relative scroll-animate ${item.delayClass}`}>
+              <div className="absolute top-4 right-6 text-3xl font-black text-white/[0.03] group-hover:text-white/[0.08] transition-colors duration-500 font-mono">{item.step}</div>
+              <div className="w-14 h-14 rounded-2xl bg-[#0f0b24] border border-white/[0.05] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-purple-500/30 transition-all duration-300">
                 {item.icon}
               </div>
-              <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-              <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+              <h3 className="text-xl font-bold mb-3 text-white">{item.title}</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ═══ Features Grid ═══ */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-20">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-4">
-          Built for <span className="gradient-text">serious creators</span>
+      {/* ═══ Features Grid (Scroll-Animated & Staggered) ═══ */}
+      <section className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-24">
+        <h2 className="text-3.5xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
+          Engineered for <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">serious creators</span>
         </h2>
-        <p className="text-text-secondary text-center mb-16 max-w-lg mx-auto">
-          Everything you need to maximize your earnings
+        <p className="text-gray-400 text-center mb-20 max-w-lg mx-auto text-base scroll-animate scroll-animate-delay-1">
+          Advanced backend features designed to give you a clean, secure, and highly optimized experience.
         </p>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
-              title: "Auto View Tracking", desc: "Views checked automatically every hour. No manual work needed.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-accent-light"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              title: "Hourly Automation", desc: "Our system automatically tracks and updates video statistics every hour. Sit back and watch it grow.",
+              delayClass: "",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-cyan-400"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             },
             {
-              title: "Anti-Cheat Detection", desc: "Bot views and fake engagement are filtered out to keep campaigns fair.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-success"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              title: "Anti-Fraud Engine", desc: "Intelligent analytics verify that engagement is legitimate, keeping campaigns fair for active creators.",
+              delayClass: "scroll-animate-delay-1",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-emerald-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             },
             {
-              title: "Multiple Earning Models", desc: "Get paid per view, per post, or both — depending on the campaign.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-warning"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              title: "Hybrid Earnings", desc: "Select campaigns that offer payment per view, per fixed video post, or combined options.",
+              delayClass: "scroll-animate-delay-2",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-amber-400"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             },
             {
-              title: "Fast Withdrawals", desc: "Cash out via Dana, GoPay, OVO, PayPal, or Bank Transfer. Min $10.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-pink"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              title: "Multi-Wallet Cashout", desc: "Direct withdrawal to popular local wallets including DANA, GoPay, OVO, Bank Transfer, or PayPal.",
+              delayClass: "scroll-animate-delay-3",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-pink-400"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             },
             {
-              title: "Sound Matching", desc: "Our AI matches your video's sound to campaign requirements automatically.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-info"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              title: "Auto Sound Match", desc: "Advanced scraping instantly checks sound IDs used in videos, verifying they match the campaign's exact song.",
+              delayClass: "",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-blue-400"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
             },
             {
-              title: "Real-time Analytics", desc: "Track your earnings, views, and campaign performance in real-time.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-accent-light"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              title: "Analytics Portal", desc: "View transaction ledgers, hourly status audits, and detailed submission review remarks instantly.",
+              delayClass: "scroll-animate-delay-1",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-purple-400"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             },
             {
-              title: "Verified Profiles", desc: "Only verified TikTok accounts can submit — no fake submissions.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              title: "Verified Handshake", desc: "No fake profiles allowed. Link accounts via unique TikTok signatures to verify ownership.",
+              delayClass: "scroll-animate-delay-2",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             },
             {
-              title: "Creator Leaderboard", desc: "Compete with other creators and climb campaign leaderboards.",
-              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-warning"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4"/><path d="M14 22V8a4 4 0 0 1 4-4"/></svg>
+              title: "Rank & Bonus", desc: "Earn premium bonuses by climbing active campaign leaderboards and hitting total views milestones.",
+              delayClass: "scroll-animate-delay-3",
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-amber-400"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4"/><path d="M14 22V8a4 4 0 0 1 4-4"/></svg>
             },
           ].map((f) => (
-            <div key={f.title} className="glass-card p-6 group hover:border-accent/20 transition-all duration-300">
-              <div className="w-10 h-10 rounded-xl bg-bg-primary/60 border border-border/50 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-accent/30 transition-all duration-300">
+            <div key={f.title} className={`backdrop-blur-md bg-white/[0.015] border border-white/[0.04] p-6.5 rounded-2xl group hover:border-purple-500/30 hover:-translate-y-1 transition-all duration-300 scroll-animate ${f.delayClass}`}>
+              <div className="w-11 h-11 rounded-xl bg-purple-950/20 border border-white/[0.04] flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-purple-500/25 transition-all duration-300">
                 {f.icon}
               </div>
-              <h3 className="font-bold text-sm mb-1.5">{f.title}</h3>
-              <p className="text-xs text-text-muted leading-relaxed">{f.desc}</p>
+              <h3 className="font-bold text-base mb-2 text-white">{f.title}</h3>
+              <p className="text-xs.5 text-gray-400 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ═══ CTA ═══ */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 py-20">
-        <div className="glass-card p-12 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-pink/5" />
+      {/* ═══ Premium CTA Section (Scroll-Animated) ═══ */}
+      <section className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 py-20 scroll-animate">
+        <div className="backdrop-blur-md bg-white/[0.02] border border-purple-500/20 rounded-3xl p-12 text-center relative overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/5" />
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Ready to start earning?</h2>
-            <p className="text-text-secondary mb-8 max-w-md mx-auto">
-              Join the community of creators turning their content into real payouts.
+            <h2 className="text-3xl md:text-4.5xl font-black mb-4 text-white">Ready to orchestrate your growth?</h2>
+            <p className="text-gray-400 mb-9 max-w-md mx-auto text-sm md:text-base leading-relaxed">
+              Register inside our multi-tool system. Submit short videos and secure massive rewards.
             </p>
-            <Link href="/register" className="btn-gradient text-base !py-3.5 !px-10 !rounded-2xl inline-flex items-center gap-2.5">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Link href="/register" className="relative group overflow-hidden px-10 py-4.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-base font-extrabold text-white shadow-xl shadow-purple-600/35 hover:shadow-cyan-500/40 transition-all duration-300 inline-flex items-center gap-3">
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
               </svg>
-              Join RuneClipy
+              <span className="relative z-10">Join RuneClipy</span>
             </Link>
           </div>
         </div>
       </section>
 
       {/* ═══ Footer ═══ */}
-      <footer className="relative z-10 border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-pink flex items-center justify-center">
+      <footer className="relative z-10 border-t border-white/[0.04] bg-[#05040a]/80 backdrop-blur-md scroll-animate">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2.5 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-purple-500/20">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
                   </svg>
                 </div>
-                <span className="font-bold gradient-text">RuneClipy</span>
+                <span className="text-lg font-black tracking-widest text-white">RuneClipy</span>
               </div>
-              <p className="text-sm text-text-muted leading-relaxed">
-                Performance-based creator platform. Get paid for every view.
+              <p className="text-sm text-gray-500 leading-relaxed mb-4">
+                Automated short-form campaign matching and hourly statistics engine. Cash out on views.
               </p>
             </div>
+            
             <div>
-              <h4 className="text-sm font-semibold mb-3 text-text-secondary uppercase tracking-wider">Legal</h4>
-              <div className="flex flex-col gap-2">
-                <Link href="/privacy-policy" className="text-sm text-text-muted hover:text-text-primary transition-colors">Privacy Policy</Link>
-                <Link href="/creator-terms" className="text-sm text-text-muted hover:text-text-primary transition-colors">Creator Terms of Use</Link>
-              </div>
+              <h4 className="text-xs.5 font-bold mb-4.5 text-gray-300 uppercase tracking-widest">Legal</h4>
+              <ul className="flex flex-col gap-3 text-sm">
+                <li><Link href="/privacy-policy" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/creator-terms" className="text-gray-500 hover:text-white transition-colors">Creator Terms of Use</Link></li>
+              </ul>
             </div>
+            
             <div>
-              <h4 className="text-sm font-semibold mb-3 text-text-secondary uppercase tracking-wider">Company</h4>
-              <div className="flex flex-col gap-2">
-                <Link href="/support" className="text-sm text-text-muted hover:text-text-primary transition-colors">Support</Link>
-                <Link href="/contact" className="text-sm text-text-muted hover:text-text-primary transition-colors">Contact Us</Link>
-              </div>
+              <h4 className="text-xs.5 font-bold mb-4.5 text-gray-300 uppercase tracking-widest">Company</h4>
+              <ul className="flex flex-col gap-3 text-sm">
+                <li><Link href="/support" className="text-gray-500 hover:text-white transition-colors">Support Portal</Link></li>
+                <li><Link href="/contact" className="text-gray-500 hover:text-white transition-colors">Contact Us</Link></li>
+              </ul>
             </div>
+            
             <div>
-              <h4 className="text-sm font-semibold mb-3 text-text-secondary uppercase tracking-wider">Resources</h4>
-              <div className="flex flex-col gap-2">
-                <Link href="/dashboard" className="text-sm text-text-muted hover:text-text-primary transition-colors">Explore Campaigns</Link>
-                <a href="https://discord.gg/runeclipy" target="_blank" className="text-sm text-text-muted hover:text-text-primary transition-colors">Discord</a>
-              </div>
+              <h4 className="text-xs.5 font-bold mb-4.5 text-gray-300 uppercase tracking-widest">Resources</h4>
+              <ul className="flex flex-col gap-3 text-sm">
+                <li><Link href="/dashboard" className="text-gray-500 hover:text-white transition-colors">Active Campaigns</Link></li>
+                <li><a href="https://discord.gg/runeclipy" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors flex items-center gap-1.5">Discord Server <i className="fa-brands fa-discord"></i></a></li>
+              </ul>
             </div>
           </div>
-          <div className="border-t border-border pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-text-muted">© 2026 RuneClipy. All rights reserved.</p>
-            <div className="flex gap-4">
-              <Link href="/creator-terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Creator Terms</Link>
-              <Link href="/privacy-policy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy Policy</Link>
+          
+          <div className="border-t border-white/[0.04] pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+            <p>© 2026 RuneClipy System. All rights reserved.</p>
+            <div className="flex gap-5">
+              <Link href="/creator-terms" className="hover:text-gray-400 transition-colors">Terms</Link>
+              <Link href="/privacy-policy" className="hover:text-gray-400 transition-colors">Privacy</Link>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* ═══ Inline Client-Side Intersection Observer Script ═══ */}
+      <script dangerouslySetInnerHTML={{ __html: `
+        (function() {
+          const initScrollAnimate = () => {
+            const observer = new IntersectionObserver((entries) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add('animate-active');
+                  observer.unobserve(entry.target); // Trigger only once
+                }
+              });
+            }, {
+              threshold: 0.08,
+              rootMargin: '0px 0px -50px 0px'
+            });
+
+            document.querySelectorAll('.scroll-animate').forEach(el => {
+              observer.observe(el);
+            });
+          };
+
+          // Safe execution check for Next.js client hydration
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initScrollAnimate);
+          } else {
+            initScrollAnimate();
+          }
+        })();
+      ` }} />
     </main>
   );
 }

@@ -8,21 +8,19 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔮</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Interactive Canvas & Ambient Lighting -->
   <canvas id="bgCanvas"></canvas>
   <div class="bg-gradient-orbs"></div>
-  <div class="grid-overlay"></div>
 
   <div class="app-container">
     <!-- Header -->
     <header class="app-header">
       <div class="logo-container">
         <div class="logo-glyph">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
           </svg>
         </div>
@@ -55,21 +53,17 @@
             </div>
             <h2>Stalk Profile</h2>
           </div>
-          <p class="search-desc">Reveal public metrics, metadata, verification status, and analytics of any TikTok profile instantly.</p>
-          
+          <p class="search-desc">Enter a TikTok username to reveal their public profile data</p>
           <form id="searchForm" autocomplete="off">
             <div class="input-wrapper">
               <span class="input-prefix">@</span>
               <input type="text" id="usernameInput" placeholder="username" required minlength="1" maxlength="30" spellcheck="false">
               <button type="submit" id="searchBtn" class="search-btn">
                 <span class="btn-text">STALK</span>
-                <span class="btn-loader" id="btnLoader">
-                  <svg class="spinner" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.416" stroke-dashoffset="10" stroke-linecap="round"/></svg>
-                </span>
+                <span class="btn-loader" id="btnLoader"><svg class="spinner" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.416" stroke-dashoffset="10" stroke-linecap="round"/></svg></span>
               </button>
             </div>
           </form>
-          
           <div class="error-message" id="errorMessage" style="display:none;">
             <span class="error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
             <span class="error-text" id="errorText"></span>
@@ -84,33 +78,30 @@
           <div class="avatar-container">
             <div class="avatar-ring"><img id="profileAvatar" src="" alt="Avatar" class="avatar-img"></div>
             <div class="verified-badge" id="verifiedBadge" style="display:none;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
           </div>
           <div class="user-info">
             <h2 class="user-nickname" id="userNickname">—</h2>
             <p class="user-handle" id="userHandle">@—</p>
             <p class="user-bio" id="userBio"></p>
-            
             <div class="user-badges">
               <span class="badge badge-region" id="badgeRegion" style="display:none;">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 <span id="regionText"></span>
               </span>
               <span class="badge badge-private" id="badgePrivate" style="display:none;">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Private
               </span>
             </div>
           </div>
-          
           <div class="stats-grid">
             <div class="stat-item"><div class="stat-value" id="statFollowers">—</div><div class="stat-label">Followers</div></div>
             <div class="stat-item"><div class="stat-value" id="statFollowing">—</div><div class="stat-label">Following</div></div>
             <div class="stat-item"><div class="stat-value" id="statHearts">—</div><div class="stat-label">Likes</div></div>
             <div class="stat-item"><div class="stat-value" id="statVideos">—</div><div class="stat-label">Videos</div></div>
           </div>
-          
           <div class="action-bar">
             <a id="openProfileLink" href="#" target="_blank" class="action-btn primary-action">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -121,7 +112,6 @@
               Copy Data
             </button>
           </div>
-          
           <div class="raw-data-section">
             <button class="raw-toggle" id="rawToggleBtn">{ } View Raw JSON</button>
             <pre class="raw-json" id="rawJson" style="display:none;"><code id="rawJsonContent"></code></pre>
@@ -140,23 +130,19 @@
             </div>
             <h2>Video Info</h2>
           </div>
-          <p class="search-desc">Extract high-resolution video thumbnails, precise viewer interactions, detailed audio information, and metadata.</p>
-          
+          <p class="search-desc">Paste a TikTok video URL or Video ID to get detailed information</p>
           <form id="videoSearchForm" autocomplete="off">
             <div class="input-wrapper">
               <span class="input-prefix">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               </span>
               <input type="text" id="videoUrlInput" placeholder="https://www.tiktok.com/@user/video/123..." required spellcheck="false">
               <button type="submit" id="videoSearchBtn" class="search-btn">
                 <span class="btn-text">SCAN</span>
-                <span class="btn-loader">
-                  <svg class="spinner" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.416" stroke-dashoffset="10" stroke-linecap="round"/></svg>
-                </span>
+                <span class="btn-loader"><svg class="spinner" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.416" stroke-dashoffset="10" stroke-linecap="round"/></svg></span>
               </button>
             </div>
           </form>
-          
           <div class="error-message" id="videoErrorMessage" style="display:none;">
             <span class="error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
             <span class="error-text" id="videoErrorText"></span>
@@ -179,7 +165,7 @@
                 <span class="video-author-handle" id="videoAuthorHandle">@—</span>
               </div>
               <span class="video-verified-badge" id="videoVerifiedBadge" style="display:none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </span>
             </div>
           </div>
@@ -264,12 +250,8 @@
       </section>
     </div>
 
-    <!-- Footer -->
-    <footer class="app-footer">
-      <p>Project Rune v3.0 — TikTok Multi-Tool Core Engine</p>
-    </footer>
+    <footer class="app-footer"><p>Project Rune v2.0 — Built with precision</p></footer>
   </div>
-  
   <script src="app.js"></script>
 </body>
 </html>
