@@ -55,11 +55,11 @@ export default async function LandingPage() {
 
       {/* ═══ Header Navbar (Glassmorphic Floating) ═══ */}
       <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-[#07050f]/65 border-b border-white/[0.04]">
-        <nav className="flex items-center justify-between px-4 sm:px-8 md:px-12 py-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 p-[1.5px] shadow-lg shadow-purple-500/25">
+        <nav className="flex items-center justify-between px-3 sm:px-8 md:px-12 py-3.5 sm:py-4 max-w-7xl mx-auto">
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 p-[1.5px] shadow-lg shadow-purple-500/25 flex-shrink-0">
               <div className="w-full h-full bg-[#0d091e] rounded-[10px] flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
                   <defs>
                     <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#c084fc" />
@@ -70,15 +70,15 @@ export default async function LandingPage() {
                 </svg>
               </div>
             </div>
-            <span className="text-lg sm:text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-300">
+            <span className="text-sm min-[360px]:text-lg sm:text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-300">
               RUNECLIPY
             </span>
           </div>
-          <div className="flex items-center gap-2.5 sm:gap-4">
-            <Link href="/login" className="px-3 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition-colors duration-300">
+          <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-4">
+            <Link href="/login" className="px-2.5 xs:px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] xs:text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition-colors duration-300">
               Log in
             </Link>
-            <Link href="/register" className="relative group overflow-hidden px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-600/20 hover:shadow-cyan-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0">
+            <Link href="/register" className="relative group overflow-hidden px-3 xs:px-4 sm:px-6 py-1.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-[11px] xs:text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-600/20 hover:shadow-cyan-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0">
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <span className="relative z-10">Sign up</span>
             </Link>
@@ -91,7 +91,7 @@ export default async function LandingPage() {
         <div className="text-center max-w-4xl mx-auto">
           
           {/* Pulsing Status Badge */}
-          <div className="animate-fadeInUp inline-flex items-center gap-2.5 px-4.5 py-2 sm:py-2.5 rounded-full bg-white/[0.02] border border-purple-500/20 text-xs sm:text-sm font-medium mb-8 sm:mb-10 backdrop-blur-md shadow-xl max-w-full">
+          <div className="animate-fadeInUp inline-flex items-center gap-2.5 px-4 py-2 sm:py-2.5 rounded-full bg-white/[0.02] border border-purple-500/20 text-xs sm:text-sm font-medium mb-8 sm:mb-10 backdrop-blur-md shadow-xl max-w-full">
             <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
@@ -104,7 +104,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Main Title with futuristic glowing highlights */}
-          <h1 className="animate-fadeInUp text-3.5xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.1] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-white" style={{ animationDelay: "0.1s" }}>
+          <h1 className="animate-fadeInUp text-3xl min-[360px]:text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.1] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-white" style={{ animationDelay: "0.1s" }}>
             Turn your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">short videos</span>
             <br className="hidden sm:block" />
             into <GlitchText>passive wealth</GlitchText>
@@ -117,7 +117,7 @@ export default async function LandingPage() {
 
           {/* CTA Buttons with cool micro-animations */}
           <div className="animate-fadeInUp flex flex-col sm:flex-row justify-center gap-4 mb-16 sm:mb-20 px-4 sm:px-0" style={{ animationDelay: "0.3s" }}>
-            <Link href="/register" className="relative group overflow-hidden px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-sm sm:text-base font-extrabold text-white shadow-xl shadow-purple-600/30 hover:shadow-cyan-500/40 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-3">
+            <Link href="/register" className="relative group overflow-hidden px-8 sm:px-10 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-sm sm:text-base font-extrabold text-white shadow-xl shadow-purple-600/30 hover:shadow-cyan-500/40 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-3">
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform duration-300 sm:w-[20px] sm:h-[20px]">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -125,7 +125,7 @@ export default async function LandingPage() {
               <span className="relative z-10">Start Earning Now</span>
             </Link>
             
-            <Link href="/dashboard" className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl border border-white/[0.07] bg-white/[0.01] hover:bg-white/[0.04] text-gray-300 hover:text-white hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 font-bold flex items-center justify-center gap-2.5 transform hover:-translate-y-1 text-sm sm:text-base">
+            <Link href="/dashboard" className="px-8 sm:px-10 py-3 sm:py-4 rounded-2xl border border-white/[0.07] bg-white/[0.01] hover:bg-white/[0.04] text-gray-300 hover:text-white hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 font-bold flex items-center justify-center gap-2.5 transform hover:-translate-y-1 text-sm sm:text-base">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
@@ -134,7 +134,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Platform Performance metrics (FULLY RESPONSIVE STACK ON MOBILE) */}
-          <div className="animate-fadeInUp grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 md:gap-6 max-w-2xl mx-auto px-2 sm:px-0" style={{ animationDelay: "0.4s" }}>
+          <div className="animate-fadeInUp grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 md:gap-6 max-w-2xl mx-auto px-3 sm:px-0" style={{ animationDelay: "0.4s" }}>
             {[
               {
                 value: stats.creators > 0 ? formatStat(stats.creators) : "0",
@@ -190,7 +190,7 @@ export default async function LandingPage() {
 
       {/* ═══ How It Works (Scroll-Animated) ═══ */}
       <section className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 md:px-12 py-16 sm:py-24">
-        <h2 className="text-2.5xl sm:text-3.5xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
+        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
           How to claim your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">earnings</span>
         </h2>
         <p className="text-gray-400 text-center mb-16 sm:text-base scroll-animate scroll-animate-delay-1 max-w-md mx-auto text-sm">
@@ -239,7 +239,7 @@ export default async function LandingPage() {
               ),
             },
           ].map((item) => (
-            <div key={item.step} className={`backdrop-blur-md bg-white/[0.015] border ${item.color} ${item.glow} p-6.5 sm:p-8 rounded-3xl text-center group hover:-translate-y-2 transition-all duration-500 shadow-xl relative scroll-animate ${item.delayClass}`}>
+            <div key={item.step} className={`backdrop-blur-md bg-white/[0.015] border ${item.color} ${item.glow} p-6 sm:p-8 rounded-3xl text-center group hover:-translate-y-2 transition-all duration-500 shadow-xl relative scroll-animate ${item.delayClass}`}>
               <div className="absolute top-4 right-6 text-3xl font-black text-white/[0.03] group-hover:text-white/[0.08] transition-colors duration-500 font-mono">{item.step}</div>
               <div className="w-14 h-14 rounded-2xl bg-[#0f0b24] border border-white/[0.05] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-purple-500/30 transition-all duration-300">
                 {item.icon}
@@ -253,7 +253,7 @@ export default async function LandingPage() {
 
       {/* ═══ Features Grid (Scroll-Animated & Staggered) ═══ */}
       <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 md:px-12 py-16 sm:py-24">
-        <h2 className="text-2.5xl sm:text-3.5xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
+        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
           Engineered for <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">serious creators</span>
         </h2>
         <p className="text-gray-400 text-center mb-16 sm:text-base scroll-animate scroll-animate-delay-1 max-w-lg mx-auto text-sm">
@@ -303,12 +303,12 @@ export default async function LandingPage() {
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-amber-400"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4"/><path d="M14 22V8a4 4 0 0 1 4-4"/></svg>
             },
           ].map((f) => (
-            <div key={f.title} className={`backdrop-blur-md bg-white/[0.015] border border-white/[0.04] p-5.5 sm:p-6.5 rounded-2xl group hover:border-purple-500/30 hover:-translate-y-1 transition-all duration-300 scroll-animate ${f.delayClass}`}>
+            <div key={f.title} className={`backdrop-blur-md bg-white/[0.015] border border-white/[0.04] p-5 sm:p-6 rounded-2xl group hover:border-purple-500/30 hover:-translate-y-1 transition-all duration-300 scroll-animate ${f.delayClass}`}>
               <div className="w-11 h-11 rounded-xl bg-purple-950/20 border border-white/[0.04] flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-purple-500/25 transition-all duration-300">
                 {f.icon}
               </div>
               <h3 className="font-bold text-base mb-2 text-white">{f.title}</h3>
-              <p className="text-xs.5 text-gray-400 leading-relaxed">{f.desc}</p>
+              <p className="text-xs text-gray-400 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
@@ -319,11 +319,11 @@ export default async function LandingPage() {
         <div className="backdrop-blur-md bg-white/[0.02] border border-purple-500/20 rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/5" />
           <div className="relative z-10">
-            <h2 className="text-2xl sm:text-3.5xl md:text-4.5xl font-black mb-4 text-white">Ready to orchestrate your growth?</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black mb-4 text-white">Ready to orchestrate your growth?</h2>
             <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
               Register inside our multi-tool system. Submit short videos and secure massive rewards.
             </p>
-            <Link href="/register" className="relative group overflow-hidden px-8 sm:px-10 py-3.5 sm:py-4.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-sm sm:text-base font-extrabold text-white shadow-xl shadow-purple-600/35 hover:shadow-cyan-500/40 transition-all duration-300 inline-flex items-center justify-center gap-3">
+            <Link href="/register" className="relative group overflow-hidden px-8 sm:px-10 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-sm sm:text-base font-extrabold text-white shadow-xl shadow-purple-600/35 hover:shadow-cyan-500/40 transition-all duration-300 inline-flex items-center justify-center gap-3">
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[20px] sm:h-[20px]">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
@@ -353,7 +353,7 @@ export default async function LandingPage() {
             </div>
             
             <div>
-              <h4 className="text-xs.5 font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Legal</h4>
+              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Legal</h4>
               <ul className="flex flex-col gap-2.5 text-sm">
                 <li><Link href="/privacy-policy" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/creator-terms" className="text-gray-500 hover:text-white transition-colors">Creator Terms of Use</Link></li>
@@ -361,7 +361,7 @@ export default async function LandingPage() {
             </div>
             
             <div>
-              <h4 className="text-xs.5 font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Company</h4>
+              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Company</h4>
               <ul className="flex flex-col gap-2.5 text-sm">
                 <li><Link href="/support" className="text-gray-500 hover:text-white transition-colors">Support Portal</Link></li>
                 <li><Link href="/contact" className="text-gray-500 hover:text-white transition-colors">Contact Us</Link></li>
@@ -369,7 +369,7 @@ export default async function LandingPage() {
             </div>
             
             <div>
-              <h4 className="text-xs.5 font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Resources</h4>
+              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Resources</h4>
               <ul className="flex flex-col gap-2.5 text-sm">
                 <li><Link href="/dashboard" className="text-gray-500 hover:text-white transition-colors">Active Campaigns</Link></li>
                 <li><a href="https://discord.gg/runeclipy" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors flex items-center gap-1.5">Discord Server <i className="fa-brands fa-discord"></i></a></li>

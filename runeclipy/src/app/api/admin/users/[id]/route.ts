@@ -87,8 +87,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       });
     }
 
-    const userObj = user.toObject();
-    delete userObj.password;
+    const { password: _, ...userObj } = user.toObject();
 
     return NextResponse.json({ success: true, user: userObj });
   } catch (error) {

@@ -67,9 +67,13 @@ export default function ForgotPasswordPage() {
   const currentStep = step === "email" ? 0 : step === "otp" ? 1 : 2;
 
   return (
-    <div className="glass-card p-8 animate-fadeInUp">
-      <h1 className="text-2xl font-bold text-center mb-2">Reset Password</h1>
-      <p className="text-sm text-text-secondary text-center mb-6">We&apos;ll help you get back into your account</p>
+    <div className="glass-card p-5 sm:p-8 animate-fadeInUp">
+      <h1 className="text-2xl sm:text-3xl font-extrabold text-center mb-2 tracking-tight">
+        Reset <span className="gradient-text">Password</span>
+      </h1>
+      <p className="text-xs sm:text-sm text-text-secondary text-center mb-6 max-w-xs mx-auto">
+        Jangan khawatir! Kami akan membantu memulihkan akses ke akun RuneClipy Anda dengan cepat.
+      </p>
 
       {/* Step Indicator */}
       <div className="flex items-center justify-center gap-2 mb-8">

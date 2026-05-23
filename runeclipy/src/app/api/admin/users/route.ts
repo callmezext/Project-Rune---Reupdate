@@ -93,8 +93,7 @@ export async function POST(req: NextRequest) {
       details: `Created new user @${newUser.username} (${newUser.email}) with role: ${newUser.role}, tier: ${newUser.tier}`,
     });
 
-    const userObj = newUser.toObject();
-    delete userObj.password;
+    const { password: _, ...userObj } = newUser.toObject();
 
     return NextResponse.json({ success: true, user: userObj });
   } catch (error) {
