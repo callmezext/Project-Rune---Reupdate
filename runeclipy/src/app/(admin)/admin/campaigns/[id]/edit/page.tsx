@@ -44,6 +44,8 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationError = validateSounds();
+    if (validationError) { alert(validationError); return; }
     setSaving(true);
     try {
       const res = await fetch(`/api/campaigns/${id}`, {
@@ -58,15 +60,36 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
     finally { setSaving(false); }
   };
 
+  // Auto-extract TikTok Sound ID from a music URL
+  const extractSoundId = (url: string): string => {
+    const match = url.match(/(\d{15,25})(?:[?#]|$)/);
+    return match ? match[1] : "";
+  };
+
   const updateSound = (i: number, field: string, value: string) => {
     const sounds = [...(form?.sounds as Array<Record<string, string>> || [])];
     sounds[i] = { ...sounds[i], [field]: value };
+    // Auto-fill tiktokSoundId when soundUrl is pasted
+    if (field === "soundUrl" && !sounds[i].tiktokSoundId) {
+      const extracted = extractSoundId(value);
+      if (extracted) sounds[i] = { ...sounds[i], tiktokSoundId: extracted };
+    }
     setForm({ ...form!, sounds });
   };
 
   const removeSound = (i: number) => {
     const sounds = (form?.sounds as Array<Record<string, string>> || []).filter((_: unknown, idx: number) => idx !== i);
     setForm({ ...form!, sounds });
+  };
+
+  const validateSounds = (): string | null => {
+    const f = form as Record<string, unknown>;
+    if (f?.type === "music") {
+      const sArr = (f.sounds as Array<Record<string, string>>) || [];
+      const missing = sArr.some((s) => !s.tiktokSoundId?.trim());
+      if (missing) return "Campaign type 'Music' wajib memiliki TikTok Sound ID pada setiap sound.";
+    }
+    return null;
   };
 
   if (loading) return <div className="flex items-center justify-center py-20"><div className="text-4xl animate-pulse">⚙️</div></div>;
@@ -238,21 +261,76 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
         {/* Sounds */}
         <div className="glass-card p-6 space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold">🎵 Sounds</h3>
+            <div>
+              <h3 className="font-bold">🎵 Sounds</h3>
+              {f.type === "music" && (
+                <p className="text-xs text-warning font-semibold mt-0.5">⚠️ Type Music — Sound ID wajib diisi pada semua sound.</p>
+              )}
+            </div>
             <button type="button" onClick={() => setForm({ ...f, sounds: [...sounds, { title: "", tiktokSoundId: "", soundUrl: "", videoReferenceUrl: "" }] })}
               className="text-xs text-accent-light hover:text-accent px-3 py-1.5 rounded-lg border border-accent/20 hover:border-accent/40 transition-all">+ Add</button>
           </div>
+
+          {/* Info box for music type */}
+          {f.type === "music" && (
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-info/10 border border-info/20">
+              <span className="text-info text-base mt-0.5 flex-shrink-0">ℹ️</span>
+              <div className="text-info/80 text-xs leading-relaxed">
+                <strong className="text-info">Cara mendapatkan Sound ID:</strong> Buka TikTok → klik sound → salin URL. Contoh:<br />
+                <code className="font-mono bg-bg-primary/60 px-1 rounded text-[11px]">tiktok.com/music/nama-sound-<strong>7622831414643739412</strong></code><br />
+                Paste URL di kolom Sound URL dan ID akan otomatis terisi.
+              </div>
+            </div>
+          )}
+
           {sounds.map((sound: Record<string, string>, i: number) => (
-            <div key={i} className="p-4 rounded-xl bg-bg-primary/50 border border-border space-y-3 relative">
+            <div key={i} className={`p-4 rounded-xl border space-y-3 relative transition-colors ${
+              f.type === "music" && !sound.tiktokSoundId
+                ? "bg-warning/5 border-warning/30"
+                : "bg-bg-primary/50 border-border"
+            }`}>
               {sounds.length > 1 && (
                 <button type="button" onClick={() => removeSound(i)} className="absolute top-3 right-3 text-text-muted hover:text-error text-xs">✕</button>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <input value={sound.title} onChange={(e) => updateSound(i, "title", e.target.value)} className="input-field text-sm" placeholder="Sound title" />
-                <input value={sound.tiktokSoundId} onChange={(e) => updateSound(i, "tiktokSoundId", e.target.value)} className="input-field text-sm" placeholder="Sound ID" />
+                <div>
+                  <label className="block text-[11px] text-text-muted uppercase tracking-wide mb-1">Sound Title</label>
+                  <input value={sound.title} onChange={(e) => updateSound(i, "title", e.target.value)} className="input-field text-sm" placeholder="Nama sound" />
+                </div>
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wide mb-1">
+                    <span className={f.type === "music" && !sound.tiktokSoundId ? "text-warning" : "text-text-muted"}>
+                      TikTok Sound ID {f.type === "music" ? "*" : "(opsional)"}
+                    </span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      value={sound.tiktokSoundId}
+                      onChange={(e) => updateSound(i, "tiktokSoundId", e.target.value)}
+                      className={`input-field text-sm font-mono ${
+                        f.type === "music" && !sound.tiktokSoundId
+                          ? "border-warning/50 focus:border-warning/80 bg-warning/5"
+                          : ""
+                      }`}
+                      placeholder="e.g. 7622831414643739412"
+                    />
+                    {f.type === "music" && !sound.tiktokSoundId && (
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-warning text-xs">⚠️</span>
+                    )}
+                    {sound.tiktokSoundId && (
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-success text-xs">✓</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <input value={sound.soundUrl} onChange={(e) => updateSound(i, "soundUrl", e.target.value)} className="input-field text-sm" placeholder="Sound URL" />
-              <input value={sound.videoReferenceUrl} onChange={(e) => updateSound(i, "videoReferenceUrl", e.target.value)} className="input-field text-sm" placeholder="Reference video URL" />
+              <div>
+                <label className="block text-[11px] text-text-muted uppercase tracking-wide mb-1">Sound URL (Paste untuk auto-extract ID)</label>
+                <input value={sound.soundUrl} onChange={(e) => updateSound(i, "soundUrl", e.target.value)} className="input-field text-sm" placeholder="https://www.tiktok.com/music/nama-sound-7622831414643739412" />
+              </div>
+              <div>
+                <label className="block text-[11px] text-text-muted uppercase tracking-wide mb-1">Reference Video URL (opsional)</label>
+                <input value={sound.videoReferenceUrl} onChange={(e) => updateSound(i, "videoReferenceUrl", e.target.value)} className="input-field text-sm" placeholder="https://www.tiktok.com/@user/video/..." />
+              </div>
             </div>
           ))}
         </div>

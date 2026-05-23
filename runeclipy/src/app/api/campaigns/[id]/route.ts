@@ -26,6 +26,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await connectDB();
     const { id } = await params;
     const body = await req.json();
+
+    // Server-side validation: music campaigns must have tiktokSoundId on every sound
+    if (body.type === "music") {
+      const sounds: Array<{ tiktokSoundId?: string }> = body.sounds || [];
+      const missingSoundId = sounds.some((s) => !s.tiktokSoundId?.trim());
+      if (missingSoundId || sounds.length === 0) {
+        return NextResponse.json(
+          { error: "Campaign type 'music' wajib memiliki TikTok Sound ID pada setiap sound." },
+          { status: 400 }
+        );
+      }
+    }
+
     const campaign = await Campaign.findByIdAndUpdate(id, body, { new: true });
     if (!campaign) return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
     return NextResponse.json({ success: true, campaign });

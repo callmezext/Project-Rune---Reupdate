@@ -2,6 +2,7 @@
 
 > **Strict behavioral rules** for any AI agent modifying the RUNE codebase.
 > Violations of these rules risk breaking production deployments.
+> Refer to [ANTIGRAVITY.MD](file:///d:/PROJECT/rune/RUNE/ANTIGRAVITY.MD) for CLI execution guidelines and token limit optimization strategies.
 
 ---
 

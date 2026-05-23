@@ -70,7 +70,8 @@ RUNE/ (monorepo root)
 ├── CLAUDE.MD                     # THIS FILE — Code Standards
 ├── DESIGN.MD                     # Design System
 ├── MEMORY.MD                     # Application State & Context
-└── AGENT.MD                      # Agent Operational Protocol
+├── AGENT.MD                      # Agent Operational Protocol
+└── ANTIGRAVITY.MD                # CLI & Token Optimization Guidelines
 ```
 
 ---

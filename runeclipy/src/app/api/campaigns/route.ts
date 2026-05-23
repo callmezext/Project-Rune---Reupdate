@@ -32,6 +32,18 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const body = await req.json();
 
+    // Server-side validation: music campaigns must have tiktokSoundId on every sound
+    if (body.type === "music") {
+      const sounds: Array<{ tiktokSoundId?: string }> = body.sounds || [];
+      const missingSoundId = sounds.some((s) => !s.tiktokSoundId?.trim());
+      if (missingSoundId || sounds.length === 0) {
+        return NextResponse.json(
+          { error: "Campaign type 'music' wajib memiliki TikTok Sound ID pada setiap sound." },
+          { status: 400 }
+        );
+      }
+    }
+
     const campaign = await Campaign.create({
       ...body,
       slug: slugify(body.title) + "-" + Date.now().toString(36),
