@@ -11,6 +11,19 @@ interface Channel { id: string; name: string; }
 interface DiscordSettings { discordWebhookUrl: string; discordInviteUrl: string; discordNotifChannelId: string; }
 type Toast = { message: string; type: "success"|"error"|"info" } | null;
 
+interface DiscordUser {
+  _id: string;
+  nickname: string;
+  username: string;
+  email: string;
+  role: string;
+  tier: string;
+  discordId?: string;
+  discordUsername?: string;
+  lastTierSynced?: string;
+  isBanned: boolean;
+}
+
 const COLORS = [
   { name: "Blurple", hex: "#5865F2", val: 0x5865F2 },
   { name: "Green", hex: "#57F287", val: 0x57F287 },
@@ -86,7 +99,25 @@ function parseDiscordMarkdown(text: string): string {
 }
 
 export default function AdminDiscordPage() {
-  const [activeTab, setActiveTab] = useState<"bot"|"send"|"guide">("bot");
+  const [activeTab, setActiveTab] = useState<"bot"|"send"|"guide"|"users">("bot");
+
+  // ── User Roles & Sync state ────────────────────────────────────────
+  const [discordUsers, setDiscordUsers] = useState<DiscordUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [userActionLoading, setUserActionLoading] = useState<string | null>(null);
+
+  // Edit modal for user roles
+  const [editRoleOpen, setEditRoleOpen] = useState(false);
+  const [editRoleUser, setEditRoleUser] = useState<DiscordUser | null>(null);
+  const [editRoleForm, setEditRoleForm] = useState({
+    role: "user",
+    tier: "bronze",
+    discordId: "",
+    discordUsername: "",
+  });
+  const [editRoleSubmitting, setEditRoleSubmitting] = useState(false);
+  const [editRoleError, setEditRoleError] = useState<string | null>(null);
 
   // Channel state
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -122,6 +153,121 @@ export default function AdminDiscordPage() {
   const showToast = useCallback((message: string, type: "success"|"error"|"info" = "success") => {
     setToast({ message, type }); setTimeout(() => setToast(null), 3000);
   }, []);
+
+  // Load discord-linked users
+  const loadDiscordUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const r = await fetch("/api/admin/users");
+      const d = await r.json();
+      if (d.success) setDiscordUsers(d.users);
+    } catch {
+      showToast("Failed to load users", "error");
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [showToast]);
+
+  // Compute sync status for a user
+  const getSyncStatus = (user: DiscordUser): "synced" | "pending" | "unlinked" => {
+    if (!user.discordId) return "unlinked";
+    if (user.lastTierSynced !== user.tier) return "pending";
+    return "synced";
+  };
+
+  // Open edit role modal
+  const openEditRole = (user: DiscordUser) => {
+    setEditRoleUser(user);
+    setEditRoleForm({
+      role: user.role || "user",
+      tier: user.tier || "bronze",
+      discordId: user.discordId || "",
+      discordUsername: user.discordUsername || "",
+    });
+    setEditRoleError(null);
+    setEditRoleOpen(true);
+  };
+
+  // Submit edit role modal
+  const handleEditRoleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editRoleUser) return;
+    setEditRoleSubmitting(true);
+    setEditRoleError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${editRoleUser._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editRoleForm),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDiscordUsers(prev => prev.map(u =>
+          u._id === editRoleUser._id ? { ...u, ...editRoleForm, lastTierSynced: "" } : u
+        ));
+        showToast("User updated! Bot will sync roles shortly.");
+        setEditRoleOpen(false);
+      } else {
+        setEditRoleError(data.error || "Failed to update user");
+      }
+    } catch {
+      setEditRoleError("Network error");
+    } finally {
+      setEditRoleSubmitting(false);
+    }
+  };
+
+  // Force sync: clear lastTierSynced
+  const handleForceSync = async (user: DiscordUser) => {
+    if (!user.discordId) return showToast("User has no Discord linked", "error");
+    setUserActionLoading(user._id);
+    try {
+      const res = await fetch(`/api/admin/users/${user._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastTierSynced: "" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDiscordUsers(prev => prev.map(u =>
+          u._id === user._id ? { ...u, lastTierSynced: "" } : u
+        ));
+        showToast("Sync queued! Bot will update Discord role shortly.", "info");
+      } else {
+        showToast(data.error || "Failed to queue sync", "error");
+      }
+    } catch {
+      showToast("Request failed", "error");
+    } finally {
+      setUserActionLoading(null);
+    }
+  };
+
+  // Unlink Discord from user
+  const handleUnlinkDiscord = async (user: DiscordUser) => {
+    if (!confirm(`Unlink Discord from @${user.username}?`)) return;
+    setUserActionLoading(user._id);
+    try {
+      const res = await fetch(`/api/admin/users/${user._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discordId: "", discordUsername: "" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDiscordUsers(prev => prev.map(u =>
+          u._id === user._id ? { ...u, discordId: "", discordUsername: "", lastTierSynced: "" } : u
+        ));
+        showToast(`Discord unlinked from @${user.username}`);
+      } else {
+        showToast(data.error || "Failed to unlink", "error");
+      }
+    } catch {
+      showToast("Request failed", "error");
+    } finally {
+      setUserActionLoading(null);
+    }
+  };
 
   // Fetch channels
   useEffect(() => {
@@ -290,6 +436,7 @@ export default function AdminDiscordPage() {
   const tabs = [
     { id: "bot" as const, label: "Bot & Settings", icon: "🤖" },
     { id: "send" as const, label: "Send Message", icon: "📤" },
+    { id: "users" as const, label: "User Roles & Sync", icon: "👥" },
     { id: "guide" as const, label: "Format Guide", icon: "📝" },
   ];
 
@@ -316,9 +463,12 @@ export default function AdminDiscordPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 mb-6 bg-bg-secondary/50 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 mb-6 bg-bg-secondary/50 p-1 rounded-xl flex-wrap">
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+          <button key={tab.id} onClick={() => {
+            setActiveTab(tab.id);
+            if (tab.id === "users" && discordUsers.length === 0) loadDiscordUsers();
+          }}
             className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
               activeTab === tab.id ? "bg-accent text-white shadow-lg shadow-accent/20" : "text-text-muted hover:text-text-primary hover:bg-bg-tertiary"
             )}>
@@ -627,6 +777,334 @@ export default function AdminDiscordPage() {
           </div>
         </div>
       )}
+
+      {/* ═══ TAB: User Roles & Sync ═══ */}
+      {activeTab === "users" && (() => {
+        const TIER_COLORS: Record<string, string> = {
+          bronze: "text-amber-600",
+          silver: "text-slate-300",
+          gold: "text-yellow-400",
+          diamond: "text-cyan-300",
+        };
+        const TIER_EMOJI: Record<string, string> = {
+          bronze: "🥉", silver: "🥈", gold: "🥇", diamond: "💎",
+        };
+        const ROLE_COLORS: Record<string, string> = {
+          admin: "bg-error/15 text-error",
+          moderator: "bg-info/15 text-info",
+          user: "bg-white/5 text-text-secondary",
+        };
+        const filteredUsers = discordUsers.filter(u =>
+          !userSearch ||
+          u.username?.toLowerCase().includes(userSearch.toLowerCase()) ||
+          (u.nickname || "").toLowerCase().includes(userSearch.toLowerCase()) ||
+          (u.email || "").toLowerCase().includes(userSearch.toLowerCase()) ||
+          (u.discordUsername || "").toLowerCase().includes(userSearch.toLowerCase())
+        );
+        const linkedCount = discordUsers.filter(u => u.discordId).length;
+        const pendingCount = discordUsers.filter(u => u.discordId && u.lastTierSynced !== u.tier).length;
+
+        return (
+          <div className="animate-fadeIn">
+            {/* Stats row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              {[
+                { label: "Total Users", value: discordUsers.length, color: "text-text-primary", icon: "👥" },
+                { label: "Discord Linked", value: linkedCount, color: "text-success", icon: "🔗" },
+                { label: "Pending Sync", value: pendingCount, color: "text-warning", icon: "⏳" },
+                { label: "Not Linked", value: discordUsers.length - linkedCount, color: "text-text-muted", icon: "⚠️" },
+              ].map(stat => (
+                <div key={stat.label} className="glass-card p-4 text-center border border-white/[0.04]">
+                  <div className="text-lg mb-0.5">{stat.icon}</div>
+                  <div className={cn("text-xl font-black font-mono", stat.color)}>{stat.value}</div>
+                  <div className="text-[10px] text-text-muted font-semibold uppercase tracking-wider mt-0.5">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Search + Refresh */}
+            <div className="flex gap-3 mb-5">
+              <input
+                type="text"
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                placeholder="🔍 Search by username, nickname, email, or Discord..."
+                className="input-field flex-1"
+              />
+              <button
+                onClick={loadDiscordUsers}
+                disabled={usersLoading}
+                className="admin-btn admin-btn--ghost !px-4 flex-shrink-0"
+              >
+                {usersLoading ? "⏳" : "🔄"} Refresh
+              </button>
+            </div>
+
+            {usersLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="admin-shimmer h-16 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="glass-card p-10 text-center">
+                <div className="text-4xl mb-3">👥</div>
+                <p className="text-text-secondary text-sm">
+                  {userSearch ? `No users matching "${userSearch}"` : "No users found"}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* ── Mobile Cards ── */}
+                <div className="space-y-3 md:hidden">
+                  {filteredUsers.map(u => {
+                    const syncStatus = getSyncStatus(u);
+                    const isDisabled = userActionLoading === u._id;
+                    return (
+                      <div key={u._id} className="glass-card p-4 border border-white/[0.04] space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-bold text-sm text-white">{u.nickname || u.username}</div>
+                            <div className="text-[11px] text-accent-light font-mono">@{u.username}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={cn("badge text-[9px] font-extrabold px-2 py-0.5", ROLE_COLORS[u.role] || ROLE_COLORS.user)}>{u.role}</span>
+                            <span className={cn("text-[10px] font-bold", TIER_COLORS[u.tier] || "text-text-muted")}>{TIER_EMOJI[u.tier] || ""} {u.tier}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[11px]">
+                          {u.discordId ? (
+                            <>
+                              <span className="text-[#5865F2] font-bold">🎮 @{u.discordUsername || u.discordId}</span>
+                              <span className="text-text-muted font-mono text-[10px] truncate">{u.discordId}</span>
+                            </>
+                          ) : (
+                            <span className="text-text-muted italic">No Discord linked</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider",
+                            syncStatus === "synced" ? "bg-success/15 text-success" :
+                            syncStatus === "pending" ? "bg-warning/15 text-warning" :
+                            "bg-text-muted/15 text-text-muted"
+                          )}>
+                            {syncStatus === "synced" ? "✅ Synced" : syncStatus === "pending" ? "⏳ Pending Sync" : "⚠️ Not Linked"}
+                          </span>
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          <button onClick={() => openEditRole(u)} disabled={isDisabled}
+                            className="admin-btn admin-btn--accent flex-1 !text-[11px] !py-1.5">✏️ Edit</button>
+                          {u.discordId && (
+                            <button onClick={() => handleForceSync(u)} disabled={isDisabled}
+                              className="admin-btn admin-btn--ghost flex-1 !text-[11px] !py-1.5">
+                              {isDisabled ? "⏳" : "🔄 Sync"}
+                            </button>
+                          )}
+                          {u.discordId && (
+                            <button onClick={() => handleUnlinkDiscord(u)} disabled={isDisabled}
+                              className="admin-btn admin-btn--danger !px-3 !text-[11px] !py-1.5">🔓</button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── Desktop Table ── */}
+                <div className="glass-card overflow-hidden hidden md:block border border-white/[0.04]">
+                  <div className="overflow-x-auto">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>User</th>
+                          <th className="text-center">Web Role</th>
+                          <th className="text-center">Discord Tier</th>
+                          <th>Discord Account</th>
+                          <th className="text-center">Sync Status</th>
+                          <th className="text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredUsers.map(u => {
+                          const syncStatus = getSyncStatus(u);
+                          const isDisabled = userActionLoading === u._id;
+                          return (
+                            <tr key={u._id} className={cn(
+                              "hover:bg-white/[0.015] transition-colors duration-200",
+                              u.isBanned && "opacity-50"
+                            )}>
+                              <td>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center text-sm font-black text-white flex-shrink-0">
+                                    {(u.nickname || u.username).charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-sm text-white">{u.nickname || u.username}</div>
+                                    <div className="text-[11px] text-accent-light font-mono">@{u.username}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="text-center">
+                                <span className={cn("badge text-[9.5px] font-extrabold px-2.5 py-0.5", ROLE_COLORS[u.role] || ROLE_COLORS.user)}>
+                                  {u.role}
+                                </span>
+                              </td>
+                              <td className="text-center">
+                                <span className={cn("text-sm font-bold", TIER_COLORS[u.tier] || "text-text-muted")}>
+                                  {TIER_EMOJI[u.tier] || ""} {u.tier || "bronze"}
+                                </span>
+                              </td>
+                              <td>
+                                {u.discordId ? (
+                                  <div>
+                                    <div className="text-[#7289da] text-sm font-semibold">
+                                      🎮 @{u.discordUsername || "—"}
+                                    </div>
+                                    <div className="text-text-muted font-mono text-[10px]">{u.discordId}</div>
+                                  </div>
+                                ) : (
+                                  <span className="text-text-muted italic text-xs">Not linked</span>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                <span className={cn(
+                                  "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap",
+                                  syncStatus === "synced" ? "bg-success/15 text-success" :
+                                  syncStatus === "pending" ? "bg-warning/15 text-warning" :
+                                  "bg-white/5 text-text-muted"
+                                )}>
+                                  {syncStatus === "synced" ? "✅ Synced" : syncStatus === "pending" ? "⏳ Pending" : "⚠️ Not Linked"}
+                                </span>
+                              </td>
+                              <td className="text-center">
+                                <div className="flex gap-1.5 justify-center">
+                                  <button onClick={() => openEditRole(u)} disabled={isDisabled}
+                                    className="admin-btn admin-btn--accent !py-1.5 !px-3 !text-[11px] font-bold">✏️ Edit</button>
+                                  {u.discordId && (
+                                    <button onClick={() => handleForceSync(u)} disabled={isDisabled}
+                                      className="admin-btn admin-btn--ghost !py-1.5 !px-3 !text-[11px] font-bold">
+                                      {isDisabled ? "⏳" : "🔄"}
+                                    </button>
+                                  )}
+                                  {u.discordId && (
+                                    <button onClick={() => handleUnlinkDiscord(u)} disabled={isDisabled}
+                                      className="admin-btn admin-btn--danger !py-1.5 !px-2.5 !text-[11px]" title="Unlink Discord">🔓</button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ── Edit Role Modal ── */}
+            {editRoleOpen && editRoleUser && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
+                <div className="fixed inset-0 bg-[#000]/70 backdrop-blur-sm" onClick={() => setEditRoleOpen(false)} />
+                <div className="relative z-10 glass-card w-full max-w-md p-7 border border-indigo-500/30 bg-[#0f0b24]/95 animate-fadeIn">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center text-base font-black text-white flex-shrink-0">
+                      {(editRoleUser.nickname || editRoleUser.username).charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black text-white leading-tight">Edit User Roles</h2>
+                      <p className="text-[11px] text-text-muted">@{editRoleUser.username} • {editRoleUser.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-white/[0.06] my-5" />
+
+                  <form onSubmit={handleEditRoleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs text-text-secondary font-bold">Web Role</label>
+                        <select
+                          value={editRoleForm.role}
+                          onChange={e => setEditRoleForm(p => ({ ...p, role: e.target.value }))}
+                          className="input-field !py-2.5 !text-sm"
+                        >
+                          <option value="user">👤 User</option>
+                          <option value="moderator">🛡️ Moderator</option>
+                          <option value="admin">👑 Admin</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs text-text-secondary font-bold">Discord Tier</label>
+                        <select
+                          value={editRoleForm.tier}
+                          onChange={e => setEditRoleForm(p => ({ ...p, tier: e.target.value }))}
+                          className="input-field !py-2.5 !text-sm"
+                        >
+                          <option value="bronze">🥉 Bronze</option>
+                          <option value="silver">🥈 Silver</option>
+                          <option value="gold">🥇 Gold</option>
+                          <option value="diamond">💎 Diamond</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-white/[0.04]" />
+                    <p className="text-[11px] text-text-muted -mt-1">Discord Account Linking</p>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs text-text-secondary font-bold">Discord User ID</label>
+                      <input
+                        type="text"
+                        value={editRoleForm.discordId}
+                        onChange={e => setEditRoleForm(p => ({ ...p, discordId: e.target.value }))}
+                        placeholder="e.g. 123456789012345678"
+                        className="input-field !py-2.5 !text-sm font-mono"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs text-text-secondary font-bold">Discord Username</label>
+                      <input
+                        type="text"
+                        value={editRoleForm.discordUsername}
+                        onChange={e => setEditRoleForm(p => ({ ...p, discordUsername: e.target.value }))}
+                        placeholder="e.g. username#1234"
+                        className="input-field !py-2.5 !text-sm"
+                      />
+                    </div>
+
+                    {editRoleForm.discordId && (
+                      <div className="flex items-start gap-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
+                        <span className="text-base flex-shrink-0">ℹ️</span>
+                        <span>Saving will set sync status to <strong>Pending</strong>. The Discord bot will automatically assign the <strong>{editRoleForm.tier}</strong> tier role within ~30 seconds.</span>
+                      </div>
+                    )}
+
+                    {editRoleError && (
+                      <div className="error-message">
+                        <span>❌</span><span>{editRoleError}</span>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                      <button type="button" onClick={() => setEditRoleOpen(false)} className="admin-btn admin-btn--ghost flex-1">
+                        Cancel
+                      </button>
+                      <button type="submit" disabled={editRoleSubmitting} className="admin-btn admin-btn--accent flex-1">
+                        {editRoleSubmitting ? "⏳ Saving..." : "💾 Save Changes"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ═══ TAB: Format Guide ═══ */}
       {activeTab === "guide" && (

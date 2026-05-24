@@ -31,6 +31,7 @@ export interface IUser extends Document {
   isDeleted: boolean;
   tier: "bronze" | "silver" | "gold" | "diamond";
   badges: string[];
+  lastTierSynced?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,6 +70,7 @@ const UserSchema = new Schema<IUser>(
     isDeleted: { type: Boolean, default: false },
     tier: { type: String, enum: ["bronze", "silver", "gold", "diamond"], default: "bronze" },
     badges: [{ type: String }],
+    lastTierSynced: { type: String, default: "" },
   },
   { timestamps: true }
 );

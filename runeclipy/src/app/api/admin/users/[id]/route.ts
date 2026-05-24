@@ -16,7 +16,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
 
     const allowed = [
-      "nickname", "role", "tier", "isBanned", "badges"
+      "nickname", "role", "tier", "isBanned", "badges", "discordId", "discordUsername", "lastTierSynced"
     ];
     const update: Record<string, any> = {};
     
@@ -63,6 +63,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         totalEarned: Number(body.stats.totalEarned) || 0,
         totalViews: Number(body.stats.totalViews) || 0,
       };
+    }
+
+    // Queue discord sync if tier or discordId is modified
+    if ("tier" in body || "discordId" in body) {
+      update.lastTierSynced = "";
     }
 
     const user = await User.findByIdAndUpdate(id, update, { new: true });
