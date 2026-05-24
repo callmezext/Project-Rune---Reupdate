@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
     }
 
-    const { apiKey, model } = await getStoredAIConfig();
-    if (!apiKey) {
+    const { apiKey, apiKeys, model } = await getStoredAIConfig();
+    const activeKeys = apiKeys && apiKeys.length > 0 ? apiKeys : (apiKey ? [apiKey] : []);
+    if (activeKeys.length === 0) {
       return NextResponse.json({
         error: "API key Gemini belum dikonfigurasi. Silakan set di Settings → AI Assistant.",
       }, { status: 400 });
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     const chatHistory: ChatMessage[] = Array.isArray(history) ? history : [];
 
     const reply = await runAIChat(
-      apiKey,
+      activeKeys,
       model,
       chatHistory,
       message,

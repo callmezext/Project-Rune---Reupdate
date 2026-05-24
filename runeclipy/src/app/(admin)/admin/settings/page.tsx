@@ -13,6 +13,7 @@ interface Settings {
   discordNotifChannelId: string;
   supportEmail: string;
   geminiApiKey: string;
+  geminiApiKeys: string[];
   geminiModel: string;
 }
 
@@ -24,6 +25,7 @@ export default function AdminSettingsPage() {
     referralCommissionPercent: 5, discordWebhookUrl: "",
     discordInviteUrl: "", discordNotifChannelId: "", supportEmail: "",
     geminiApiKey: "",
+    geminiApiKeys: [""],
     geminiModel: "gemini-2.0-flash",
   });
   const [loading, setLoading] = useState(true);
@@ -32,8 +34,8 @@ export default function AdminSettingsPage() {
   const [resetConfirm, setResetConfirm] = useState("");
   const [resetResult, setResetResult] = useState<Record<string, number> | null>(null);
   const [toast, setToast] = useState<Toast>(null);
-  const [verifyingKey, setVerifyingKey] = useState(false);
-  const [keyStatus, setKeyStatus] = useState<"idle" | "valid" | "invalid">("idle");
+  const [verifyingIndex, setVerifyingIndex] = useState<number | null>(null);
+  const [keyStatuses, setKeyStatuses] = useState<Record<number, "idle" | "valid" | "invalid">>({});
 
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
     setToast({ message, type });
@@ -45,6 +47,9 @@ export default function AdminSettingsPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d.success && d.settings) {
+          const apiKeys = d.settings.geminiApiKeys && d.settings.geminiApiKeys.length > 0
+            ? d.settings.geminiApiKeys
+            : [d.settings.geminiApiKey || ""];
           setSettings({
             platformFeePercent: d.settings.platformFeePercent ?? 3,
             minCampaignWithdrawal: d.settings.minCampaignWithdrawal ?? 10,
@@ -55,6 +60,7 @@ export default function AdminSettingsPage() {
             discordNotifChannelId: d.settings.discordNotifChannelId ?? "",
             supportEmail: d.settings.supportEmail ?? "",
             geminiApiKey: d.settings.geminiApiKey ?? "",
+            geminiApiKeys: apiKeys,
             geminiModel: d.settings.geminiModel ?? "gemini-2.0-flash",
           });
         }
@@ -67,12 +73,26 @@ export default function AdminSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const cleanKeys = settings.geminiApiKeys.map(k => k.trim()).filter(Boolean);
+      const finalKeys = cleanKeys.length > 0 ? cleanKeys : [""];
+
+      const payload = {
+        ...settings,
+        geminiApiKeys: finalKeys,
+        geminiApiKey: finalKeys[0] || "",
+      };
+
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
+        setSettings(prev => ({
+          ...prev,
+          geminiApiKeys: finalKeys,
+          geminiApiKey: finalKeys[0] || "",
+        }));
         showToast("Settings saved successfully!");
       } else {
         showToast("Failed to save settings", "error");
@@ -106,33 +126,57 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const handleVerifyKey = async () => {
-    if (!settings.geminiApiKey?.trim()) {
+  const handleVerifyKeyAtIndex = async (index: number) => {
+    const targetKey = settings.geminiApiKeys[index];
+    if (!targetKey?.trim()) {
       showToast("Masukkan API key terlebih dahulu", "error");
       return;
     }
-    setVerifyingKey(true);
-    setKeyStatus("idle");
+    setVerifyingIndex(index);
+    setKeyStatuses(prev => ({ ...prev, [index]: "idle" }));
     try {
       const res = await fetch("/api/admin/ai/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: settings.geminiApiKey, model: settings.geminiModel }),
+        body: JSON.stringify({ apiKey: targetKey, model: settings.geminiModel }),
       });
       const data = await res.json();
       if (data.valid) {
-        setKeyStatus("valid");
-        showToast("✅ API key valid! AI Assistant siap digunakan.");
+        setKeyStatuses(prev => ({ ...prev, [index]: "valid" }));
+        showToast(`✅ API key #${index + 1} valid!`);
       } else {
-        setKeyStatus("invalid");
-        showToast(data.error || "API key tidak valid", "error");
+        setKeyStatuses(prev => ({ ...prev, [index]: "invalid" }));
+        showToast(data.error || `API key #${index + 1} tidak valid`, "error");
       }
     } catch {
-      setKeyStatus("invalid");
-      showToast("Gagal memverifikasi API key", "error");
+      setKeyStatuses(prev => ({ ...prev, [index]: "invalid" }));
+      showToast(`Gagal memverifikasi API key #${index + 1}`, "error");
     } finally {
-      setVerifyingKey(false);
+      setVerifyingIndex(null);
     }
+  };
+
+  const handleKeyChange = (index: number, val: string) => {
+    const updatedKeys = [...settings.geminiApiKeys];
+    updatedKeys[index] = val;
+    setSettings({ ...settings, geminiApiKeys: updatedKeys });
+    setKeyStatuses(prev => ({ ...prev, [index]: "idle" }));
+  };
+
+  const handleAddKey = () => {
+    setSettings({ ...settings, geminiApiKeys: [...settings.geminiApiKeys, ""] });
+  };
+
+  const handleRemoveKey = (index: number) => {
+    if (settings.geminiApiKeys.length <= 1) return;
+    const updatedKeys = settings.geminiApiKeys.filter((_, i) => i !== index);
+    setSettings({ ...settings, geminiApiKeys: updatedKeys });
+    const updatedStatuses: Record<number, "idle" | "valid" | "invalid"> = {};
+    updatedKeys.forEach((_, i) => {
+      const oldIndex = i >= index ? i + 1 : i;
+      updatedStatuses[i] = keyStatuses[oldIndex] || "idle";
+    });
+    setKeyStatuses(updatedStatuses);
   };
 
   const handleCronCheck = async () => {
@@ -240,50 +284,74 @@ export default function AdminSettingsPage() {
                 <h3 className="font-bold">AI Assistant</h3>
                 <p className="text-[11px] text-text-muted">Google AI Studio ({settings.geminiModel})</p>
               </div>
-              {keyStatus === "valid" && (
+              {Object.values(keyStatuses).includes("valid") && (
                 <span className="ml-auto text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20">● Connected</span>
               )}
-              {keyStatus === "invalid" && (
+              {!Object.values(keyStatuses).includes("valid") && Object.values(keyStatuses).includes("invalid") && (
                 <span className="ml-auto text-[10px] font-semibold text-red-400 bg-red-400/10 px-2.5 py-1 rounded-full border border-red-400/20">● Invalid Key</span>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm text-text-secondary mb-1.5">
-                Google AI Studio API Key
+            <div className="space-y-3">
+              <label className="block text-sm text-text-secondary mb-1">
+                Google AI Studio API Keys
                 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
                   className="ml-2 text-accent-light text-[10px] underline underline-offset-2 hover:text-accent">
                   Dapatkan API Key →
                 </a>
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={settings.geminiApiKey}
-                  onChange={(e) => {
-                    setSettings({ ...settings, geminiApiKey: e.target.value });
-                    setKeyStatus("idle");
-                  }}
-                  className="input-field flex-1 font-mono text-sm"
-                  placeholder="AIza..."
-                  autoComplete="off"
-                />
-                <button
-                  type="button"
-                  onClick={handleVerifyKey}
-                  disabled={verifyingKey || !settings.geminiApiKey?.trim()}
-                  className={cn(
-                    "admin-btn shrink-0 !px-4 !py-2 !text-xs transition-all",
-                    keyStatus === "valid" ? "!border-emerald-400/30 !text-emerald-400" :
-                    keyStatus === "invalid" ? "!border-red-400/30 !text-red-400" :
-                    "admin-btn--accent"
-                  )}
-                >
-                  {verifyingKey ? "⏳ Checking..." : keyStatus === "valid" ? "✅ Valid" : keyStatus === "invalid" ? "❌ Invalid" : "🔍 Verify"}
-                </button>
-              </div>
+
+              {settings.geminiApiKeys.map((key, index) => {
+                const status = keyStatuses[index] || "idle";
+                const isVerifying = verifyingIndex === index;
+
+                return (
+                  <div key={index} className="flex gap-2 items-center">
+                    <span className="text-xs text-text-muted w-5 font-mono">#{index + 1}</span>
+                    <input
+                      type="password"
+                      value={key}
+                      onChange={(e) => handleKeyChange(index, e.target.value)}
+                      className="input-field flex-1 font-mono text-sm"
+                      placeholder="AIza..."
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleVerifyKeyAtIndex(index)}
+                      disabled={isVerifying || !key.trim()}
+                      className={cn(
+                        "admin-btn shrink-0 !px-3 !py-2 !text-xs transition-all",
+                        status === "valid" ? "!border-emerald-400/30 !text-emerald-400" :
+                        status === "invalid" ? "!border-red-400/30 !text-red-400" :
+                        "admin-btn--accent"
+                      )}
+                    >
+                      {isVerifying ? "⏳" : status === "valid" ? "✅" : status === "invalid" ? "❌" : "🔍 Verify"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveKey(index)}
+                      disabled={settings.geminiApiKeys.length <= 1}
+                      className="admin-btn admin-btn--danger shrink-0 !p-2 !text-xs disabled:opacity-40"
+                      title="Hapus Key"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={handleAddKey}
+                className="w-full py-2 border border-dashed border-border/85 hover:border-accent/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-accent hover:bg-accent/5 transition-all"
+              >
+                ➕ Tambah API Key Lainnya
+              </button>
+
               <p className="text-[11px] text-text-muted mt-1.5">
-                API key disimpan di database. Setelah save, AI bubble chat akan muncul di admin panel.
+                API key disimpan di database. Jika satu key habis limit, sistem akan mencoba key berikutnya. Setelah disave, AI chat akan aktif.
               </p>
             </div>
 
@@ -296,7 +364,7 @@ export default function AdminSettingsPage() {
                   value={settings.geminiModel}
                   onChange={(e) => {
                     setSettings({ ...settings, geminiModel: e.target.value });
-                    setKeyStatus("idle");
+                    setKeyStatuses({});
                   }}
                   className="input-field w-full text-sm bg-bg-primary pr-10 border border-border/80 focus:border-accent/40 rounded-xl py-2 px-3 focus:outline-none appearance-none"
                 >

@@ -803,50 +803,88 @@ export interface ChatMessage {
 }
 
 export async function runAIChat(
-  apiKey: string,
+  apiKeys: string | string[],
   modelName: string,
   history: ChatMessage[],
   newMessage: string,
   actorId: string,
   actorUsername: string
 ): Promise<string> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelName || "gemini-2.0-flash",
-    systemInstruction: SYSTEM_PROMPT,
-    tools: [{ functionDeclarations: tools }],
-  });
+  const keys = Array.isArray(apiKeys) ? apiKeys : [apiKeys];
+  const activeKeys = keys.filter(k => k && k.trim().length > 0);
 
-  const chat = model.startChat({ history });
-
-  let result = await chat.sendMessage(newMessage);
-  let response = result.response;
-
-  // Agentic loop: handle function calls
-  while (response.functionCalls() && response.functionCalls()!.length > 0) {
-    const functionCalls = response.functionCalls()!;
-    const toolResults: Part[] = [];
-
-    for (const call of functionCalls) {
-      const toolResult = await executeTool(
-        call.name,
-        call.args as Record<string, unknown>,
-        actorId,
-        actorUsername
-      );
-      toolResults.push({
-        functionResponse: {
-          name: call.name,
-          response: toolResult as Record<string, unknown>,
-        },
-      });
-    }
-
-    result = await chat.sendMessage(toolResults);
-    response = result.response;
+  if (activeKeys.length === 0) {
+    throw new Error("API key Gemini tidak tersedia. Silakan konfigurasi di Settings.");
   }
 
-  return response.text();
+  let lastError: any = null;
+
+  for (let i = 0; i < activeKeys.length; i++) {
+    const currentKey = activeKeys[i];
+    try {
+      console.log(`[AI Chat] Mencoba menggunakan API key index ke-${i} (dimulai dengan: ${currentKey.substring(0, 8)}...)`);
+      const genAI = new GoogleGenerativeAI(currentKey);
+      const model = genAI.getGenerativeModel({
+        model: modelName || "gemini-2.0-flash",
+        systemInstruction: SYSTEM_PROMPT,
+        tools: [{ functionDeclarations: tools }],
+      });
+
+      const chat = model.startChat({ history });
+
+      let result = await chat.sendMessage(newMessage);
+      let response = result.response;
+
+      // Agentic loop: handle function calls
+      while (response.functionCalls() && response.functionCalls()!.length > 0) {
+        const functionCalls = response.functionCalls()!;
+        const toolResults: Part[] = [];
+
+        for (const call of functionCalls) {
+          const toolResult = await executeTool(
+            call.name,
+            call.args as Record<string, unknown>,
+            actorId,
+            actorUsername
+          );
+          toolResults.push({
+            functionResponse: {
+              name: call.name,
+              response: toolResult as Record<string, unknown>,
+            },
+          });
+        }
+
+        result = await chat.sendMessage(toolResults);
+        response = result.response;
+      }
+
+      return response.text();
+    } catch (error: any) {
+      console.error(`[AI Chat] Gagal menggunakan API key index ke-${i}:`, error);
+      lastError = error;
+
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const isQuotaOrKeyError =
+        errorMsg.includes("429") ||
+        errorMsg.toLowerCase().includes("quota") ||
+        errorMsg.toLowerCase().includes("resourceexhausted") ||
+        errorMsg.toLowerCase().includes("limit") ||
+        errorMsg.toLowerCase().includes("api key") ||
+        errorMsg.toLowerCase().includes("key not valid") ||
+        errorMsg.toLowerCase().includes("unauthorized") ||
+        errorMsg.includes("403");
+
+      if (isQuotaOrKeyError && i < activeKeys.length - 1) {
+        console.warn(`[AI Chat] Key index ke-${i} bermasalah atau habis kuota. Mencoba API key berikutnya...`);
+        continue;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError || new Error("Semua API key Gemini yang dikonfigurasi gagal atau habis kuota.");
 }
 
 // ─── Verify API Key ───────────────────────────────────────────────────────────
@@ -865,11 +903,19 @@ export async function verifyGeminiApiKey(apiKey: string, modelName?: string): Pr
 }
 
 // ─── Get stored API key and Model from DB ────────────────────────────────────
-export async function getStoredAIConfig(): Promise<{ apiKey: string | null; model: string }> {
+export async function getStoredAIConfig(): Promise<{ apiKey: string | null; apiKeys: string[]; model: string }> {
   await connectDB();
-  const settings = await SiteSetting.findOne().select("geminiApiKey geminiModel").lean();
+  const settings = await SiteSetting.findOne().select("geminiApiKey geminiApiKeys geminiModel").lean();
+  let keys: string[] = [];
+  if (settings?.geminiApiKeys && settings.geminiApiKeys.length > 0) {
+    keys = settings.geminiApiKeys.filter((k: string) => k && k.trim().length > 0);
+  }
+  if (keys.length === 0 && settings?.geminiApiKey) {
+    keys = [settings.geminiApiKey];
+  }
   return {
     apiKey: settings?.geminiApiKey || null,
+    apiKeys: keys,
     model: settings?.geminiModel || "gemini-2.0-flash",
   };
 }
