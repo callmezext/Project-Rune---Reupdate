@@ -1216,6 +1216,7 @@ async function handleMessageCreate(message) {
     if (message.channel.id !== settings.discordChatChannelId) return;
 
     // Show typing
+    console.log(`[Bot AI Chat] Received message from @${message.author.tag} in channel ${message.channel.id}: "${message.content}"`);
     await message.channel.sendTyping();
 
     // Check if user is admin
@@ -1326,7 +1327,12 @@ ${context}`;
       await message.reply(reply);
     }
   } catch (err) {
-    console.error("[Bot AI chat error]:", err.message);
+    console.error("[Bot AI chat error]:", err);
+    try {
+      await message.reply(`❌ Terjadi error saat memproses chat AI: \`${err.message}\``);
+    } catch (replyErr) {
+      console.error("[Bot AI chat error] Failed to reply error to channel:", replyErr.message);
+    }
   }
 }
 
