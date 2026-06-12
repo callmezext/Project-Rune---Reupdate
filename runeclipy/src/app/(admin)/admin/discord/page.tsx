@@ -8,7 +8,14 @@ interface DiscordEmbed {
   footer?: { text: string; icon_url?: string }; content?: string;
 }
 interface Channel { id: string; name: string; }
-interface DiscordSettings { discordWebhookUrl: string; discordInviteUrl: string; discordNotifChannelId: string; discordMatrixChannelId: string; }
+interface DiscordSettings {
+  discordWebhookUrl: string;
+  discordInviteUrl: string;
+  discordNotifChannelId: string;
+  discordMatrixChannelId: string;
+  discordChatChannelId: string;
+  enableDiscordAIChat: boolean;
+}
 type Toast = { message: string; type: "success"|"error"|"info" } | null;
 
 interface DiscordUser {
@@ -132,9 +139,13 @@ export default function AdminDiscordPage() {
   }>({ status: "offline", error: null, startedAt: null, uptime: 0, guildCount: 0, ping: 0, username: null, avatar: null });
   const [botLoading, setBotLoading] = useState(false);
 
-  // Discord settings
   const [discordSettings, setDiscordSettings] = useState<DiscordSettings>({
-    discordWebhookUrl: "", discordInviteUrl: "", discordNotifChannelId: "", discordMatrixChannelId: "",
+    discordWebhookUrl: "",
+    discordInviteUrl: "",
+    discordNotifChannelId: "",
+    discordMatrixChannelId: "",
+    discordChatChannelId: "",
+    enableDiscordAIChat: false,
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
@@ -286,6 +297,8 @@ export default function AdminDiscordPage() {
           discordInviteUrl: d.settings.discordInviteUrl || "",
           discordNotifChannelId: d.settings.discordNotifChannelId || "",
           discordMatrixChannelId: d.settings.discordMatrixChannelId || "",
+          discordChatChannelId: d.settings.discordChatChannelId || "",
+          enableDiscordAIChat: d.settings.enableDiscordAIChat || false,
         });
       }
     }).catch(console.error);
@@ -565,6 +578,42 @@ export default function AdminDiscordPage() {
                   onChange={(e) => setDiscordSettings({ ...discordSettings, discordMatrixChannelId: e.target.value })}
                   className="input-field text-xs">
                   <option value="">— Auto Create / Fallback to #rune-matrix —</option>
+                  {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
+                </select>
+              )}
+            </div>
+
+            {/* AI Chatbot Auto-Responder Channel */}
+            <div className="glass-card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold">🤖 AI Chatbot Auto-Responder</h3>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={discordSettings.enableDiscordAIChat}
+                    onChange={(e) => setDiscordSettings({ ...discordSettings, enableDiscordAIChat: e.target.checked })}
+                    className="sr-only peer" />
+                  <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+                </label>
+              </div>
+              <p className="text-xs text-text-muted -mt-2">
+                Select channel where the bot will chat and auto-respond (no slash command needed).
+              </p>
+              {loadingChannels ? (
+                <div className="admin-shimmer h-10 w-full rounded-lg" />
+              ) : channelError ? (
+                <div className="space-y-2">
+                  <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs">
+                    ⚠️ {channelError}
+                  </div>
+                  <select disabled className="input-field text-xs opacity-50 cursor-not-allowed">
+                    <option>— Channels unavailable —</option>
+                  </select>
+                </div>
+              ) : (
+                <select value={discordSettings.discordChatChannelId}
+                  onChange={(e) => setDiscordSettings({ ...discordSettings, discordChatChannelId: e.target.value })}
+                  disabled={!discordSettings.enableDiscordAIChat}
+                  className="input-field text-xs disabled:opacity-50">
+                  <option value="">— Select AI Chat Channel —</option>
                   {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
                 </select>
               )}

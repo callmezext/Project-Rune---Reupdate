@@ -12,6 +12,8 @@ export interface ISiteSetting extends Document {
   discordInviteUrl: string;
   discordNotifChannelId: string;
   discordMatrixChannelId?: string;
+  discordChatChannelId?: string;
+  enableDiscordAIChat?: boolean;
   discordBotToken?: string;
   discordGuildId?: string;
 
@@ -41,6 +43,8 @@ const SiteSettingSchema = new Schema<ISiteSetting>(
     discordInviteUrl: { type: String, default: "https://discord.gg/runeclipy" },
     discordNotifChannelId: { type: String, default: "" },
     discordMatrixChannelId: { type: String, default: "" },
+    discordChatChannelId: { type: String, default: "" },
+    enableDiscordAIChat: { type: Boolean, default: false },
     discordBotToken: { type: String, default: "" },
     discordGuildId: { type: String, default: "" },
 
