@@ -419,16 +419,31 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                {/* My Activity Button — green like reference */}
-                <Link
-                  href="/campaigns"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl bg-success/15 text-success text-[10px] sm:text-xs font-bold hover:bg-success/25 transition-all border border-success/20 flex-shrink-0 self-start w-fit"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  My Activity
-                </Link>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-1.5 flex-shrink-0 self-start">
+                  {/* My Activity Button */}
+                  <Link
+                    href="/campaigns"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-success/15 text-success text-[10px] sm:text-xs font-bold hover:bg-success/25 transition-all border border-success/20 w-fit"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span className="hidden sm:inline">My Activity</span>
+                    <span className="sm:hidden">Activity</span>
+                  </Link>
+                  {/* Withdraw Button */}
+                  <Link
+                    href="/balance"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-accent/15 text-accent-light text-[10px] sm:text-xs font-bold hover:bg-accent/25 transition-all border border-accent/20 w-fit"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Withdraw
+                  </Link>
+                </div>
               </div>
 
               {/* Tier info if available */}
