@@ -21,12 +21,12 @@ interface CampaignBreakdown { _id: string; count: number; totalBudget: number; b
 function LoadingSkeleton() {
   return (
     <div className="space-y-8 animate-fadeIn">
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="admin-stat-card">
-            <div className="admin-shimmer h-5 w-10 mb-3" />
-            <div className="admin-shimmer h-8 w-24 mb-2" />
-            <div className="admin-shimmer h-3 w-20" />
+          <div key={i} className="admin-stat-card !p-3">
+            <div className="admin-shimmer h-4 w-8 mb-2" />
+            <div className="admin-shimmer h-6 w-16 mb-1" />
+            <div className="admin-shimmer h-2 w-14" />
           </div>
         ))}
       </div>
@@ -154,16 +154,16 @@ export default function AdminDashboardPage() {
         <h2 className="text-[10px] uppercase font-extrabold tracking-widest text-text-muted">Core Platform Statistics</h2>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+      {/* Stat Cards — 3 col × 2 row on all screen sizes */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
         {statCards.map((card, i) => (
-          <div key={card.label} className={`admin-stat-card admin-grid-item bg-gradient-to-br ${card.gradient}`}
+          <div key={card.label} className={`admin-stat-card admin-grid-item bg-gradient-to-br ${card.gradient} !p-2.5 sm:!p-4`}
             style={{ animationDelay: `${i * 60}ms` }}>
-            <div className="flex justify-between items-start mb-2 sm:mb-3">
-              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center ${card.iconBg} transition-transform hover:scale-110`}>{card.icon}</div>
+            <div className="flex justify-between items-start mb-1.5 sm:mb-3">
+              <div className={`w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center ${card.iconBg} transition-transform hover:scale-110 [&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-5 sm:[&>svg]:h-5`}>{card.icon}</div>
             </div>
-            <div className="text-lg sm:text-2xl font-extrabold tracking-tight mb-1 truncate">{card.value}</div>
-            <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-widest font-medium truncate">{card.label}</div>
+            <div className="text-sm sm:text-2xl font-extrabold tracking-tight mb-0.5 truncate">{card.value}</div>
+            <div className="text-[8px] sm:text-[10px] text-text-muted uppercase tracking-widest font-medium truncate leading-tight">{card.label}</div>
           </div>
         ))}
       </div>
