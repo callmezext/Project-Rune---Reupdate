@@ -462,37 +462,33 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <div className="glass-card p-2 sm:p-4 text-center">
-                <div className="text-xs text-text-muted mb-1">Total Views</div>
-                <div className="text-xl font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
-                <div className="flex justify-center gap-3 mt-2">
-                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> {formatNumber(profile.stats.totalViews)}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg> 0
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 0
-                  </span>
-                </div>
+            {/* Platform Stats Grid — 3 col × 2 row */}
+            <div className="grid grid-cols-3 gap-1.5">
+              {/* Row 1 */}
+              <div className="glass-card p-2 text-center">
+                <div className="text-[9px] text-text-muted mb-0.5 uppercase tracking-wider">Views</div>
+                <div className="text-xs sm:text-sm font-extrabold leading-tight">{formatNumber(profile.stats.totalViews)}</div>
               </div>
-              <div className="glass-card p-4 text-center">
-                <div className="text-xs text-text-muted mb-1">Submissions</div>
-                <div className="text-xl font-extrabold">{profile.stats.totalVideos}</div>
-                <div className="flex justify-center gap-3 mt-2">
-                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 0
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> 0
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[9px] text-text-muted">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 0
-                  </span>
-                </div>
+              <div className="glass-card p-2 text-center">
+                <div className="text-[9px] text-text-muted mb-0.5 uppercase tracking-wider">Videos</div>
+                <div className="text-xs sm:text-sm font-extrabold leading-tight">{profile.stats.totalVideos}</div>
+              </div>
+              <div className="glass-card p-2 text-center">
+                <div className="text-[9px] text-text-muted mb-0.5 uppercase tracking-wider">Active</div>
+                <div className="text-xs sm:text-sm font-extrabold leading-tight">{campaigns.length}</div>
+              </div>
+              {/* Row 2 */}
+              <div className="glass-card p-2 text-center">
+                <div className="text-[9px] text-text-muted mb-0.5 uppercase tracking-wider">Earned</div>
+                <div className="text-xs sm:text-sm font-extrabold leading-tight text-success">{formatCurrency(profile.stats.totalEarned)}</div>
+              </div>
+              <div className="glass-card p-2 text-center">
+                <div className="text-[9px] text-text-muted mb-0.5 uppercase tracking-wider">Pending</div>
+                <div className="text-xs sm:text-sm font-extrabold leading-tight text-warning">{formatCurrency(pendingEarnings)}</div>
+              </div>
+              <div className="glass-card p-2 text-center">
+                <div className="text-[9px] text-text-muted mb-0.5 uppercase tracking-wider">Tier</div>
+                <div className="text-xs sm:text-sm font-extrabold leading-tight">{profile.tierInfo?.emoji ?? '🥉'} <span className="text-[8px] text-text-muted">{profile.tierInfo?.tier ?? 'bronze'}</span></div>
               </div>
             </div>
           </div>
