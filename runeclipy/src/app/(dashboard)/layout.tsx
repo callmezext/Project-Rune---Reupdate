@@ -112,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
                 </svg>
               </span>
-              <span className="text-base font-extrabold tracking-wider text-white">CLIPSTER</span>
+              <span className="text-base font-extrabold tracking-wider text-white">RUNECLIPY</span>
             </Link>
 
             {/* Horizontal Tabs */}
@@ -335,7 +335,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ═══ Footer ═══ */}
       <footer className="border-t border-border px-6 py-4 mt-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 max-w-7xl mx-auto">
-          <p className="text-xs text-text-muted">© 2026 Clipster</p>
+          <p className="text-xs text-text-muted">© 2026 RuneClipy</p>
           <div className="flex gap-4">
             <Link href="/creator-terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Creator Terms</Link>
             <Link href="/privacy-policy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy Policy</Link>

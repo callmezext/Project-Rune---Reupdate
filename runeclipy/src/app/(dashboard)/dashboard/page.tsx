@@ -328,36 +328,7 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      {/* ═══ Quick Actions Strip ═══ */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <Link href="/campaigns" className="glass-card p-4 flex items-center gap-4 group hover:border-accent/30 transition-all">
-          <div className="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-bold">My Activity</div>
-            <div className="text-[11px] text-text-muted">Track your video progress</div>
-          </div>
-        </Link>
-        <Link href="/analytics" className="glass-card p-4 flex items-center gap-4 group hover:border-blue-500/30 transition-all">
-          <div className="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-bold">Analytics</div>
-            <div className="text-[11px] text-text-muted">View performance metrics</div>
-          </div>
-        </Link>
-        <Link href="/balance" className="glass-card p-4 flex items-center gap-4 group hover:border-emerald-500/30 transition-all">
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-bold">Balance</div>
-            <div className="text-[11px] text-text-muted">Withdraw your earnings</div>
-          </div>
-        </Link>
-      </div>
+
 
       {/* ═══ Campaign Section Header ═══ */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
