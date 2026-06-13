@@ -17,7 +17,7 @@ Kamu membantu admin mengelola platform secara efisien dengan tingkat kecerdasan,
 Kemampuanmu:
 - Mencari dan menganalisis data user, campaign, submission, transaksi, setting platform, log aktivitas, serta Discord Server (channel, role, member)
 - Mengedit data user (role, tier, balance, ban/unban)
-- Mengelola campaign (membuat campaign baru, edit status, budget, rate)
+- Mengelola campaign (membuat campaign baru, menduplikasi campaign, melihat detail, edit status, budget, rate)
 - Approve/reject submission video
 - Memproses payout/penarikan dana user (menyetujui atau menolak payout)
 - Melihat dan mengubah setting platform (platform fee, minimum withdrawal, dll)
@@ -33,7 +33,7 @@ Kemampuanmu:
 Panduan Gaya Bicara & Perilaku Tingkat Tinggi (Claude-Level / Gemini 3.5-Level):
 1. PENALARAN RIGOROUS & LOGIS: Berpikirlah secara mendalam, kritis, strategis, dan analitis. Lakukan analisis step-by-step sebelum menyimpulkan data. Jika mendeteksi anomali (misal: user dengan tier tinggi tapi view rendah, atau submission video yang tidak realistis), laporkan ke admin dan beri usulan solusi mitigasi secara proaktif.
 2. TO THE POINT: Berikan jawaban yang langsung ke inti masalah, singkat, padat, profesional, dan berbobot tinggi. HILANGKAN kata-kata basa-basi, sapaan santai berlebih, atau kalimat pengantar/penutup yang tidak berguna.
-3. PROSEDUR KONFIRMASI WAJIB (SEBELUM EKSEKUSI): Untuk semua aksi memodifikasi data, bersifat sensitif, atau berbahaya (seperti 'edit_user', 'edit_campaign', 'create_campaign', 'update_submission', 'process_payout', 'edit_site_settings', 'send_bot_command', 'send_discord_message', 'manage_member_role', 'schedule_task'):
+3. PROSEDUR KONFIRMASI WAJIB (SEBELUM EKSEKUSI): Untuk semua aksi memodifikasi data, bersifat sensitif, atau berbahaya (seperti 'edit_user', 'edit_campaign', 'create_campaign', 'duplicate_campaign', 'update_submission', 'process_payout', 'edit_site_settings', 'send_bot_command', 'send_discord_message', 'manage_member_role', 'schedule_task'):
    - Kamu TIDAK BOLEH langsung memanggil/mengeksekusi tool tersebut pada request pertama admin.
    - Kamu wajib menjawab terlebih dahulu secara to-the-point: sebutkan aksi apa yang akan dilakukan, parameternya, dampaknya secara ringkas, dan meminta konfirmasi eksplisit dari admin (misal: 'Saya akan memproses payout senilai $50.00 untuk user @guntur menjadi Completed. Apakah Anda yakin? Jawab Ya atau Tidak').
    - Hanya setelah admin membalas 'Ya', 'Ya, silakan', atau persetujuan eksplisit sejenisnya pada percakapan berikutnya, kamu diperbolehkan memanggil tool yang bersangkutan.
@@ -338,6 +338,32 @@ export const tools: FunctionDeclaration[] = [
         note: { type: SchemaType.STRING, description: "Catatan atau alasan (terutama jika ditolak)" },
       },
       required: ["transactionId", "action"],
+    },
+  },
+  {
+    name: "get_campaign_detail",
+    description: "Ambil detail lengkap satu campaign berdasarkan ID atau slug.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId campaign" },
+        slug: { type: SchemaType.STRING, description: "Slug campaign" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "duplicate_campaign",
+    description: "Duplikasi campaign yang sudah ada untuk membuat campaign baru dengan pengaturan yang sama.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId campaign yang akan diduplikasi" },
+        slug: { type: SchemaType.STRING, description: "Slug campaign yang akan diduplikasi (alternatif)" },
+        newTitle: { type: SchemaType.STRING, description: "Judul baru untuk campaign hasil duplikasi (opsional)" },
+        newBudget: { type: SchemaType.NUMBER, description: "Budget baru untuk campaign hasil duplikasi (opsional)" },
+      },
+      required: [],
     },
   },
 ];
@@ -933,6 +959,75 @@ export async function executeTool(
       return {
         success: true,
         message: `Payout dengan ID ${transactionId} berhasil diupdate menjadi ${action}!`,
+      };
+    }
+
+    case "get_campaign_detail": {
+      const filter: Record<string, unknown> = {};
+      if (args.campaignId) filter._id = args.campaignId;
+      else if (args.slug) filter.slug = args.slug;
+      else return { error: "campaignId atau slug wajib diisi." };
+
+      const campaign = await Campaign.findOne(filter).lean();
+      if (!campaign) return { error: "Campaign tidak ditemukan" };
+      return { success: true, campaign };
+    }
+
+    case "duplicate_campaign": {
+      const filter: Record<string, unknown> = {};
+      if (args.campaignId) filter._id = args.campaignId;
+      else if (args.slug) filter.slug = args.slug;
+      else return { error: "campaignId atau slug wajib diisi." };
+
+      const original = await Campaign.findOne(filter);
+      if (!original) return { error: "Campaign asal tidak ditemukan." };
+
+      const title = args.newTitle || `${original.title} (Copy)`;
+      const totalBudget = args.newBudget !== undefined ? args.newBudget : original.totalBudget;
+
+      const baseSlug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const existing = await Campaign.findOne({ slug: baseSlug });
+      const finalSlug = existing ? `${baseSlug}-${Date.now().toString().slice(-4)}` : baseSlug;
+
+      const copyData = original.toObject();
+      delete copyData._id;
+      delete copyData.createdAt;
+      delete copyData.updatedAt;
+      
+      copyData.title = title;
+      copyData.slug = finalSlug;
+      copyData.totalBudget = totalBudget;
+      copyData.budgetUsed = 0;
+      copyData.totalCreators = 0;
+      copyData.totalSubmissions = 0;
+      copyData.budgetAlertSent = false;
+      copyData.status = "active";
+      copyData.createdBy = new mongoose.Types.ObjectId(actorId);
+      copyData.startDate = new Date();
+
+      const campaign = await Campaign.create(copyData);
+
+      await ActivityLog.create({
+        actor: actorUsername,
+        actorId,
+        action: "ai_duplicate_campaign",
+        target: campaign._id.toString(),
+        targetType: "campaign",
+        details: `AI Assistant menduplikasi campaign "${original.title}" menjadi "${title}" (Slug: ${finalSlug}) dengan budget $${totalBudget}`,
+      });
+
+      return {
+        success: true,
+        message: `Campaign "${original.title}" berhasil diduplikasi menjadi "${title}"!`,
+        campaign: {
+          id: campaign._id.toString(),
+          slug: campaign.slug,
+          status: campaign.status,
+        },
       };
     }
 

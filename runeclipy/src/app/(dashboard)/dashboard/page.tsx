@@ -290,42 +290,42 @@ export default function DashboardPage() {
   return (
     <div>
       {/* ═══ Welcome Header ═══ */}
-      <h1 className="text-xl sm:text-2xl font-bold mb-5">
+      <h1 className="text-base sm:text-2xl font-bold mb-3 sm:mb-5">
         Welcome Back, <span className="gradient-text">{profile?.nickname || profile?.username || "Creator"}</span>
       </h1>
 
       {/* ═══ Profile Summary Card ═══ */}
       {profileLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8 animate-pulse">
-          <div className="glass-card p-6 h-52 bg-bg-tertiary/30" />
-          <div className="glass-card p-6 h-52 bg-bg-tertiary/30" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4 sm:mb-8 animate-pulse">
+          <div className="glass-card p-4 h-32 sm:h-52 bg-bg-tertiary/30" />
+          <div className="glass-card p-4 h-32 sm:h-52 bg-bg-tertiary/30" />
         </div>
       ) : profile ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4 sm:mb-8">
           {/* ── Left: User Identity Card ── */}
           <div className="glass-card p-0 overflow-hidden relative">
             {/* Glossy gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-transparent pointer-events-none" />
 
-            <div className="relative p-5 sm:p-6">
+            <div className="relative p-3 sm:p-5">
               {/* User info row */}
-              <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center gap-3 mb-3">
                 {/* Avatar */}
-                <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center text-3xl font-bold flex-shrink-0 border border-border/50">
+                <div className="w-10 h-10 sm:w-[72px] sm:h-[72px] rounded-xl sm:rounded-2xl bg-gradient-to-br from-bg-tertiary to-bg-secondary flex items-center justify-center text-xl sm:text-3xl font-bold flex-shrink-0 border border-border/50">
                   {profile.nickname.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg sm:text-xl font-bold truncate">{profile.nickname}</h2>
+                    <h2 className="text-sm sm:text-xl font-bold truncate">{profile.nickname}</h2>
                     <Link href="/profile" title="Edit Profile" className="p-1 rounded-md hover:bg-bg-tertiary transition-colors">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted hover:text-accent-light transition-colors"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                     </Link>
                   </div>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    member since {new Date(profile.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                  <p className="text-[10px] sm:text-xs text-text-muted mt-0.5">
+                    since {new Date(profile.memberSince).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                   </p>
                   {/* Approval Rate Badge */}
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/10 border border-success/20">
+                  <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-success/10 border border-success/20">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span className="text-xs font-semibold text-success">
                       Approval Rate: {profile.stats.totalVideos > 0 ? "Active" : "N/A"}
@@ -335,27 +335,27 @@ export default function DashboardPage() {
               </div>
 
               {/* Stats row */}
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 mb-4">
-                <div className="text-center p-2 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
+              <div className="grid grid-cols-3 gap-1 sm:gap-3 mb-3">
+                <div className="text-center p-1.5 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-info"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     <span className="text-[9px] sm:text-[10px] text-text-muted font-medium">Views</span>
                   </div>
-                  <div className="text-sm sm:text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
+                  <div className="text-xs sm:text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
                 </div>
                 <div className="text-center p-2 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-light"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                     <span className="text-[9px] sm:text-[10px] text-text-muted font-medium">Videos</span>
                   </div>
-                  <div className="text-sm sm:text-lg font-extrabold">{profile.stats.totalVideos}</div>
+                  <div className="text-xs sm:text-lg font-extrabold">{profile.stats.totalVideos}</div>
                 </div>
                 <div className="text-center p-2 sm:p-3 rounded-xl bg-bg-primary/40 border border-border/50">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink"><path d="M9 18V5l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <span className="text-[9px] sm:text-[10px] text-text-muted font-medium">Campaigns</span>
                   </div>
-                  <div className="text-sm sm:text-lg font-extrabold">{campaigns.length}</div>
+                  <div className="text-xs sm:text-lg font-extrabold">{campaigns.length}</div>
                 </div>
               </div>
 
@@ -400,16 +400,16 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Right: Earnings + Quick Stats ── */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {/* Earnings Card */}
-            <div className="glass-card p-5 sm:p-6 relative overflow-hidden flex-1">
-              <div className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="glass-card p-3 sm:p-6 relative overflow-hidden flex-1">
+              <div className="relative flex flex-row items-start justify-between gap-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium text-text-muted flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Total Earnings</span>
                     <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
                   </div>
-                  <div className="text-3xl sm:text-4xl font-extrabold gradient-text mb-3">
+                  <div className="text-2xl sm:text-4xl font-extrabold gradient-text mb-2">
                     {formatCurrency(profile.stats.totalEarned)}
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                 {/* My Activity Button — green like reference */}
                 <Link
                   href="/campaigns"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success/15 text-success text-xs font-bold hover:bg-success/25 transition-all border border-success/20 flex-shrink-0 self-start sm:self-auto w-fit"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl bg-success/15 text-success text-[10px] sm:text-xs font-bold hover:bg-success/25 transition-all border border-success/20 flex-shrink-0 self-start w-fit"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -463,8 +463,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="glass-card p-4 text-center">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="glass-card p-2 sm:p-4 text-center">
                 <div className="text-xs text-text-muted mb-1">Total Views</div>
                 <div className="text-xl font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
                 <div className="flex justify-center gap-3 mt-2">
@@ -502,19 +502,19 @@ export default function DashboardPage() {
 
 
       {/* ═══ Campaign Section Header ═══ */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent-light"><path d="M9 18V5l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          </div>
-          <h1 className="text-2xl font-bold">CAMPAIGNS</h1>
-        </div>
+      <div className="flex flex-row justify-between items-center gap-2 mb-3 sm:mb-6">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-text-muted">Sort By</span>
+          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent-light"><path d="M9 18V5l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <h2 className="text-base sm:text-2xl font-bold">CAMPAIGNS</h2>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-text-muted hidden sm:inline">Sort By</span>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="input-field !w-auto !py-2 !px-3 text-sm"
+            className="input-field !w-auto !py-1.5 !px-2 text-xs sm:!py-2 sm:!px-3 sm:text-sm"
           >
             {sortOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -523,14 +523,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Type Filters */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      {/* Type Filters + Platform Row */}
+      <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-4">
         {typeFilters.map((type) => (
           <button
             key={type}
             onClick={() => setActiveType(type)}
             className={cn(
-              "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              "px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-sm font-medium transition-all",
               activeType === type
                 ? "bg-accent/15 text-accent-light border border-border-hover"
                 : "text-text-muted hover:text-text-secondary hover:bg-bg-tertiary/50 border border-transparent"
@@ -542,33 +542,33 @@ export default function DashboardPage() {
       </div>
 
       {/* Platform Checkboxes */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex flex-wrap gap-2 sm:gap-4 mb-3 sm:mb-6">
         {platformFilters.map((platform) => (
-          <label key={platform} className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
+          <label key={platform} className="flex items-center gap-1.5 text-[10px] sm:text-sm text-text-secondary cursor-pointer">
             <input
               type="checkbox"
               checked={activePlatforms.has(platform)}
               onChange={() => togglePlatform(platform)}
-              className="w-4 h-4 rounded bg-bg-tertiary border-border accent-accent"
+              className="w-3 h-3 sm:w-4 sm:h-4 rounded bg-bg-tertiary border-border accent-accent"
             />
             {platform}
           </label>
         ))}
-        <span className="text-sm text-text-muted ml-2">
-          {filteredCampaigns.length} from {campaigns.length} campaigns
+        <span className="text-[10px] sm:text-sm text-text-muted">
+          {filteredCampaigns.length}/{campaigns.length}
         </span>
       </div>
 
       {/* Campaign Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-5">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="glass-card p-4 overflow-hidden animate-pulse flex gap-4 h-[116px]">
-              <div className="w-20 h-20 bg-bg-tertiary rounded-2xl flex-shrink-0" />
-              <div className="flex-1 space-y-3 py-1">
-                <div className="h-4 bg-bg-tertiary rounded w-3/4" />
-                <div className="h-3 bg-bg-tertiary rounded w-1/4" />
-                <div className="h-3 bg-bg-tertiary rounded w-1/2" />
+            <div key={i} className="glass-card p-2.5 sm:p-4 overflow-hidden animate-pulse flex gap-2 sm:gap-4 h-[90px] sm:h-[116px]">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-bg-tertiary rounded-xl sm:rounded-2xl flex-shrink-0" />
+              <div className="flex-1 space-y-2 sm:space-y-3 py-1">
+                <div className="h-3 bg-bg-tertiary rounded w-3/4" />
+                <div className="h-2 bg-bg-tertiary rounded w-1/4" />
+                <div className="h-2 bg-bg-tertiary rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -580,7 +580,7 @@ export default function DashboardPage() {
           <p className="text-text-muted text-sm">Check back later for new campaigns!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-5">
           {filteredCampaigns.map((campaign) => (
             <Link
               href={`/dashboard/detail/${campaign._id}`}
@@ -589,12 +589,12 @@ export default function DashboardPage() {
                 setSelectedCampaignId(campaign._id);
               }}
               key={campaign._id}
-              className="glass-card !p-4 block group hover:border-accent/30 transition-all relative overflow-hidden cursor-pointer"
+              className="glass-card !p-2 sm:!p-4 block group hover:border-accent/30 transition-all relative overflow-hidden cursor-pointer"
             >
               {/* Cover & Title Flex Row */}
-              <div className="flex gap-4 items-start mb-4">
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:gap-4 sm:items-start mb-2 sm:mb-4">
                 {/* Cover Thumbnail */}
-                <div className="relative w-20 h-20 rounded-2xl bg-bg-tertiary overflow-hidden flex-shrink-0">
+                <div className="relative w-full sm:w-20 h-24 sm:h-20 rounded-xl sm:rounded-2xl bg-bg-tertiary overflow-hidden flex-shrink-0">
                   {campaign.coverImage ? (
                     <img
                       src={campaign.coverImage}
@@ -665,19 +665,19 @@ export default function DashboardPage() {
               </div>
 
               {/* Active & Rate Row */}
-              <div className="flex justify-between items-end text-xs mb-4">
+              <div className="flex justify-between items-end text-xs mb-2 sm:mb-4">
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Active</div>
-                  <div className="font-bold text-sm">
+                  <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Active</div>
+                  <div className="font-bold text-[10px] sm:text-sm">
                     <span className="text-text-primary">{budgetPercent(campaign)}%</span>
-                    <span className="text-text-muted font-normal"> / {formatCompactCurrency(campaign.totalBudget)}</span>
+                    <span className="text-text-muted font-normal hidden sm:inline"> / {formatCompactCurrency(campaign.totalBudget)}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Rate</div>
-                  <div className="font-bold text-sm">
+                  <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Rate</div>
+                  <div className="font-bold text-[10px] sm:text-sm">
                     <span className="text-text-primary">{formatCompactCurrency(campaign.ratePerMillionViews)}</span>
-                    <span className="text-text-muted font-normal"> / 1M</span>
+                    <span className="text-text-muted font-normal hidden sm:inline"> / 1M</span>
                   </div>
                 </div>
               </div>
