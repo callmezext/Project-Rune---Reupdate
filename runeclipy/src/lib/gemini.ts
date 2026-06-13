@@ -993,10 +993,8 @@ export async function executeTool(
       const existing = await Campaign.findOne({ slug: baseSlug });
       const finalSlug = existing ? `${baseSlug}-${Date.now().toString().slice(-4)}` : baseSlug;
 
-      const copyData = original.toObject();
-      delete copyData._id;
-      delete copyData.createdAt;
-      delete copyData.updatedAt;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { _id, createdAt, updatedAt, ...copyData } = original.toObject();
       
       copyData.title = title;
       copyData.slug = finalSlug;
