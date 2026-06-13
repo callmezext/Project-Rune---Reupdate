@@ -44,6 +44,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Download reference videos locally if provided in the sound object
+    if (body.sounds && body.sounds.length > 0) {
+      const { downloadReferenceVideo } = await import("@/lib/tiktok-scraper");
+      for (const sound of body.sounds) {
+        if (sound.videoReferenceUrl && sound.videoReferenceUrl.trim().startsWith("http")) {
+          try {
+            console.log("[Campaign API] Downloading reference video:", sound.videoReferenceUrl);
+            const localUrl = await downloadReferenceVideo(sound.videoReferenceUrl);
+            sound.videoReferenceUrl = localUrl;
+            console.log("[Campaign API] Saved reference video locally to:", localUrl);
+          } catch (err) {
+            console.error("[Campaign API] Failed to download reference video:", err);
+          }
+        }
+      }
+    }
+
     const campaign = await Campaign.create({
       ...body,
       slug: slugify(body.title) + "-" + Date.now().toString(36),

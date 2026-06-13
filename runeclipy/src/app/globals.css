@@ -829,3 +829,17 @@ select.input-field {
 .scroll-animate-delay-4 { transition-delay: 400ms; }
 .scroll-animate-delay-5 { transition-delay: 500ms; }
 
+/* ─── Modal Background Blur & Transition ─── */
+header, nav, main, footer {
+  transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.modal-open header,
+body.modal-open nav,
+body.modal-open main,
+body.modal-open footer {
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+

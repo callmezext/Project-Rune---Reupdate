@@ -148,3 +148,68 @@ export function verifySoundMatch(
     reason: `Video uses "${videoMusic.title || "unknown sound"}" but campaign requires: ${soundNames}`,
   };
 }
+
+export async function downloadReferenceVideo(videoUrl: string): Promise<string> {
+  const fs = await import("fs");
+  const path = await import("path");
+
+  // If it's already a local path, return it directly
+  if (videoUrl.startsWith("/uploads/")) {
+    return videoUrl;
+  }
+
+  // 1. Scrape video metadata using TikWM
+  const response = await axios.post(
+    "https://www.tikwm.com/api/",
+    `url=${encodeURIComponent(videoUrl)}&hd=1`,
+    {
+      headers: {
+        "User-Agent": getRandomUA(),
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      timeout: 15000,
+    }
+  );
+
+  const d = response.data;
+  if (d?.code !== 0) throw new Error(d?.msg || "TikWM API error");
+  const data = d?.data;
+  if (!data) throw new Error("No data in TikWM response");
+
+  const videoId = data.id || `video-${Date.now()}`;
+  const playUrl = data.play || data.hdplay;
+  if (!playUrl) throw new Error("No play URL found in response");
+
+  // 2. Define path to save
+  const publicDir = path.join(process.cwd(), "public");
+  const uploadsDir = path.join(publicDir, "uploads", "reference-videos");
+  
+  // Create directories if they don't exist
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  const fileName = `${videoId}.mp4`;
+  const filePath = path.join(uploadsDir, fileName);
+  const publicPath = `/uploads/reference-videos/${fileName}`;
+
+  // 3. Download the video file stream
+  const writer = fs.createWriteStream(filePath);
+  const downloadResponse = await axios({
+    url: playUrl,
+    method: 'GET',
+    responseType: 'stream'
+  });
+
+  downloadResponse.data.pipe(writer);
+
+  return new Promise((resolve, reject) => {
+    writer.on('finish', () => resolve(publicPath));
+    writer.on('error', (err) => {
+      fs.unlink(filePath, () => {}); // cleanup
+      reject(err);
+    });
+  });
+}
+

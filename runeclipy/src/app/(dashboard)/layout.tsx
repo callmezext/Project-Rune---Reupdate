@@ -32,8 +32,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [profile, setProfile] = useState<{ nickname?: string; email?: string; stats?: { totalEarned: number } } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [activeTheme, setActiveTheme] = useState("default");
   const [notifications, setNotifications] = useState<Notif[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const themes = [
+    { id: "default", name: "Default (Dark Navy)", previewColor: "#8B5CF6" },
+    { id: "ame", name: "Ame (Violet & Gold)", previewColor: "#F59E0B" },
+    { id: "emerald", name: "Emerald Forest", previewColor: "#10B981" },
+    { id: "ocean", name: "Ocean Depths", previewColor: "#3B82F6" },
+    { id: "vampire", name: "Crimson Vampire", previewColor: "#EF4444" },
+    { id: "cyberpunk", name: "Cyberpunk 2077", previewColor: "#FACC15" },
+    { id: "obsidian", name: "Midnight Obsidian", previewColor: "#9CA3AF" },
+    { id: "sakura", name: "Sakura Dream", previewColor: "#F472B6" },
+    { id: "frost", name: "Nordic Frost", previewColor: "#0284C7" },
+    { id: "sunset", name: "Sunset Horizon", previewColor: "#D97706" },
+    { id: "toxic", name: "Toxic Wasteland", previewColor: "#84CC16" },
+    { id: "royal", name: "Royal Amethyst", previewColor: "#A855F7" },
+    { id: "arcade", name: "Retro Arcade", previewColor: "#06B6D4" },
+    { id: "coffee", name: "Coffee Roast", previewColor: "#78716C" },
+    { id: "matrix", name: "Hacker Matrix", previewColor: "#22C55E" },
+  ];
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -47,6 +67,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
+    // Load theme
+    const savedTheme = localStorage.getItem("theme") || "default";
+    setActiveTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
+
     fetch("/api/profile")
       .then((r) => r.json())
       .then((data) => {
@@ -60,6 +85,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       })
       .catch(() => router.push("/login"));
   }, [router, fetchNotifications]);
+
+  const changeTheme = (newTheme: string) => {
+    localStorage.setItem("theme", newTheme);
+    setActiveTheme(newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+    setThemeOpen(false);
+  };
 
   // Poll notifications every 30s
   useEffect(() => {
@@ -170,6 +202,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </svg>
               Invite & Earn
             </Link>
+
+            {/* Theme Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setThemeOpen(!themeOpen)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-text-muted hover:bg-bg-tertiary/40 hover:text-text-primary transition-all"
+                title="Change Theme"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+              </button>
+
+              {themeOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setThemeOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2.5 w-48 bg-bg-secondary border border-border rounded-2xl shadow-2xl p-2 z-50 animate-fadeInUp max-h-[300px] overflow-y-auto">
+                    <div className="px-3 py-1.5 text-xs font-bold text-text-muted uppercase tracking-wider">Select Theme</div>
+                    <div className="border-t border-border my-1" />
+                    {themes.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => changeTheme(t.id)}
+                        className={cn(
+                          "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 hover:bg-bg-tertiary transition-all",
+                          activeTheme === t.id ? "bg-accent/15 text-accent-light" : "text-text-secondary"
+                        )}
+                      >
+                        <span className="w-3 h-3 rounded-full border border-white/10" style={{ backgroundColor: t.previewColor }} />
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Notifications */}
             <div className="relative">
