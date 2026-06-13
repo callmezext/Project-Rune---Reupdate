@@ -224,31 +224,31 @@ export default function ProfilePage() {
           <div className="glass-card p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent to-pink flex items-center justify-center text-2xl font-bold">
-                {profile.nickname.charAt(0).toUpperCase()}
+                {(profile.nickname || profile.username || "U").charAt(0).toUpperCase()}
               </div>
               <div>
-                <h2 className="text-xl font-bold">{profile.nickname}</h2>
+                <h2 className="text-xl font-bold">{profile.nickname || profile.username || "User"}</h2>
                 <p className="text-sm text-text-muted font-mono">@{profile.username}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 rounded-xl bg-bg-primary/50 border border-border">
               <div className="text-center">
-                <div className="text-base sm:text-lg font-extrabold">{formatNumber(profile.stats.totalVideos)}</div>
+                <div className="text-base sm:text-lg font-extrabold">{formatNumber(profile.stats?.totalVideos ?? 0)}</div>
                 <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider">Videos</div>
               </div>
               <div className="text-center">
-                <div className="text-base sm:text-lg font-extrabold gradient-text">{formatCurrency(profile.stats.totalEarned)}</div>
+                <div className="text-base sm:text-lg font-extrabold gradient-text">{formatCurrency(profile.stats?.totalEarned ?? 0)}</div>
                 <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider">Earned</div>
               </div>
               <div className="text-center">
-                <div className="text-base sm:text-lg font-extrabold">{formatNumber(profile.stats.totalViews)}</div>
+                <div className="text-base sm:text-lg font-extrabold">{formatNumber(profile.stats?.totalViews ?? 0)}</div>
                 <div className="text-[9px] sm:text-[10px] text-text-muted uppercase tracking-wider">Views</div>
               </div>
             </div>
 
             <div className="mt-4 flex items-center gap-2 text-xs text-text-muted">
-              <span>🗓️</span> Member since {new Date(profile.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              <span>🗓️</span> Member since {profile.memberSince ? new Date(profile.memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Recently"}
             </div>
           </div>
 
@@ -266,16 +266,16 @@ export default function ProfilePage() {
                 <div className="flex-1">
                   <div className="text-lg font-extrabold">{profile.tierInfo.label} Creator</div>
                   <div className="text-xs text-text-muted mt-0.5">
-                    {profile.stats.totalVideos} approved videos
+                    {profile.stats?.totalVideos ?? 0} approved videos
                   </div>
                   {profile.tierInfo.nextTier && (
                     <div className="mt-3">
                       <div className="flex justify-between text-[10px] text-text-muted mb-1">
                         <span>Progress to {profile.tierInfo.nextTier.tier.charAt(0).toUpperCase() + profile.tierInfo.nextTier.tier.slice(1)}</span>
-                        <span>{profile.stats.totalVideos}/{profile.tierInfo.nextTier.required}</span>
+                        <span>{profile.stats?.totalVideos ?? 0}/{profile.tierInfo.nextTier.required}</span>
                       </div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${Math.min(100, (profile.stats.totalVideos / profile.tierInfo.nextTier.required) * 100)}%` }} />
+                        <div className="progress-fill" style={{ width: `${Math.min(100, ((profile.stats?.totalVideos ?? 0) / profile.tierInfo.nextTier.required) * 100)}%` }} />
                       </div>
                     </div>
                   )}
