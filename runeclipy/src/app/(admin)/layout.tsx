@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import AdminAIChat from "@/components/AdminAIChat";
+import Logo from "@/components/Logo";
 
 const AdminIcon = ({ d, ...props }: { d: string } & React.SVGProps<SVGSVGElement>) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}><path d={d} /></svg>
@@ -78,9 +79,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!authorized) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="admin-loader">
-          <div className="admin-loader-ring" />
-          <span className="text-sm text-text-muted mt-4">Verifying admin access...</span>
+        <div className="text-center flex flex-col items-center gap-3">
+          <Logo showText={false} iconSize={26} className="animate-pulse" />
+          <p className="text-text-muted text-[10px] uppercase tracking-widest font-extrabold animate-pulse">Verifying Admin...</p>
         </div>
       </div>
     );
@@ -105,12 +106,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Brand */}
         <div className="p-5 pb-3">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#22d3ee] flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-accent/20"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
-            <div>
-              <span className="font-bold gradient-text text-base tracking-tight">RuneClipy</span>
-              <div className="admin-badge">ADMIN</div>
-            </div>
+          <Link href="/dashboard" className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity">
+            <Logo iconSize={18} textSize="text-base" />
+            <div className="admin-badge -ml-1">ADMIN</div>
           </Link>
         </div>
 

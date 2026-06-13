@@ -12,6 +12,8 @@ interface Settings {
   discordInviteUrl: string;
   discordNotifChannelId: string;
   supportEmail: string;
+  siteName: string;
+  siteLogoUrl: string;
   geminiApiKey: string;
   geminiApiKeys: string[];
   geminiModel: string;
@@ -24,6 +26,7 @@ export default function AdminSettingsPage() {
     platformFeePercent: 3, minCampaignWithdrawal: 10, minReferralWithdrawal: 30,
     referralCommissionPercent: 5, discordWebhookUrl: "",
     discordInviteUrl: "", discordNotifChannelId: "", supportEmail: "",
+    siteName: "RuneClipy", siteLogoUrl: "",
     geminiApiKey: "",
     geminiApiKeys: [""],
     geminiModel: "gemini-2.0-flash",
@@ -59,6 +62,8 @@ export default function AdminSettingsPage() {
             discordInviteUrl: d.settings.discordInviteUrl ?? "",
             discordNotifChannelId: d.settings.discordNotifChannelId ?? "",
             supportEmail: d.settings.supportEmail ?? "",
+            siteName: d.settings.siteName ?? "RuneClipy",
+            siteLogoUrl: d.settings.siteLogoUrl ?? "",
             geminiApiKey: d.settings.geminiApiKey ?? "",
             geminiApiKeys: apiKeys,
             geminiModel: d.settings.geminiModel ?? "gemini-2.0-flash",
@@ -245,11 +250,28 @@ export default function AdminSettingsPage() {
           {/* General */}
           <div className="glass-card p-6 space-y-4">
             <h3 className="font-bold mb-2">🌐 General</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-text-secondary mb-1.5">Site Name</label>
+                <input type="text" value={settings.siteName}
+                  onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                  className="input-field" placeholder="RuneClipy" />
+              </div>
+              <div>
+                <label className="block text-sm text-text-secondary mb-1.5">Support Email</label>
+                <input type="email" value={settings.supportEmail}
+                  onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
+                  className="input-field" placeholder="support@runeclipy.com" />
+              </div>
+            </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Support Email</label>
-              <input type="email" value={settings.supportEmail}
-                onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                className="input-field" placeholder="support@runeclipy.com" />
+              <label className="block text-sm text-text-secondary mb-1.5">Custom Logo URL</label>
+              <input type="url" value={settings.siteLogoUrl}
+                onChange={(e) => setSettings({ ...settings, siteLogoUrl: e.target.value })}
+                className="input-field" placeholder="https://example.com/logo.png" />
+              <p className="text-[10px] text-text-muted mt-1.5">
+                Masukkan URL logo kustom Anda. Biarkan kosong untuk menggunakan logo default SVG premium.
+              </p>
             </div>
           </div>
 

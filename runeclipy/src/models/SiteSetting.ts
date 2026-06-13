@@ -19,6 +19,7 @@ export interface ISiteSetting extends Document {
 
   // General
   siteName: string;
+  siteLogoUrl: string;
   supportEmail: string;
   weeklyLeaderboardSentAt?: Date | null;
 
@@ -50,6 +51,7 @@ const SiteSettingSchema = new Schema<ISiteSetting>(
 
     // General
     siteName: { type: String, default: "RuneClipy" },
+    siteLogoUrl: { type: String, default: "" },
     supportEmail: { type: String, default: "" },
     weeklyLeaderboardSentAt: { type: Date, default: null },
 

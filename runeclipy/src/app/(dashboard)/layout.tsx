@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { cn, timeAgo } from "@/lib/utils";
+import Logo from "@/components/Logo";
 
 interface Notif {
   _id: string;
@@ -118,13 +119,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <p className="text-text-muted text-sm">Loading...</p>
+        <div className="text-center flex flex-col items-center gap-3">
+          <Logo showText={false} iconSize={26} className="animate-pulse" />
+          <p className="text-text-muted text-[10px] uppercase tracking-widest font-extrabold animate-pulse">Loading...</p>
         </div>
       </div>
     );
@@ -137,14 +134,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex items-center justify-between h-16 max-w-7xl mx-auto w-full">
           {/* Left: Brand/Logo & Navigation */}
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-2.5">
-              <span className="text-white">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
-                  <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
-                </svg>
-              </span>
-              <span className="text-base font-extrabold tracking-wider text-white">RUNECLIPY</span>
+            <Link href="/dashboard" className="hover:opacity-95 transition-opacity">
+              <Logo iconSize={18} textSize="text-base" />
             </Link>
 
             {/* Horizontal Tabs */}

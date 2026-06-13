@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = { title: "Login — RuneClipy" };
 
@@ -14,10 +15,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <div className="relative z-10 w-full max-w-md mx-4">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span className="text-3xl">🔮</span>
-            <span className="text-2xl font-bold gradient-text tracking-wider">RuneClipy</span>
+        <div className="text-center mb-8 flex justify-center">
+          <Link href="/" className="inline-block hover:opacity-95 transition-opacity">
+            <Logo iconSize={26} textSize="text-2xl" />
           </Link>
         </div>
 

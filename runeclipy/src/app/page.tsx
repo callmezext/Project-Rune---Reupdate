@@ -5,6 +5,7 @@ import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import Campaign from "@/models/Campaign";
 import Submission from "@/models/Submission";
+import Logo from "@/components/Logo";
 
 function formatStat(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M+`;
@@ -56,24 +57,9 @@ export default async function LandingPage() {
       {/* ═══ Header Navbar (Glassmorphic Floating) ═══ */}
       <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-[#07050f]/65 border-b border-white/[0.04]">
         <nav className="flex items-center justify-between px-3 sm:px-8 md:px-12 py-3.5 sm:py-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 p-[1.5px] shadow-lg shadow-purple-500/25 flex-shrink-0">
-              <div className="w-full h-full bg-[#0d091e] rounded-[10px] flex items-center justify-center">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
-                  <defs>
-                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#c084fc" />
-                      <stop offset="100%" stopColor="#22d3ee" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-            </div>
-            <span className="text-sm min-[360px]:text-lg sm:text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-300">
-              RUNECLIPY
-            </span>
-          </div>
+          <Link href="/" className="hover:opacity-95 transition-opacity">
+            <Logo iconSize={22} textSize="text-sm min-[360px]:text-lg sm:text-2xl" />
+          </Link>
           <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-4">
             <Link href="/login" className="px-2.5 xs:px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] xs:text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition-colors duration-300">
               Log in
