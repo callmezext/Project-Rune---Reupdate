@@ -154,11 +154,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={cn(
                   "px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 border border-transparent",
                   (pathname === "/dashboard" || pathname.startsWith("/dashboard/detail"))
-                    ? "bg-error/15 text-white border-error/20 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+                    ? "bg-accent/15 text-white border-accent/20 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
                     : "text-text-muted hover:text-text-primary hover:bg-bg-tertiary/30"
                 )}
               >
-                <svg className={cn("w-4 h-4", (pathname === "/dashboard" || pathname.startsWith("/dashboard/detail")) ? "text-error" : "text-text-muted")} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <svg className={cn("w-4 h-4", (pathname === "/dashboard" || pathname.startsWith("/dashboard/detail")) ? "text-accent" : "text-text-muted")} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" />
                   <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
                 </svg>
@@ -170,11 +170,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={cn(
                   "px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 border border-transparent",
                   pathname.startsWith("/campaigns")
-                    ? "bg-error/15 text-white border-error/20 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+                    ? "bg-accent/15 text-white border-accent/20 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
                     : "text-text-muted hover:text-text-primary hover:bg-bg-tertiary/30"
                 )}
               >
-                <svg className={cn("w-4 h-4", pathname.startsWith("/campaigns") ? "text-error" : "text-text-muted")} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <svg className={cn("w-4 h-4", pathname.startsWith("/campaigns") ? "text-accent" : "text-text-muted")} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-13m0 0C5 7 7 9 10 9s5-2 8-2 5 2 6 2v10c-1 0-3-2-6-2s-5 2-8 2-5-2-7-2m0-3h18" />
                 </svg>
                 My Activity
