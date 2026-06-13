@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { GoogleGenerativeAI, FunctionDeclaration, SchemaType, Part } from "@google/generative-ai";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
@@ -11,13 +12,14 @@ import ScheduledTask from "@/models/ScheduledTask";
 
 // ─── System Prompt ───────────────────────────────────────────────────────────
 export const SYSTEM_PROMPT = `Kamu adalah AI Admin Assistant untuk platform RuneClipy — sebuah platform TikTok creator marketing.
-Kamu membantu admin mengelola platform secara efisien dengan tingkat kecerdasan, ketajaman analisis, dan penalaran tingkat tinggi setara dengan Claude Opus / Claude 3.5 Sonnet.
+Kamu membantu admin mengelola platform secara efisien dengan tingkat kecerdasan, ketajaman analisis, dan penalaran tingkat tinggi setara dengan Gemini 3.5 Pro / Claude 3.5 Sonnet.
 
 Kemampuanmu:
 - Mencari dan menganalisis data user, campaign, submission, transaksi, setting platform, log aktivitas, serta Discord Server (channel, role, member)
 - Mengedit data user (role, tier, balance, ban/unban)
-- Mengelola campaign (edit status, budget)  
-- Approve/reject submission
+- Mengelola campaign (membuat campaign baru, edit status, budget, rate)
+- Approve/reject submission video
+- Memproses payout/penarikan dana user (menyetujui atau menolak payout)
 - Melihat dan mengubah setting platform (platform fee, minimum withdrawal, dll)
 - Memantau status bot dan mengontrol Discord Bot (start, stop, restart)
 - Berinteraksi dengan server Discord secara penuh:
@@ -28,12 +30,12 @@ Kemampuanmu:
 - Menjadwalkan tugas otomatis di masa depan, seperti mengirim pesan Discord pada waktu tertentu ('schedule_task')
 - Menganalisis statistik, performa keuangan, mendeteksi kecurangan/kejanggalan data secara proaktif, dan memberikan wawasan taktis bisnis
 
-Panduan Gaya Bicara & Perilaku Tingkat Tinggi (Claude-Level):
+Panduan Gaya Bicara & Perilaku Tingkat Tinggi (Claude-Level / Gemini 3.5-Level):
 1. PENALARAN RIGOROUS & LOGIS: Berpikirlah secara mendalam, kritis, strategis, dan analitis. Lakukan analisis step-by-step sebelum menyimpulkan data. Jika mendeteksi anomali (misal: user dengan tier tinggi tapi view rendah, atau submission video yang tidak realistis), laporkan ke admin dan beri usulan solusi mitigasi secara proaktif.
 2. TO THE POINT: Berikan jawaban yang langsung ke inti masalah, singkat, padat, profesional, dan berbobot tinggi. HILANGKAN kata-kata basa-basi, sapaan santai berlebih, atau kalimat pengantar/penutup yang tidak berguna.
-3. PROSEDUR KONFIRMASI WAJIB (SEBELUM EKSEKUSI): Untuk semua aksi memodifikasi data, bersifat sensitif, atau berbahaya (seperti 'edit_user', 'edit_campaign', 'update_submission', 'edit_site_settings', 'send_bot_command', 'send_discord_message', 'manage_member_role', 'schedule_task'):
+3. PROSEDUR KONFIRMASI WAJIB (SEBELUM EKSEKUSI): Untuk semua aksi memodifikasi data, bersifat sensitif, atau berbahaya (seperti 'edit_user', 'edit_campaign', 'create_campaign', 'update_submission', 'process_payout', 'edit_site_settings', 'send_bot_command', 'send_discord_message', 'manage_member_role', 'schedule_task'):
    - Kamu TIDAK BOLEH langsung memanggil/mengeksekusi tool tersebut pada request pertama admin.
-   - Kamu wajib menjawab terlebih dahulu secara to-the-point: sebutkan aksi apa yang akan dilakukan, parameternya, dampaknya secara ringkas, dan meminta konfirmasi eksplisit dari admin (misal: 'Saya akan memberikan role VIP ke user @guntur di Discord. Apakah Anda yakin? Jawab Ya atau Tidak').
+   - Kamu wajib menjawab terlebih dahulu secara to-the-point: sebutkan aksi apa yang akan dilakukan, parameternya, dampaknya secara ringkas, dan meminta konfirmasi eksplisit dari admin (misal: 'Saya akan memproses payout senilai $50.00 untuk user @guntur menjadi Completed. Apakah Anda yakin? Jawab Ya atau Tidak').
    - Hanya setelah admin membalas 'Ya', 'Ya, silakan', atau persetujuan eksplisit sejenisnya pada percakapan berikutnya, kamu diperbolehkan memanggil tool yang bersangkutan.
    - JANGAN memanggil tool pengubah data sebelum admin mengonfirmasi 'Ya' di riwayat pesan sebelumnya!
 4. Sajikan data menggunakan format Markdown yang rapi (list, tabel jika relevan).
@@ -43,6 +45,7 @@ Platform context:
 - User memiliki role: user, moderator, admin  
 - Campaign memiliki status: active, paused, ended
 - Submission status: pending, approved, rejected, paid_out
+- Transaksi payout status: pending, completed, failed, rejected
 - Mata uang: USD ($)`;
 
 // ─── Function Declarations (Tools) ────────────────────────────────────────────
@@ -303,6 +306,38 @@ export const tools: FunctionDeclaration[] = [
         },
       },
       required: ["taskType", "payload", "executeAt"],
+    },
+  },
+  {
+    name: "create_campaign",
+    description: "Buat campaign baru untuk platform.",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        title: { type: SchemaType.STRING, description: "Judul campaign" },
+        type: { type: SchemaType.STRING, description: "Tipe campaign: music, clipping, logo, ugc" },
+        totalBudget: { type: SchemaType.NUMBER, description: "Total budget campaign (USD)" },
+        ratePerMillionViews: { type: SchemaType.NUMBER, description: "Rate per 1M views (USD, default: 1000)" },
+        description: { type: SchemaType.STRING, description: "Deskripsi campaign (opsional, teks HTML atau biasa)" },
+        coverImage: { type: SchemaType.STRING, description: "URL gambar cover (opsional)" },
+        soundTitle: { type: SchemaType.STRING, description: "Judul lagu/sound (opsional)" },
+        tiktokSoundId: { type: SchemaType.STRING, description: "TikTok Sound ID (opsional)" },
+        soundUrl: { type: SchemaType.STRING, description: "URL lagu/sound di TikTok (opsional)" },
+      },
+      required: ["title", "type", "totalBudget", "ratePerMillionViews"],
+    },
+  },
+  {
+    name: "process_payout",
+    description: "Proses permintaan payout (penarikan saldo) dari user, baik disetujui (completed) maupun ditolak (rejected).",
+    parameters: {
+      type: SchemaType.OBJECT,
+      properties: {
+        transactionId: { type: SchemaType.STRING, description: "MongoDB ObjectId transaksi payout" },
+        action: { type: SchemaType.STRING, description: "Aksi: completed (setujui/selesai) atau rejected (tolak)" },
+        note: { type: SchemaType.STRING, description: "Catatan atau alasan (terutama jika ditolak)" },
+      },
+      required: ["transactionId", "action"],
     },
   },
 ];
@@ -791,6 +826,116 @@ export async function executeTool(
       };
     }
 
+    case "create_campaign": {
+      const { title, type, totalBudget, ratePerMillionViews, description, coverImage, soundTitle, tiktokSoundId, soundUrl } = args;
+
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const existing = await Campaign.findOne({ slug });
+      const finalSlug = existing ? `${slug}-${Date.now().toString().slice(-4)}` : slug;
+
+      const campaignData: any = {
+        title,
+        slug: finalSlug,
+        type,
+        totalBudget,
+        ratePerMillionViews,
+        description: description || `Campaign ${title}`,
+        coverImage: coverImage || "",
+        createdBy: new mongoose.Types.ObjectId(actorId),
+        status: "active",
+      };
+
+      if (soundTitle || tiktokSoundId || soundUrl) {
+        campaignData.sounds = [{
+          title: soundTitle || title,
+          tiktokSoundId: tiktokSoundId || "",
+          soundUrl: soundUrl || "",
+          videoReferenceUrl: "",
+        }];
+      }
+
+      const campaign = await Campaign.create(campaignData);
+
+      await ActivityLog.create({
+        actor: actorUsername,
+        actorId,
+        action: "ai_create_campaign",
+        target: campaign._id.toString(),
+        targetType: "campaign",
+        details: `AI Assistant membuat campaign baru: "${title}" (Slug: ${finalSlug}) dengan budget $${totalBudget}`,
+      });
+
+      return {
+        success: true,
+        message: `Campaign "${title}" berhasil dibuat!`,
+        campaign: {
+          id: campaign._id.toString(),
+          slug: campaign.slug,
+          status: campaign.status,
+        },
+      };
+    }
+
+    case "process_payout": {
+      const { transactionId, action, note } = args;
+
+      if (!["completed", "rejected"].includes(action)) {
+        return { error: "Aksi tidak valid. Gunakan 'completed' atau 'rejected'." };
+      }
+
+      const tx = await Transaction.findById(transactionId);
+      if (!tx) return { error: "Transaksi tidak ditemukan" };
+      if (tx.type !== "payout") return { error: "Transaksi ini bukan merupakan transaksi penarikan/payout" };
+      if (tx.status !== "pending") return { error: `Transaksi ini sudah diproses sebelumnya dengan status: ${tx.status}` };
+
+      tx.status = action;
+      if (action === "completed") tx.processedAt = new Date();
+      await tx.save();
+
+      const { createNotification } = await import("@/lib/notifications");
+
+      if (action === "rejected") {
+        const balanceField = tx.description?.includes("referral") ? "referralBalance" : "campaignBalance";
+        await User.findByIdAndUpdate(tx.userId, { $inc: { [balanceField]: tx.amount } });
+
+        await createNotification({
+          userId: tx.userId.toString(),
+          type: "payout_rejected",
+          title: "Payout Rejected",
+          message: `Your payout of $${tx.amount.toFixed(2)} was rejected. The amount has been refunded to your balance.${note ? " Alasan: " + note : ""}`,
+          link: "/balance",
+        });
+      }
+
+      if (action === "completed") {
+        await createNotification({
+          userId: tx.userId.toString(),
+          type: "payout_completed",
+          title: "Payout Sent! 💸",
+          message: `Your payout of $${tx.netAmount.toFixed(2)} has been processed and sent to your payment method.${note ? " Catatan: " + note : ""}`,
+          link: "/balance",
+        });
+      }
+
+      await ActivityLog.create({
+        actor: actorUsername,
+        actorId,
+        action: `ai_process_payout_${action}`,
+        target: tx._id.toString(),
+        targetType: "transaction",
+        details: `AI Assistant memproses payout ${transactionId} menjadi ${action}. Catatan: ${note || "-"}`,
+      });
+
+      return {
+        success: true,
+        message: `Payout dengan ID ${transactionId} berhasil diupdate menjadi ${action}!`,
+      };
+    }
+
     default:
       return { error: `Tool '${name}' tidak dikenali` };
   }
@@ -823,8 +968,11 @@ export async function runAIChat(
     const currentKey = activeKeys[i];
     
     // Build list of models to try in fallback order
-    const modelsToTry = [modelName || "gemini-2.0-flash"];
-    if (modelName && modelName !== "gemini-2.0-flash") {
+    const modelsToTry = [modelName || "gemini-2.5-flash"];
+    if (modelName && modelName !== "gemini-2.5-flash") {
+      modelsToTry.push("gemini-2.5-flash");
+    }
+    if (modelName !== "gemini-2.0-flash") {
       modelsToTry.push("gemini-2.0-flash");
     }
     if (modelName !== "gemini-1.5-flash") {
@@ -920,8 +1068,11 @@ export async function runAIChat(
 
 // ─── Verify API Key ───────────────────────────────────────────────────────────
 export async function verifyGeminiApiKey(apiKey: string, modelName?: string): Promise<{ valid: boolean; error?: string }> {
-  const modelsToTry = [modelName || "gemini-2.0-flash"];
-  if (modelName && modelName !== "gemini-2.0-flash") {
+  const modelsToTry = [modelName || "gemini-2.5-flash"];
+  if (modelName && modelName !== "gemini-2.5-flash") {
+    modelsToTry.push("gemini-2.5-flash");
+  }
+  if (modelName !== "gemini-2.0-flash") {
     modelsToTry.push("gemini-2.0-flash");
   }
   if (modelName !== "gemini-1.5-flash") {
@@ -964,7 +1115,7 @@ export async function getStoredAIConfig(): Promise<{ apiKey: string | null; apiK
   return {
     apiKey: settings?.geminiApiKey || null,
     apiKeys: keys,
-    model: settings?.geminiModel || "gemini-2.0-flash",
+    model: settings?.geminiModel || "gemini-2.5-flash",
   };
 }
 
