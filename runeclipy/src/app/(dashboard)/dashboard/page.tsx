@@ -93,7 +93,9 @@ export default function DashboardPage() {
 
   const filteredCampaigns = campaigns
     .filter((c) => activeType === "All" || c.type === activeType.toLowerCase())
-    .filter((c) => activePlatforms.size === 0 || c.supportedPlatforms?.some((p) => activePlatforms.has(p)))
+    .filter((c) => activePlatforms.size === 0 || c.supportedPlatforms?.some((p) => 
+      Array.from(activePlatforms).some((ap) => ap.toLowerCase() === p.toLowerCase())
+    ))
     .sort((a, b) => {
       if (sort === "budget") return b.totalBudget - a.totalBudget;
       if (sort === "rate") return b.ratePerMillionViews - a.ratePerMillionViews;
