@@ -488,14 +488,16 @@ export default function DashboardPage() {
                       const platformLower = p.toLowerCase();
                       if (platformLower === "tiktok") {
                         return (
-                          <svg key={p} className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" fill="currentColor" viewBox="0 0 24 24" title="TikTok">
+                          <svg key={p} className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                            <title>TikTok</title>
                             <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.6-4.09-1.5-1.2-1-2.02-2.44-2.24-3.99-.01 1.72-.01 3.43-.01 5.14v6.86c-.07 1.71-.56 3.47-1.74 4.72-1.34 1.48-3.41 2.27-5.42 2.29-2.08.06-4.22-.64-5.69-2.14C1.58 19.86.77 17.57.9 15.22c.07-2.16.94-4.32 2.65-5.66 1.6-1.3 3.79-1.84 5.86-1.5v4.05c-1.22-.24-2.58-.1-3.6.59-1.07.67-1.72 1.94-1.73 3.2-.01 1.25.59 2.5 1.59 3.23 1.09.85 2.61 1.01 3.89.44 1.11-.46 1.84-1.57 1.94-2.77.02-2.31.01-4.62.01-6.93V.02z" />
                           </svg>
                         );
                       }
                       if (platformLower === "instagram") {
                         return (
-                          <svg key={p} className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" title="Instagram">
+                          <svg key={p} className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                            <title>Instagram</title>
                             <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
                             <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
@@ -504,7 +506,8 @@ export default function DashboardPage() {
                       }
                       if (platformLower === "youtube") {
                         return (
-                          <svg key={p} className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" fill="currentColor" viewBox="0 0 24 24" title="YouTube">
+                          <svg key={p} className="w-3.5 h-3.5 text-text-muted group-hover:text-text-secondary transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                            <title>YouTube</title>
                             <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                           </svg>
                         );
