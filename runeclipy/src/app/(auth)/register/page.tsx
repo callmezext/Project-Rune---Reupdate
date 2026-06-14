@@ -3,11 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/context/LanguageContext";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { t } = useLanguage();
   const [step, setStep] = useState<"info" | "otp" | "password">("info");
   const [form, setForm] = useState({ nickname: "", username: "", email: "", referralCode: "" });
   const [otp, setOtp] = useState("");
@@ -91,20 +89,16 @@ export default function RegisterPage() {
   };
 
   // Step indicator
-  const steps = [
-    t("accountsTitle"),
-    t("btnVerifyEmail").replace("Email", ""),
-    t("labelPassword")
-  ];
+  const steps = ["Account Info", "Verify Email", "Set Password"];
   const currentStepIndex = step === "info" ? 0 : step === "otp" ? 1 : 2;
 
   return (
     <div className="glass-card p-5 sm:p-8 animate-fadeInUp">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-center mb-2 tracking-tight">
-        {t("registerTitle")}<span className="gradient-text">{t("registerTitleHighlight")}</span>
+        Start <span className="gradient-text">Earning</span>
       </h1>
       <p className="text-xs sm:text-sm text-text-secondary text-center mb-6 max-w-xs mx-auto">
-        {t("registerSubtitle")}
+        Join RuneClipy and turn your TikTok short video views into passive earnings!
       </p>
 
       {/* Step Indicator */}
@@ -132,43 +126,41 @@ export default function RegisterPage() {
       {step === "info" && (
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">{t("labelNickname")}</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Nickname</label>
             <input type="text" value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })}
-              className="input-field" placeholder={t("placeholderNickname")} required maxLength={30} />
+              className="input-field" placeholder="Your display name" required maxLength={30} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">{t("labelUsername")}</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Username</label>
             <input type="text" value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, "") })}
-              className="input-field font-mono" placeholder={t("placeholderUsername")} required maxLength={20} />
-            <p className="text-xs text-text-muted mt-1">{t("usernameWarning")}</p>
+              className="input-field font-mono" placeholder="your username" required maxLength={20} />
+            <p className="text-xs text-text-muted mt-1">This will be your referral code. Cannot change later.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">{t("labelEmail")}</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Email (Gmail)</label>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="input-field" placeholder={t("placeholderEmail")} required />
+              className="input-field" placeholder="you@gmail.com" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              {t("labelReferralCode")} <span className="text-text-muted">({t("or") === "or" ? "optional" : "opsional"})</span>
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Referral Code <span className="text-text-muted">(optional)</span></label>
             <input type="text" value={form.referralCode}
               onChange={(e) => setForm({ ...form, referralCode: e.target.value.toLowerCase() })}
-              className="input-field font-mono" placeholder={t("placeholderReferralCode")} />
+              className="input-field font-mono" placeholder="friend username" />
           </div>
           <div className="flex items-start gap-2">
             <input type="checkbox" id="terms" checked={agreedTerms}
               onChange={(e) => setAgreedTerms(e.target.checked)}
               className="mt-1 accent-accent w-4 h-4 rounded" />
             <label htmlFor="terms" className="text-xs text-text-muted leading-relaxed">
-              {t("agreeTo")}
-              <Link href="/creator-terms" target="_blank" className="text-accent-light hover:underline">{t("termsOfService")}</Link>
-              {t("and")}
-              <Link href="/privacy-policy" target="_blank" className="text-accent-light hover:underline">{t("privacyPolicy")}</Link>
+              I agree to the{" "}
+              <Link href="/creator-terms" target="_blank" className="text-accent-light hover:underline">Terms of Service</Link>
+              {" "}and{" "}
+              <Link href="/privacy-policy" target="_blank" className="text-accent-light hover:underline">Privacy Policy</Link>
             </label>
           </div>
           <button type="submit" disabled={loading || !agreedTerms} className="btn-gradient w-full !rounded-xl text-sm !py-3 disabled:opacity-50">
-            {loading ? t("btnSendingOtp") : `${t("btnContinue")} →`}
+            {loading ? "Sending OTP..." : "Continue →"}
           </button>
         </form>
       )}
@@ -176,7 +168,7 @@ export default function RegisterPage() {
       {step === "otp" && (
         <form onSubmit={handleVerifyOTP} className="space-y-4">
           <p className="text-sm text-text-secondary text-center mb-2">
-            {t("otpInstructions")} <strong className="text-text-primary">{form.email}</strong>
+            We sent a 6-digit code to <strong className="text-text-primary">{form.email}</strong>
           </p>
           <div>
             <input type="text" value={otp}
@@ -185,10 +177,10 @@ export default function RegisterPage() {
               placeholder="000000" maxLength={6} required autoFocus />
           </div>
           <button type="submit" disabled={loading || otp.length < 6} className="btn-gradient w-full !rounded-xl text-sm !py-3 disabled:opacity-50">
-            {loading ? t("btnVerifying") : t("btnVerifyEmail")}
+            {loading ? "Verifying..." : "Verify Email"}
           </button>
           <button type="button" onClick={() => setStep("info")} className="w-full text-sm text-text-muted hover:text-text-secondary transition-colors">
-            {t("btnBack")}
+            ← Back
           </button>
         </form>
       )}
@@ -197,20 +189,20 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="text-center mb-2">
             <span className="text-3xl">✅</span>
-            <p className="text-sm text-success font-medium mt-2">{t("msgEmailVerified")}</p>
+            <p className="text-sm text-success font-medium mt-2">Email verified!</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">{t("labelPassword")}</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              className="input-field" placeholder={t("placeholderPassword")} required minLength={6} />
+              className="input-field" placeholder="Min. 6 characters" required minLength={6} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">{t("labelConfirmPassword")}</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Confirm Password</label>
             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-              className="input-field" placeholder={t("placeholderConfirmPassword")} required />
+              className="input-field" placeholder="Repeat password" required />
           </div>
           <button type="submit" disabled={loading} className="btn-gradient w-full !rounded-xl text-sm !py-3 disabled:opacity-50">
-            {loading ? t("btnCreatingAccount") : t("btnCreateAccount")}
+            {loading ? "Creating account..." : "🔮 Create Account"}
           </button>
         </form>
       )}
@@ -219,7 +211,7 @@ export default function RegisterPage() {
         <>
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center text-xs"><span className="px-3 bg-bg-card text-text-muted">{t("or")}</span></div>
+            <div className="relative flex justify-center text-xs"><span className="px-3 bg-bg-card text-text-muted">or</span></div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <button onClick={handleGoogleSignup} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-text-secondary hover:text-text-primary hover:border-border-hover transition-all text-sm font-medium">
@@ -235,8 +227,8 @@ export default function RegisterPage() {
       )}
 
       <p className="text-center text-sm text-text-muted mt-6">
-        {t("alreadyHaveAccount")}
-        <Link href="/login" className="text-accent-light hover:text-accent transition-colors font-medium">{t("login")}</Link>
+        Already have an account?{" "}
+        <Link href="/login" className="text-accent-light hover:text-accent transition-colors font-medium">Log in</Link>
       </p>
     </div>
   );

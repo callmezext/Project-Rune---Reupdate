@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { timeAgo } from "@/lib/utils";
-import { useLanguage } from "@/context/LanguageContext";
 
 interface ConnectedAccount {
   _id: string;
@@ -16,7 +15,6 @@ interface ConnectedAccount {
 }
 
 export default function AccountsPage() {
-  const { t } = useLanguage();
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -99,7 +97,7 @@ export default function AccountsPage() {
         if (data.canRequestManual) setCanRequestManual(true);
         return;
       }
-      setSuccessMsg(data.message || t("successMsgVerified"));
+      setSuccessMsg(data.message || "Verified successfully!");
       setTimeout(() => {
         setShowModal(false);
         setStep("link");
@@ -134,7 +132,7 @@ export default function AccountsPage() {
   };
 
   const handleDisconnect = async (id: string) => {
-    if (!confirm(t("disconnectAccount"))) return;
+    if (!confirm("Disconnect this account?")) return;
     try {
       await fetch("/api/accounts/disconnect", {
         method: "POST",
@@ -149,12 +147,12 @@ export default function AccountsPage() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold gradient-text">{t("accountsTitle")}</h1>
-          <p className="text-sm text-text-muted mt-1">{t("accountsSubtitle")}</p>
+          <h1 className="text-2xl font-bold gradient-text">Connected Accounts</h1>
+          <p className="text-sm text-text-muted mt-1">Link your social media accounts to submit content</p>
         </div>
         <button onClick={() => { setShowModal(true); setStep("link"); setError(""); setHint(""); setCurrentBio(""); setCanRequestManual(false); setManualRequested(false); setSuccessMsg(""); }}
           className="btn-gradient !rounded-xl text-sm !py-2.5 flex items-center gap-2">
-          + {t("btnConnectAccount")}
+          + Connect Account
         </button>
       </div>
 
@@ -171,9 +169,9 @@ export default function AccountsPage() {
       ) : accounts.length === 0 ? (
         <div className="glass-card p-12 text-center">
           <span className="text-5xl mb-4 block">🔗</span>
-          <h3 className="text-lg font-semibold mb-2">{t("noAccountsConnected")}</h3>
-          <p className="text-text-muted text-sm mb-6">{t("noAccountsDesc")}</p>
-          <button onClick={() => setShowModal(true)} className="btn-gradient !rounded-xl text-sm !py-2.5">+ {t("btnConnectAccount")}</button>
+          <h3 className="text-lg font-semibold mb-2">No accounts connected</h3>
+          <p className="text-text-muted text-sm mb-6">Connect your TikTok account to start submitting content</p>
+          <button onClick={() => setShowModal(true)} className="btn-gradient !rounded-xl text-sm !py-2.5">+ Connect Account</button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -186,13 +184,13 @@ export default function AccountsPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-bold">{acc.username}</span>
                   {acc.isVerified ? (
-                    <span className="badge badge-active text-[10px]">{t("verifiedBadge")}</span>
+                    <span className="badge badge-active text-[10px]">Verified</span>
                   ) : (
-                    <span className="badge badge-paused text-[10px]">{t("pendingBadge")}</span>
+                    <span className="badge badge-paused text-[10px]">Pending</span>
                   )}
                 </div>
                 <p className="text-xs text-text-muted mt-0.5">
-                  {t("connectedAgo")} {acc.connectedAt ? timeAgo(new Date(acc.connectedAt)) : "recently"}
+                  Connected {acc.connectedAt ? timeAgo(new Date(acc.connectedAt)) : "recently"}
                 </p>
               </div>
               <button onClick={() => handleDisconnect(acc._id)}
@@ -209,7 +207,7 @@ export default function AccountsPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
           <div className="glass-card p-8 max-w-md w-full animate-fadeInUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold gradient-text">{t("connectModalTitle")}</h2>
+              <h2 className="text-lg font-bold gradient-text">Connect Social Media Account</h2>
               <button onClick={() => setShowModal(false)} className="text-text-muted hover:text-text-primary text-xl">×</button>
             </div>
 
@@ -230,7 +228,7 @@ export default function AccountsPage() {
             {/* Show current bio detected by server */}
             {currentBio && (
               <div className="mb-4 p-3 rounded-xl bg-bg-primary border border-border text-xs">
-                <p className="text-text-muted mb-1 font-medium">{t("bioDetectedTitle")}</p>
+                <p className="text-text-muted mb-1 font-medium">📋 Bio detected by server:</p>
                 <p className="text-text-secondary italic">&ldquo;{currentBio}&rdquo;</p>
               </div>
             )}
@@ -245,13 +243,13 @@ export default function AccountsPage() {
             {step === "link" ? (
               <form onSubmit={handleConnect} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1.5">{t("fieldProfileLink")}</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1.5">Profile Link</label>
                   <input type="url" value={profileLink} onChange={(e) => setProfileLink(e.target.value)}
-                    className="input-field" placeholder="https://www.tiktok.com/@yourusername" required />
+                    className="input-field" placeholder="https://www.tiktok.com/@yourname" required />
                 </div>
                 <button type="submit" disabled={actionLoading}
                   className="btn-pink w-full !rounded-xl text-sm !py-3 btn-gradient disabled:opacity-50">
-                  {actionLoading ? t("btnProcessing") : t("btnStartVerification")}
+                  {actionLoading ? "Processing..." : "Start Verification"}
                 </button>
               </form>
             ) : (
@@ -259,24 +257,24 @@ export default function AccountsPage() {
                 {!manualRequested ? (
                   <>
                     <div className="text-center p-6 rounded-xl bg-bg-primary border border-border">
-                      <p className="text-sm text-text-secondary mb-3">{t("bioInstructionsCode")}</p>
+                      <p className="text-sm text-text-secondary mb-3">Add this code to your TikTok bio:</p>
                       <div className="text-3xl font-mono font-extrabold tracking-[8px] gradient-text mb-3">{verifyCode}</div>
                       <button onClick={handleCopyCode}
                         className="text-xs text-accent-light hover:underline transition-all">
-                        {copied ? t("btnCopied") : t("btnCopyCode")}
+                        {copied ? "✅ Copied!" : "📋 Copy Code"}
                       </button>
                     </div>
 
                     {/* Step-by-step instructions */}
                     <div className="p-4 rounded-xl bg-bg-primary/50 border border-border/50 text-xs text-text-muted space-y-2">
-                      <p className="font-semibold text-text-secondary">{t("stepsHeader")}</p>
+                      <p className="font-semibold text-text-secondary">📝 Steps:</p>
                       <ol className="list-decimal list-inside space-y-1">
-                        <li>{t("stepItem1")}</li>
-                        <li>{t("stepItem2")}</li>
-                        <li>{t("stepItem3")}</li>
-                        <li><strong>{t("stepItem4")}</strong></li>
-                        <li>{t("stepItem5")}</li>
-                        <li>{t("stepItem6")}</li>
+                        <li>Copy the code above</li>
+                        <li>Open TikTok → Profile → Edit Bio</li>
+                        <li>Paste the code in your bio</li>
+                        <li><strong>Save your bio</strong> and make sure it is saved</li>
+                        <li>Wait <strong>3-5 minutes</strong> for the changes to propagate to TikTok's servers</li>
+                        <li>Click the Verify button below</li>
                       </ol>
                     </div>
 
@@ -285,12 +283,12 @@ export default function AccountsPage() {
                       {actionLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          {t("btnCheckingBio")}
+                          Checking bio... (±20s)
                         </span>
                       ) : verifyAttempts > 0 ? (
-                        `🔄 ${t("btnTryAgainVerify")} (${t("pendingBadge")} ${verifyAttempts})`
+                        `🔄 Try Again — Verify (Attempt ${verifyAttempts + 1})`
                       ) : (
-                        t("btnAddedVerify")
+                        "✅ I've Added the Code — Verify"
                       )}
                     </button>
 
@@ -298,31 +296,31 @@ export default function AccountsPage() {
                     {canRequestManual && (
                       <button onClick={handleRequestManualVerify}
                         className="w-full text-sm py-2.5 rounded-xl border border-accent-light/30 text-accent-light hover:bg-accent-light/10 transition-all">
-                        {t("btnRequestManual")}
+                        🙋 Request Manual Verification by Admin
                       </button>
                     )}
 
                     <button onClick={() => { setStep("link"); setError(""); setHint(""); setCurrentBio(""); setCanRequestManual(false); }}
-                      className="w-full text-sm text-text-muted hover:text-text-secondary">← {t("btnBack")}</button>
+                      className="w-full text-sm text-text-muted hover:text-text-secondary">← Back</button>
                   </>
                 ) : (
                   /* Manual verification info */
                   <div className="text-center space-y-4">
                     <div className="p-6 rounded-xl bg-accent-light/5 border border-accent-light/20">
                       <span className="text-4xl block mb-3">📩</span>
-                      <h3 className="font-bold text-text-primary mb-2">{t("manualRequestSentTitle")}</h3>
+                      <h3 className="font-bold text-text-primary mb-2">Manual Verification Request Sent</h3>
                       <p className="text-sm text-text-muted mb-4">
-                        {t("manualRequestSentDesc")}
+                        Admin will review your TikTok account manually. Make sure the code <strong className="text-accent-light">{verifyCode}</strong> remains in your TikTok bio.
                       </p>
                       <div className="p-3 rounded-lg bg-bg-primary border border-border text-xs text-text-muted text-left space-y-1">
-                        <p>{t("manualRequestInfo1")}</p>
-                        <p>{t("manualRequestInfo2")}</p>
-                        <p>{t("manualRequestInfo3")}</p>
+                        <p>⏱️ Manual review usually takes 1-24 hours</p>
+                        <p>📌 Do not remove the code from your bio until verified</p>
+                        <p>🔔 You will receive a notification once verified</p>
                       </div>
                     </div>
                     <button onClick={() => { setShowModal(false); setStep("link"); setManualRequested(false); }}
                       className="btn-gradient w-full !rounded-xl text-sm !py-3">
-                      {t("btnModalClose")}
+                      Close
                     </button>
                   </div>
                 )}
