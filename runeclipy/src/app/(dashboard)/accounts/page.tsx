@@ -97,7 +97,7 @@ export default function AccountsPage() {
         if (data.canRequestManual) setCanRequestManual(true);
         return;
       }
-      setSuccessMsg(data.message || "Berhasil diverifikasi!");
+      setSuccessMsg(data.message || "Verified successfully!");
       setTimeout(() => {
         setShowModal(false);
         setStep("link");
@@ -228,7 +228,7 @@ export default function AccountsPage() {
             {/* Show current bio detected by server */}
             {currentBio && (
               <div className="mb-4 p-3 rounded-xl bg-bg-primary border border-border text-xs">
-                <p className="text-text-muted mb-1 font-medium">📋 Bio yang terdeteksi server:</p>
+                <p className="text-text-muted mb-1 font-medium">📋 Bio detected by server:</p>
                 <p className="text-text-secondary italic">&ldquo;{currentBio}&rdquo;</p>
               </div>
             )}
@@ -267,14 +267,14 @@ export default function AccountsPage() {
 
                     {/* Step-by-step instructions */}
                     <div className="p-4 rounded-xl bg-bg-primary/50 border border-border/50 text-xs text-text-muted space-y-2">
-                      <p className="font-semibold text-text-secondary">📝 Langkah-langkah:</p>
+                      <p className="font-semibold text-text-secondary">📝 Steps:</p>
                       <ol className="list-decimal list-inside space-y-1">
-                        <li>Copy kode di atas</li>
-                        <li>Buka aplikasi TikTok → Profile → Edit Bio</li>
-                        <li>Paste kode di bio (bisa di awal, akhir, atau sendiri)</li>
-                        <li><strong>Simpan bio</strong> dan pastikan tersimpan</li>
-                        <li>Tunggu <strong>3-5 menit</strong> agar perubahan tersebar ke server TikTok</li>
-                        <li>Klik tombol Verify di bawah</li>
+                        <li>Copy the code above</li>
+                        <li>Open TikTok → Profile → Edit Bio</li>
+                        <li>Paste the code in your bio</li>
+                        <li><strong>Save your bio</strong> and make sure it is saved</li>
+                        <li>Wait <strong>3-5 minutes</strong> for the changes to propagate to TikTok's servers</li>
+                        <li>Click the Verify button below</li>
                       </ol>
                     </div>
 
@@ -283,10 +283,10 @@ export default function AccountsPage() {
                       {actionLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Sedang memeriksa bio... (±20 detik)
+                          Checking bio... (±20s)
                         </span>
                       ) : verifyAttempts > 0 ? (
-                        `🔄 Coba Lagi — Verify (Percobaan ${verifyAttempts + 1})`
+                        `🔄 Try Again — Verify (Attempt ${verifyAttempts + 1})`
                       ) : (
                         "✅ I've Added the Code — Verify"
                       )}
@@ -296,7 +296,7 @@ export default function AccountsPage() {
                     {canRequestManual && (
                       <button onClick={handleRequestManualVerify}
                         className="w-full text-sm py-2.5 rounded-xl border border-accent-light/30 text-accent-light hover:bg-accent-light/10 transition-all">
-                        🙋 Minta Verifikasi Manual oleh Admin
+                        🙋 Request Manual Verification by Admin
                       </button>
                     )}
 
@@ -308,19 +308,19 @@ export default function AccountsPage() {
                   <div className="text-center space-y-4">
                     <div className="p-6 rounded-xl bg-accent-light/5 border border-accent-light/20">
                       <span className="text-4xl block mb-3">📩</span>
-                      <h3 className="font-bold text-text-primary mb-2">Permintaan Verifikasi Manual Dikirim</h3>
+                      <h3 className="font-bold text-text-primary mb-2">Manual Verification Request Sent</h3>
                       <p className="text-sm text-text-muted mb-4">
-                        Admin akan memeriksa akun TikTok kamu secara manual. Pastikan kode <strong className="text-accent-light">{verifyCode}</strong> masih ada di bio TikTok kamu.
+                        Admin will review your TikTok account manually. Make sure the code <strong className="text-accent-light">{verifyCode}</strong> remains in your TikTok bio.
                       </p>
                       <div className="p-3 rounded-lg bg-bg-primary border border-border text-xs text-text-muted text-left space-y-1">
-                        <p>⏱️ Proses manual biasanya memakan waktu 1-24 jam</p>
-                        <p>📌 Jangan hapus kode dari bio sampai diverifikasi</p>
-                        <p>🔔 Kamu akan mendapat notifikasi saat diverifikasi</p>
+                        <p>⏱️ Manual review usually takes 1-24 hours</p>
+                        <p>📌 Do not remove the code from your bio until verified</p>
+                        <p>🔔 You will receive a notification once verified</p>
                       </div>
                     </div>
                     <button onClick={() => { setShowModal(false); setStep("link"); setManualRequested(false); }}
                       className="btn-gradient w-full !rounded-xl text-sm !py-3">
-                      Tutup
+                      Close
                     </button>
                   </div>
                 )}

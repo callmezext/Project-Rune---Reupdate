@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
       result = await scrapeForVerification(username, account.verificationCode);
     } catch {
       return NextResponse.json({
-        error: "Gagal mengambil data profil TikTok. Coba lagi dalam beberapa saat.",
-        hint: "Pastikan username TikTok sudah benar dan profil tidak di-private.",
+        error: "Failed to fetch TikTok profile. Please try again in a moment.",
+        hint: "Make sure the TikTok username is correct and the profile is not private.",
         canRequestManual: true,
       }, { status: 400 });
     }
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Akun @${username} berhasil diverifikasi! Kamu bisa hapus kode dari bio sekarang.`,
+        message: `Account @${username} verified successfully! You can now remove the code from your bio.`,
       });
     }
 
@@ -60,16 +60,16 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      error: `Kode verifikasi "${account.verificationCode}" tidak ditemukan di bio TikTok @${username}.`,
-      currentBio: bio || "(bio kosong — server belum mendapat update terbaru dari TikTok)",
+      error: `Verification code "${account.verificationCode}" not found in @${username}'s TikTok bio.`,
+      currentBio: bio || "(empty bio — server has not received the latest update from TikTok yet)",
       allBiosDetected: [...new Set(allBios.filter(b => b))],
       hint: [
-        "💡 Tips agar verifikasi berhasil:",
-        "1. Pastikan kode sudah disalin PERSIS ke bio TikTok (tanpa spasi tambahan)",
-        "2. Setelah edit bio, SIMPAN dan TUTUP aplikasi TikTok sepenuhnya",
-        "3. Tunggu 3-5 menit agar perubahan tersebar ke server TikTok",
-        "4. Klik tombol verifikasi lagi",
-        "5. Jika tetap gagal, klik 'Minta Verifikasi Manual' di bawah",
+        "💡 Tips for successful verification:",
+        "1. Make sure the code is copied EXACTLY to your TikTok bio (no extra spaces)",
+        "2. After editing your bio, SAVE it and CLOSE the TikTok app completely",
+        "3. Wait 3-5 minutes for changes to propagate to TikTok's servers",
+        "4. Click the verify button again",
+        "5. If it still fails, click 'Request Manual Verification' below",
       ].join("\n"),
       canRequestManual: true,
     }, { status: 400 });

@@ -95,10 +95,10 @@ export default function RegisterPage() {
   return (
     <div className="glass-card p-5 sm:p-8 animate-fadeInUp">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-center mb-2 tracking-tight">
-        Mulai <span className="gradient-text">Earning</span>
+        Start <span className="gradient-text">Earning</span>
       </h1>
       <p className="text-xs sm:text-sm text-text-secondary text-center mb-6 max-w-xs mx-auto">
-        Gabung dengan RuneClipy dan ubah views short video TikTok Anda menjadi penghasilan pasif!
+        Join RuneClipy and turn your TikTok short video views into passive earnings!
       </p>
 
       {/* Step Indicator */}
@@ -134,8 +134,8 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-text-secondary mb-1.5">Username</label>
             <input type="text" value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, "") })}
-              className="input-field font-mono" placeholder="yourname" required maxLength={20} />
-            <p className="text-xs text-text-muted mt-1">This will be your referral code. Cannot be changed later.</p>
+              className="input-field font-mono" placeholder="your username" required maxLength={20} />
+            <p className="text-xs text-text-muted mt-1">This will be your referral code. Cannot change later.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1.5">Email (Gmail)</label>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-text-secondary mb-1.5">Referral Code <span className="text-text-muted">(optional)</span></label>
             <input type="text" value={form.referralCode}
               onChange={(e) => setForm({ ...form, referralCode: e.target.value.toLowerCase() })}
-              className="input-field font-mono" placeholder="friend_username" />
+              className="input-field font-mono" placeholder="friend username" />
           </div>
           <div className="flex items-start gap-2">
             <input type="checkbox" id="terms" checked={agreedTerms}

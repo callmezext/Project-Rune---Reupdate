@@ -91,7 +91,7 @@ export default async function LandingPage() {
 
           {/* Main Title with futuristic glowing highlights */}
           <h1 className="animate-fadeInUp text-3xl min-[360px]:text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.1] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-white" style={{ animationDelay: "0.1s" }}>
-            Turn your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">short videos</span>
+            Turn your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">short videos</span>{" "}
             <br className="hidden sm:block" />
             into <GlitchText>passive wealth</GlitchText>
           </h1>
