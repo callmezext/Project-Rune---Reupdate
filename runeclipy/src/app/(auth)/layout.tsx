@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export const metadata: Metadata = { title: "Login — RuneClipy" };
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center relative overflow-hidden">
+      {/* Floating Language Switcher */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
+
       {/* Background orbs */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-30%] right-[-10%] w-[500px] h-[500px] rounded-full bg-accent/5 blur-[100px]" />

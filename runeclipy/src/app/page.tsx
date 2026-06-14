@@ -6,6 +6,9 @@ import User from "@/models/User";
 import Campaign from "@/models/Campaign";
 import Submission from "@/models/Submission";
 import Logo from "@/components/Logo";
+import { cookies } from "next/headers";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { translations } from "@/lib/translations";
 
 function formatStat(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M+`;
@@ -36,6 +39,11 @@ async function getPlatformStats() {
 
 export default async function LandingPage() {
   const stats = await getPlatformStats();
+  
+  // Read language cookie for server-side translation
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("RUNECLIPY_LANG")?.value === "id" ? "id" : "en";
+  const t = translations[lang];
 
   return (
     <main className="min-h-screen bg-[#07050f] text-gray-100 relative overflow-hidden font-sans">
@@ -61,12 +69,13 @@ export default async function LandingPage() {
             <Logo iconSize={22} textSize="text-sm min-[360px]:text-lg sm:text-2xl" />
           </Link>
           <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-4">
+            <LanguageSwitcher />
             <Link href="/login" className="px-2.5 xs:px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] xs:text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition-colors duration-300">
-              Log in
+              {t.login}
             </Link>
             <Link href="/register" className="relative group overflow-hidden px-3 xs:px-4 sm:px-6 py-1.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-[11px] xs:text-xs sm:text-sm font-bold text-white shadow-lg shadow-purple-600/20 hover:shadow-cyan-500/30 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0">
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <span className="relative z-10">Sign up</span>
+              <span className="relative z-10"> {t.signup}</span>
             </Link>
           </div>
         </nav>
@@ -84,21 +93,21 @@ export default async function LandingPage() {
             </span>
             <span className="text-gray-300 tracking-wide truncate">
               {stats.paidOut > 0 ? (
-                <>Paid out <span className="text-cyan-400 font-extrabold">${formatStat(stats.paidOut)}</span> to creators</>
-              ) : "RuneClipy Network is active — Link & Start Earning"}
+                <>{t.paidOutPrefix}<span className="text-cyan-400 font-extrabold">${formatStat(stats.paidOut)}</span>{t.paidOutSuffix}</>
+              ) : t.networkActive}
             </span>
           </div>
 
           {/* Main Title with futuristic glowing highlights */}
           <h1 className="animate-fadeInUp text-3xl min-[360px]:text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[1.1] sm:leading-[1.05] mb-6 sm:mb-8 tracking-tight text-white" style={{ animationDelay: "0.1s" }}>
-            Turn your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">short videos</span>{" "}
+            {t.heroTitlePart1}<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500">{t.heroTitlePart2}</span>{" "}
             <br className="hidden sm:block" />
-            into <GlitchText>passive wealth</GlitchText>
+            {t.heroTitlePart3}<GlitchText>{t.heroTitlePart4}</GlitchText>
           </h1>
 
           {/* Subtitle */}
           <p className="animate-fadeInUp text-sm sm:text-lg md:text-xl text-gray-400 leading-relaxed mb-8 sm:mb-12 max-w-2xl mx-auto" style={{ animationDelay: "0.2s" }}>
-            The ultimate TikTok automation and earning suite. Link your account, use trending sounds, and get paid automatically for every verified view you generate.
+            {t.heroSubtitle}
           </p>
 
           {/* CTA Buttons with cool micro-animations */}
@@ -108,23 +117,23 @@ export default async function LandingPage() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform duration-300 sm:w-[20px] sm:h-[20px]">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
-              <span className="relative z-10">Start Earning Now</span>
+              <span className="relative z-10">{t.startEarningNow}</span>
             </Link>
             
             <Link href="/dashboard" className="px-8 sm:px-10 py-3 sm:py-4 rounded-2xl border border-white/[0.07] bg-white/[0.01] hover:bg-white/[0.04] text-gray-300 hover:text-white hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300 font-bold flex items-center justify-center gap-2.5 transform hover:-translate-y-1 text-sm sm:text-base">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              Explore Campaigns
+              {t.exploreCampaigns}
             </Link>
           </div>
 
-          {/* Platform Performance metrics (FULLY RESPONSIVE STACK ON MOBILE) */}
+          {/* Platform Performance metrics */}
           <div className="animate-fadeInUp grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 md:gap-6 max-w-2xl mx-auto px-3 sm:px-0" style={{ animationDelay: "0.4s" }}>
             {[
               {
                 value: stats.creators > 0 ? formatStat(stats.creators) : "0",
-                label: "Creators Joined",
+                label: t.creatorsJoined,
                 colorClass: "from-cyan-400 to-blue-500",
                 shadowClass: "shadow-cyan-500/10",
                 icon: (
@@ -135,7 +144,7 @@ export default async function LandingPage() {
               },
               {
                 value: stats.paidOut > 0 ? `$${formatStat(stats.paidOut)}` : "$0",
-                label: "Total Paid Out",
+                label: t.totalPaidOut,
                 colorClass: "from-emerald-400 to-teal-500",
                 shadowClass: "shadow-emerald-500/10",
                 icon: (
@@ -146,7 +155,7 @@ export default async function LandingPage() {
               },
               {
                 value: stats.campaigns > 0 ? formatStat(stats.campaigns) : "0",
-                label: "Active Campaigns",
+                label: t.activeCampaigns,
                 colorClass: "from-purple-400 to-pink-500",
                 shadowClass: "shadow-purple-500/10",
                 icon: (
@@ -174,21 +183,21 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ How It Works (Scroll-Animated) ═══ */}
+      {/* ═══ How It Works ═══ */}
       <section className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 md:px-12 py-16 sm:py-24">
         <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
-          How to claim your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">earnings</span>
+          {t.howToClaimTitle}<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">{t.howToClaimHighlight}</span>
         </h2>
         <p className="text-gray-400 text-center mb-16 sm:text-base scroll-animate scroll-animate-delay-1 max-w-md mx-auto text-sm">
-          Our fully automated system handles everything in three transparent steps.
+          {t.howToClaimSubtitle}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {[
             {
               step: "01",
-              title: "Link Account",
-              desc: "Link your TikTok profile via a quick secure verification code to establish content ownership.",
+              title: t.step1Title,
+              desc: t.step1Desc,
               color: "border-cyan-500/25",
               glow: "group-hover:border-cyan-400/40",
               delayClass: "",
@@ -200,8 +209,8 @@ export default async function LandingPage() {
             },
             {
               step: "02",
-              title: "Submit Content",
-              desc: "Create and publish short clips containing active campaign sounds. Paste your link in the app.",
+              title: t.step2Title,
+              desc: t.step2Desc,
               color: "border-pink-500/25",
               glow: "group-hover:border-pink-400/40",
               delayClass: "scroll-animate-delay-1",
@@ -213,8 +222,8 @@ export default async function LandingPage() {
             },
             {
               step: "03",
-              title: "Get Paid",
-              desc: "Our automated scraper scans view statistics every hour, instantly depositing money into your wallet.",
+              title: t.step3Title,
+              desc: t.step3Desc,
               color: "border-emerald-500/25",
               glow: "group-hover:border-emerald-400/40",
               delayClass: "scroll-animate-delay-2",
@@ -237,54 +246,54 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ Features Grid (Scroll-Animated & Staggered) ═══ */}
+      {/* ═══ Features Grid ═══ */}
       <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 md:px-12 py-16 sm:py-24">
         <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-center mb-4 tracking-tight scroll-animate">
-          Engineered for <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">serious creators</span>
+          {t.featuresTitle}<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">{t.featuresHighlight}</span>
         </h2>
         <p className="text-gray-400 text-center mb-16 sm:text-base scroll-animate scroll-animate-delay-1 max-w-lg mx-auto text-sm">
-          Advanced backend features designed to give you a clean, secure, and highly optimized experience.
+          {t.featuresSubtitle}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[
             {
-              title: "Hourly Automation", desc: "Our system automatically tracks and updates video statistics every hour. Sit back and watch it grow.",
+              title: t.feat1Title, desc: t.feat1Desc,
               delayClass: "",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-cyan-400"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             },
             {
-              title: "Anti-Fraud Engine", desc: "Intelligent analytics verify that engagement is legitimate, keeping campaigns fair for active creators.",
+              title: t.feat2Title, desc: t.feat2Desc,
               delayClass: "scroll-animate-delay-1",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-emerald-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             },
             {
-              title: "Hybrid Earnings", desc: "Select campaigns that offer payment per view, per fixed video post, or combined options.",
+              title: t.feat3Title, desc: t.feat3Desc,
               delayClass: "scroll-animate-delay-2",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-amber-400"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             },
             {
-              title: "Multi-Wallet Cashout", desc: "Direct withdrawal to popular local wallets including DANA, GoPay, OVO, Bank Transfer, or PayPal.",
+              title: t.feat4Title, desc: t.feat4Desc,
               delayClass: "scroll-animate-delay-3",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-pink-400"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             },
             {
-              title: "Auto Sound Match", desc: "Advanced scraping instantly checks sound IDs used in videos, verifying they match the campaign's exact song.",
+              title: t.feat5Title, desc: t.feat5Desc,
               delayClass: "",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-blue-400"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
             },
             {
-              title: "Analytics Portal", desc: "View transaction ledgers, hourly status audits, and detailed submission review remarks instantly.",
+              title: t.feat6Title, desc: t.feat6Desc,
               delayClass: "scroll-animate-delay-1",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-purple-400"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             },
             {
-              title: "Verified Handshake", desc: "No fake profiles allowed. Link accounts via unique TikTok signatures to verify ownership.",
+              title: t.feat7Title, desc: t.feat7Desc,
               delayClass: "scroll-animate-delay-2",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             },
             {
-              title: "Rank & Bonus", desc: "Earn premium bonuses by climbing active campaign leaderboards and hitting total views milestones.",
+              title: t.feat8Title, desc: t.feat8Desc,
               delayClass: "scroll-animate-delay-3",
               icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-amber-400"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4"/><path d="M14 22V8a4 4 0 0 1 4-4"/></svg>
             },
@@ -300,21 +309,21 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ Premium CTA Section (Scroll-Animated) ═══ */}
+      {/* ═══ Premium CTA Section ═══ */}
       <section className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 md:px-12 py-16 sm:py-20 scroll-animate">
         <div className="backdrop-blur-md bg-white/[0.02] border border-purple-500/20 rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/5" />
           <div className="relative z-10">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black mb-4 text-white">Ready to orchestrate your growth?</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black mb-4 text-white">{t.ctaTitle}</h2>
             <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-              Register inside our multi-tool system. Submit short videos and secure massive rewards.
+              {t.ctaSubtitle}
             </p>
             <Link href="/register" className="relative group overflow-hidden px-8 sm:px-10 py-3 sm:py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-sm sm:text-base font-extrabold text-white shadow-xl shadow-purple-600/35 hover:shadow-cyan-500/40 transition-all duration-300 inline-flex items-center justify-center gap-3">
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[20px] sm:h-[20px]">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
               </svg>
-              <span className="relative z-10">Join RuneClipy</span>
+              <span className="relative z-10">{t.joinRuneClipy}</span>
             </Link>
           </div>
         </div>
@@ -331,34 +340,34 @@ export default async function LandingPage() {
                     <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
                   </svg>
                 </div>
-                <span className="text-lg font-black tracking-widest text-white">RuneClipy</span>
+                <span className="text-lg font-black tracking-widest text-white">{t.brand}</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                Automated short-form campaign matching and hourly statistics engine. Cash out on views.
+                {t.footerDesc}
               </p>
             </div>
             
             <div>
-              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Legal</h4>
+              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">{t.legal}</h4>
               <ul className="flex flex-col gap-2.5 text-sm">
-                <li><Link href="/privacy-policy" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/creator-terms" className="text-gray-500 hover:text-white transition-colors">Creator Terms of Use</Link></li>
+                <li><Link href="/privacy-policy" className="text-gray-500 hover:text-white transition-colors">{t.privacyPolicy}</Link></li>
+                <li><Link href="/creator-terms" className="text-gray-500 hover:text-white transition-colors">{t.creatorTerms}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Company</h4>
+              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">{t.company}</h4>
               <ul className="flex flex-col gap-2.5 text-sm">
-                <li><Link href="/support" className="text-gray-500 hover:text-white transition-colors">Support Portal</Link></li>
-                <li><Link href="/contact" className="text-gray-500 hover:text-white transition-colors">Contact Us</Link></li>
+                <li><Link href="/support" className="text-gray-500 hover:text-white transition-colors">{t.supportPortal}</Link></li>
+                <li><Link href="/contact" className="text-gray-500 hover:text-white transition-colors">{t.contactUs}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">Resources</h4>
+              <h4 className="text-xs font-bold mb-3.5 text-gray-300 uppercase tracking-widest">{t.resources}</h4>
               <ul className="flex flex-col gap-2.5 text-sm">
-                <li><Link href="/dashboard" className="text-gray-500 hover:text-white transition-colors">Active Campaigns</Link></li>
-                <li><a href="https://discord.gg/runeclipy" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors flex items-center gap-1.5">Discord Server <i className="fa-brands fa-discord"></i></a></li>
+                <li><Link href="/dashboard" className="text-gray-500 hover:text-white transition-colors">{t.activeCampaigns}</Link></li>
+                <li><a href="https://discord.gg/runeclipy" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors flex items-center gap-1.5">{t.discordServer} <i className="fa-brands fa-discord"></i></a></li>
               </ul>
             </div>
           </div>
@@ -366,8 +375,8 @@ export default async function LandingPage() {
           <div className="border-t border-white/[0.04] pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
             <p>© 2026 RuneClipy System. All rights reserved.</p>
             <div className="flex gap-5">
-              <Link href="/creator-terms" className="hover:text-gray-400 transition-colors">Terms</Link>
-              <Link href="/privacy-policy" className="hover:text-gray-400 transition-colors">Privacy</Link>
+              <Link href="/creator-terms" className="hover:text-gray-400 transition-colors">{t.terms}</Link>
+              <Link href="/privacy-policy" className="hover:text-gray-400 transition-colors">{t.privacy}</Link>
             </div>
           </div>
         </div>

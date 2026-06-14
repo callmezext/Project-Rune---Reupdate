@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { cn, timeAgo } from "@/lib/utils";
 import Logo from "@/components/Logo";
+import { useLanguage } from "@/context/LanguageContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface Notif {
   _id: string;
@@ -29,6 +31,7 @@ const formatCompactCurrency = (amount: number) => {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
   const [profile, setProfile] = useState<{ nickname?: string; email?: string; stats?: { totalEarned: number } } | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -121,7 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="text-center flex flex-col items-center gap-3">
           <Logo showText={false} iconSize={26} className="animate-pulse" />
-          <p className="text-text-muted text-[10px] uppercase tracking-widest font-extrabold animate-pulse">Loading...</p>
+          <p className="text-text-muted text-[10px] uppercase tracking-widest font-extrabold animate-pulse">{t("loading")}</p>
         </div>
       </div>
     );
@@ -153,7 +156,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <circle cx="12" cy="12" r="10" />
                   <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
                 </svg>
-                Explore
+                {t("explore")}
               </Link>
               
               <Link
@@ -168,7 +171,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <svg className={cn("w-4 h-4", pathname.startsWith("/campaigns") ? "text-accent" : "text-text-muted")} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-13m0 0C5 7 7 9 10 9s5-2 8-2 5 2 6 2v10c-1 0-3-2-6-2s-5 2-8 2-5-2-7-2m0-3h18" />
                 </svg>
-                My Activity
+                {t("myActivity")}
               </Link>
             </nav>
           </div>
@@ -191,8 +194,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM2 20a7 7 0 0112 0v1H2v-1z" />
               </svg>
-              Invite & Earn
+              {t("inviteEarn")}
             </Link>
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Theme Selector */}
             <div className="relative">
@@ -210,7 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setThemeOpen(false)} />
                   <div className="absolute right-0 top-full mt-2.5 w-48 bg-bg-secondary border border-border rounded-2xl shadow-2xl p-2 z-50 animate-fadeInUp max-h-[300px] overflow-y-auto">
-                    <div className="px-3 py-1.5 text-xs font-bold text-text-muted uppercase tracking-wider">Select Theme</div>
+                    <div className="px-3 py-1.5 text-xs font-bold text-text-muted uppercase tracking-wider">{t("selectTheme")}</div>
                     <div className="border-t border-border my-1" />
                     {themes.map((t) => (
                       <button
@@ -253,14 +259,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-bg-secondary border border-border rounded-2xl overflow-hidden z-50 animate-fadeInUp sm:right-0 max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-14 max-sm:w-auto shadow-2xl">
                     <div className="flex items-center justify-between p-4 border-b border-border">
-                      <span className="font-bold text-sm text-white">Notifications</span>
+                      <span className="font-bold text-sm text-white">{t("notifications")}</span>
                       {unreadCount > 0 && (
-                        <button onClick={markAllRead} className="text-xs text-error hover:text-error/85 font-semibold">Mark all read</button>
+                        <button onClick={markAllRead} className="text-xs text-error hover:text-error/85 font-semibold">{t("markAllRead")}</button>
                       )}
                     </div>
                     <div className="max-h-[320px] overflow-y-auto">
                       {notifications.length === 0 ? (
-                        <div className="p-6 text-center text-text-muted text-xs">No notifications yet</div>
+                        <div className="p-6 text-center text-text-muted text-xs">{t("noNotifications")}</div>
                       ) : (
                         notifications.slice(0, 10).map((n) => (
                           <div
@@ -313,26 +319,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        Profile
+                        {t("profile")}
                       </Link>
                       <Link href="/accounts" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:bg-bg-tertiary hover:text-text-primary transition-all" onClick={() => setProfileOpen(false)}>
                         <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
                         </svg>
-                        Connected Accounts
+                        {t("connectedAccounts")}
                       </Link>
                       <Link href="/leaderboard" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:bg-bg-tertiary hover:text-text-primary transition-all" onClick={() => setProfileOpen(false)}>
                         <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
-                        Leaderboard
+                        {t("leaderboard")}
                       </Link>
                       {user.role === "admin" && (
                         <Link href="/admin" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-error hover:bg-error/5 transition-all" onClick={() => setProfileOpen(false)}>
                           <svg className="w-4 h-4 text-error" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z" />
                           </svg>
-                          Admin Panel
+                          {t("adminPanel")}
                         </Link>
                       )}
                       <div className="border-t border-border my-2" />
@@ -340,7 +346,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        Log Out
+                        {t("logout")}
                       </button>
                     </div>
                   </div>
@@ -362,7 +368,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               : "text-text-muted"
           )}
         >
-          Explore
+          {t("explore")}
         </Link>
         <Link
           href="/campaigns"
@@ -373,7 +379,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               : "text-text-muted"
           )}
         >
-          My Activity
+          {t("myActivity")}
         </Link>
         <Link
           href="/balance/referrals"
@@ -382,7 +388,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             pathname.startsWith("/balance/referrals") ? "bg-error/15 text-white" : "text-text-muted"
           )}
         >
-          Invite
+          {t("inviteEarn").split("&")[0].trim()}
         </Link>
       </nav>
 
@@ -396,8 +402,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 max-w-7xl mx-auto">
           <p className="text-xs text-text-muted">© 2026 RuneClipy</p>
           <div className="flex gap-4">
-            <Link href="/creator-terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Creator Terms</Link>
-            <Link href="/privacy-policy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy Policy</Link>
+            <Link href="/creator-terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">{t("creatorTerms").split("of")[0].trim()}</Link>
+            <Link href="/privacy-policy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">{t("privacyPolicy")}</Link>
           </div>
         </div>
       </footer>

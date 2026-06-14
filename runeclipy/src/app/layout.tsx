@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit, Space_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -42,7 +43,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${outfit.variable} ${spaceMono.variable}`}>
       <body className="antialiased overflow-x-hidden">
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
         <Toaster
           theme="dark"
           position="bottom-right"
