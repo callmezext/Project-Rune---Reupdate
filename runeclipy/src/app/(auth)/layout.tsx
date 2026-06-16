@@ -1,10 +1,26 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import Logo from "@/components/Logo";
-
-export const metadata: Metadata = { title: "Login — RuneClipy" };
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    // If user is already logged in, redirect to dashboard using replace
+    // so /login is NOT added to browser history stack
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.user) {
+          router.replace("/dashboard");
+        }
+      })
+      .catch(() => { /* not logged in, stay on login page */ });
+  }, [router]);
+
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center relative overflow-hidden">
       {/* Background orbs */}

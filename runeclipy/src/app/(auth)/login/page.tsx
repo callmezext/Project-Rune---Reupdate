@@ -48,7 +48,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || "Invalid OTP");
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Verification failed");
     } finally {

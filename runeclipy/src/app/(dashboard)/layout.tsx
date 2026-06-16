@@ -113,7 +113,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     await fetch("/api/auth/session", { method: "DELETE" });
-    router.push("/login");
+    router.replace("/login");
   };
 
   if (!user) {
