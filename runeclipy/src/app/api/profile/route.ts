@@ -148,15 +148,22 @@ export async function PUT(req: NextRequest) {
         action: "change-email",
       });
 
+      console.log(`[OTP] Generated Email Change OTP for ${newEmail}: ${otp}`);
+
+      let mailSent = false;
       try {
         await sendOTPEmail(newEmail, otp);
-      } catch {
-        console.log(`[DEV] Email change OTP for ${newEmail}: ${otp}`);
+        mailSent = true;
+      } catch (mailErr) {
+        console.warn(`[OTP] Failed to send email change OTP to ${newEmail}:`, mailErr);
       }
+
+      const isDev = process.env.NODE_ENV === "development";
 
       return NextResponse.json({
         success: true,
-        message: "Verification code sent to new email",
+        message: mailSent ? "Verification code sent to new email" : "OTP generated (development console)",
+        ...(isDev ? { devOtp: otp } : {}),
       });
     }
 

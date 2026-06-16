@@ -49,16 +49,23 @@ export async function POST(req: NextRequest) {
       action: "reset-password",
     });
 
+    console.log(`[OTP] Generated Reset OTP for ${email}: ${otp}`);
+
+    let mailSent = false;
     try {
       await sendResetPasswordEmail(email, otp);
-    } catch {
-      console.log(`[DEV] Reset OTP for ${email}: ${otp}`);
+      mailSent = true;
+    } catch (mailErr) {
+      console.warn(`[OTP] Failed to send reset email to ${email}:`, mailErr);
     }
+
+    const isDev = process.env.NODE_ENV === "development";
 
     return NextResponse.json({
       success: true,
-      message: "If an account exists with this email, a reset code has been sent.",
+      message: mailSent ? "If an account exists with this email, a reset code has been sent." : "OTP generated (development console)",
       email: email.toLowerCase(),
+      ...(isDev ? { devOtp: otp } : {}),
     });
   } catch (error) {
     console.error("Forgot password error:", error);

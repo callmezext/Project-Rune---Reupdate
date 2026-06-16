@@ -49,17 +49,23 @@ export async function POST(req: NextRequest) {
     const otp = generateOTP();
     otpStore.set(user.email, { otp, expiresAt: Date.now() + 5 * 60 * 1000, action: "login" });
 
+    console.log(`[OTP] Generated Login OTP for ${user.email}: ${otp}`);
+
+    let mailSent = false;
     try {
       await sendOTPEmail(user.email, otp);
-    } catch {
-      // If email fails in dev, log OTP to console
-      console.log(`[DEV] OTP for ${user.email}: ${otp}`);
+      mailSent = true;
+    } catch (mailErr) {
+      console.warn(`[OTP] Failed to send login email to ${user.email}:`, mailErr);
     }
+
+    const isDev = process.env.NODE_ENV === "development";
 
     return NextResponse.json({
       success: true,
-      message: "OTP sent to your email",
+      message: mailSent ? "OTP sent to your email" : "OTP generated (development console)",
       email: user.email,
+      ...(isDev ? { devOtp: otp } : {}),
     });
   } catch (error) {
     console.error("Login error:", error);

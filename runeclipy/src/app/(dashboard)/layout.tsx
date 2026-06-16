@@ -77,14 +77,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then((r) => r.json())
       .then((data) => {
         if (!data.success || !data.user) {
-          router.push("/login");
+          router.replace("/login");
         } else {
           setProfile(data.user);
           setUser({ username: data.user.username, role: data.user.role });
           fetchNotifications();
         }
       })
-      .catch(() => router.push("/login"));
+      .catch(() => router.replace("/login"));
   }, [router, fetchNotifications]);
 
   const changeTheme = (newTheme: string) => {

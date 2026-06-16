@@ -1,4 +1,4 @@
-const fs = require("fs");
+ const fs = require("fs");
 const path = require("path");
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
