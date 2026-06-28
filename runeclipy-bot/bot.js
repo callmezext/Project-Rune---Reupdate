@@ -14,6 +14,11 @@ const {
 const mongoose = require("mongoose");
 try { require("dotenv").config(); } catch {}
 
+const dns = require("dns");
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
+} catch (dnsErr) {}
+
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "";
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || "1501176219255963778";
@@ -38,9 +43,9 @@ const SiteSettingSchema = new mongoose.Schema({
 }, { timestamps: true, strict: false });
 
 const CampaignSchema = new mongoose.Schema({
-  title: String, description: String, soundUrl: String,
-  ratePerView: Number, budget: Number, spent: Number,
-  status: { type: String, enum: ["active","completed","paused","draft"] },
+  title: String, description: String,
+  ratePerMillionViews: Number, totalBudget: Number, budgetUsed: Number,
+  status: { type: String, enum: ["active","paused","ended"] },
   deadline: Date, minViews: Number, maxSubmissions: Number,
   imageUrl: String, notifiedDiscord: { type: Boolean, default: false },
 }, { timestamps: true, strict: false });
@@ -49,7 +54,7 @@ const SubmissionSchema = new mongoose.Schema({
   userId: mongoose.Schema.Types.ObjectId,
   campaignId: mongoose.Schema.Types.ObjectId,
   videoUrl: String,
-  status: { type: String, enum: ["pending","approved","rejected","recheck"], default: "pending" },
+  status: { type: String, enum: ["pending","approved","rejected","paid_out"], default: "pending" },
   views: Number, earned: Number,
   dmNotified: { type: Boolean, default: false },
 }, { timestamps: true, strict: false });
@@ -188,6 +193,12 @@ const TIER_ROLES = {
 
 function fmt(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+"M" : n >= 1000 ? (n/1000).toFixed(1)+"K" : String(n||0); }
 function fmtCurrency(n) { return "$" + Number(n||0).toFixed(2); }
+function parseColor(hex, defaultColor) {
+  if (!hex) return defaultColor;
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean, 16);
+  return isNaN(num) ? defaultColor : num;
+}
 function fmtUptime(ms) {
   const s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60), d=Math.floor(h/24);
   if(d>0) return `${d}d ${h%24}h`; if(h>0) return `${h}h ${m%60}m`; return `${m}m ${s%60}s`;
@@ -271,7 +282,7 @@ async function handleCommand(interaction) {
     const e = new EmbedBuilder().setColor(0x3498DB).setTitle("🎵 Campaign Aktif").setTimestamp();
     for (const c of camps) {
       const deadline = c.deadline ? `<t:${Math.floor(new Date(c.deadline).getTime()/1000)}:R>` : "No deadline";
-      e.addFields({ name: c.title, value: `💰 ${fmtCurrency(c.ratePerView)}/view • ⏰ ${deadline}\n🔗 [Lihat](https://runeclipy.vercel.app/campaign/${c._id})` });
+      e.addFields({ name: c.title, value: `💰 ${fmtCurrency(c.ratePerMillionViews)}/M views • ⏰ ${deadline}\n🔗 [Lihat](https://runeclipy.vercel.app/campaign/${c._id})` });
     }
     e.setFooter({ text: `${camps.length} campaign aktif` });
     return interaction.reply({ embeds: [e] });
@@ -283,7 +294,7 @@ async function handleCommand(interaction) {
     if (!camps.length) return interaction.reply({ content: "😔 Tidak ada campaign aktif.", ephemeral: true });
     const options = camps.map(c => ({
       label: c.title.substring(0, 100),
-      description: `${fmtCurrency(c.ratePerView)}/view • Budget: ${fmtCurrency(c.budget)}`,
+      description: `${fmtCurrency(c.ratePerMillionViews)}/M views • Budget: ${fmtCurrency(c.totalBudget)}`,
       value: `detail_${c._id.toString()}`,
     }));
     const row = new ActionRowBuilder().addComponents(
@@ -300,7 +311,7 @@ async function handleCommand(interaction) {
     if (!accounts.length) return interaction.reply({ content: "❌ Belum punya TikTok terverifikasi. Tambahkan di web.", ephemeral: true });
     const camps = await Campaign.find({ status: "active" }).sort({ createdAt: -1 }).limit(25).lean();
     if (!camps.length) return interaction.reply({ content: "😔 Tidak ada campaign aktif.", ephemeral: true });
-    const options = camps.map(c => ({ label: c.title.substring(0, 100), description: `${fmtCurrency(c.ratePerView)}/view`, value: c._id.toString() }));
+    const options = camps.map(c => ({ label: c.title.substring(0, 100), description: `${fmtCurrency(c.ratePerMillionViews)}/M views`, value: c._id.toString() }));
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder().setCustomId("submit_campaign").setPlaceholder("Pilih campaign...").addOptions(options)
     );
@@ -316,7 +327,7 @@ async function handleCommand(interaction) {
     const campIds = [...new Set(subs.map(s => s.campaignId.toString()))];
     const camps = await Campaign.find({ _id: { $in: campIds } }).lean();
     const campMap = Object.fromEntries(camps.map(c => [c._id.toString(), c.title]));
-    const statusEmoji = { pending: "⏳", approved: "✅", rejected: "❌", recheck: "🔄" };
+    const statusEmoji = { pending: "⏳", approved: "✅", rejected: "❌", paid_out: "💸" };
     const e = new EmbedBuilder().setColor(0xF39C12).setTitle("📋 Submission Kamu").setTimestamp();
     for (const s of subs) {
       const camp = campMap[s.campaignId?.toString()] || "Unknown";
@@ -598,13 +609,13 @@ async function handleSelect(interaction) {
     if (!c) return interaction.reply({ content: "❌ Campaign tidak ditemukan.", ephemeral: true });
     const subCount = await Submission.countDocuments({ campaignId: c._id });
     const approvedCount = await Submission.countDocuments({ campaignId: c._id, status: "approved" });
-    const remaining = (c.budget||0) - (c.spent||0);
+    const remaining = (c.totalBudget||0) - (c.budgetUsed||0);
     const deadline = c.deadline ? `<t:${Math.floor(new Date(c.deadline).getTime()/1000)}:R>` : "No deadline";
     const e = new EmbedBuilder().setColor(0x3498DB).setTitle(`📋 ${c.title}`)
       .setDescription(c.description || "No description")
       .addFields(
-        { name: "💰 Rate", value: `${fmtCurrency(c.ratePerView)}/view`, inline: true },
-        { name: "💵 Budget", value: fmtCurrency(c.budget), inline: true },
+        { name: "💰 Rate", value: `${fmtCurrency(c.ratePerMillionViews)}/M views`, inline: true },
+        { name: "💵 Budget", value: fmtCurrency(c.totalBudget), inline: true },
         { name: "💸 Remaining", value: fmtCurrency(remaining), inline: true },
         { name: "📤 Submissions", value: `\`${subCount}\``, inline: true },
         { name: "✅ Approved", value: `\`${approvedCount}\``, inline: true },
@@ -649,7 +660,9 @@ async function handleModal(interaction) {
       try {
         const dcUser = await client.users.fetch(user.discordId);
         const camp = await Campaign.findById(sub.campaignId).lean();
-        await dcUser.send({ embeds: [new EmbedBuilder().setColor(0xED4245).setTitle("❌ Submission Rejected")
+        const settings = await SiteSetting.findOne().lean();
+        const rejectedColor = parseColor(settings?.discordRejectedColor, 0xED4245);
+        await dcUser.send({ embeds: [new EmbedBuilder().setColor(rejectedColor).setTitle("❌ Submission Rejected")
           .addFields({ name: "🎵 Campaign", value: camp?.title||"Unknown" }, { name: "📝 Reason", value: reason }).setTimestamp()] });
       } catch {}
     }
@@ -659,29 +672,87 @@ async function handleModal(interaction) {
 
 // ─── Auto Systems ────────────────────────────────────────
 async function autoNotifyCampaigns() {
+  console.log("[Auto] autoNotifyCampaigns check started...");
   try {
     const settings = await SiteSetting.findOne().lean();
     const channelId = settings?.discordNotifChannelId;
+    console.log("[Auto] settings channelId:", channelId);
     if (!channelId || !client) return;
-    const channel = await client.channels.fetch(channelId).catch(() => null);
+    const channel = await client.channels.fetch(channelId).catch((err) => {
+      console.error("[Auto] failed to fetch channel:", err.message);
+      return null;
+    });
+    console.log("[Auto] fetched channel:", channel ? channel.name : "null");
     if (!channel) return;
 
     const newCampaigns = await Campaign.find({ status: "active", notifiedDiscord: { $ne: true } }).lean();
+    console.log("[Auto] Found active campaigns not notified:", newCampaigns.length);
     for (const c of newCampaigns) {
-      const deadline = c.deadline ? `<t:${Math.floor(new Date(c.deadline).getTime()/1000)}:R>` : "No deadline";
-      const e = new EmbedBuilder().setColor(0x00D4AA).setTitle("🎵 New Campaign!")
-        .setDescription(`**${c.title}**\n${c.description || ""}`)
+      console.log("[Auto] Processing campaign notif for:", c.title);
+      const deadline = c.deadline ? `<t:${Math.floor(new Date(c.deadline).getTime()/1000)}:R>` : "No deadline ⏰";
+      
+      const stripHtml = (html) => (html || "").replace(/<[^>]*>/g, "").trim();
+      const desc = stripHtml(c.description);
+      const shortDesc = desc.length > 250 ? desc.substring(0, 250) + "..." : desc;
+
+      const rateVal = c.earningType === "per_post"
+        ? `${fmtCurrency(c.fixedRatePerPost)} / post`
+        : c.earningType === "both"
+          ? `${fmtCurrency(c.ratePerMillionViews)}/M views + ${fmtCurrency(c.fixedRatePerPost)}/post`
+          : `${fmtCurrency(c.ratePerMillionViews)}/M views`;
+
+      const limitDetails = `• **Cap per Post:** ${c.maxEarningsPerPost > 0 ? fmtCurrency(c.maxEarningsPerPost) : "Unlimited"}\n• **Cap per Profile:** ${c.maxEarningsPerCreator > 0 ? fmtCurrency(c.maxEarningsPerCreator) : "Unlimited"}`;
+
+      const campaignColor = parseColor(settings?.discordCampaignColor, 0x00D4AA);
+      const layout = settings?.discordCampaignLayout || "image_bottom";
+      const pingText = settings?.discordCampaignPing || "🎉 **Campaign Baru!** @everyone";
+      const campaignPrefix = settings?.discordCampaignTitle || "🎵 New Campaign!";
+      const campaignTitle = `${campaignPrefix} : ${c.title}`;
+
+      const e = new EmbedBuilder()
+        .setColor(campaignColor)
+        .setTitle(campaignTitle)
+        .setURL(`https://runeclipy.vercel.app/campaign/${c._id}`)
+        .setDescription(shortDesc || "No description provided.")
         .addFields(
-          { name: "💰 Rate", value: `${fmtCurrency(c.ratePerView)}/view`, inline: true },
-          { name: "💵 Budget", value: fmtCurrency(c.budget), inline: true },
-          { name: "⏰ Deadline", value: deadline, inline: true },
-        )
-        .setFooter({ text: "Submit sekarang di web! 🚀" }).setTimestamp();
-      if (c.imageUrl) e.setThumbnail(c.imageUrl);
-      await channel.send({ embeds: [e] });
+          { name: "💰 Earning Model & Rates", value: `• **Rate:** ${rateVal}\n${limitDetails}`, inline: false },
+          { name: "📊 Budget & Submissions", value: `• **Total Budget:** ${c.totalBudget > 0 ? fmtCurrency(c.totalBudget) : "Unlimited 💎"}\n• **Submission Limit:** ${c.maxSubmissionsPerAccount > 0 ? `${c.maxSubmissionsPerAccount} submissions` : "Unlimited 🚀"}\n• **Min. Views Required:** ${c.minViews?.toLocaleString() || "1,000"} views`, inline: false }
+        );
+
+      if (c.sounds && c.sounds.length > 0) {
+        const soundList = c.sounds
+          .filter(s => s.title)
+          .map(s => `🎵 **${s.title}**${s.soundUrl ? ` • [Sound Link](${s.soundUrl})` : ""}${s.tiktokSoundId ? ` (ID: \`${s.tiktokSoundId}\`)` : ""}`)
+          .join("\n");
+        if (soundList) {
+          e.addFields({ name: "🎧 Required Sound", value: soundList, inline: false });
+        }
+      }
+
+      e.addFields({ name: "⏰ Deadline", value: deadline, inline: true });
+
+      e.setFooter({ text: "Submit video kamu sekarang dan mulailah menghasilkan! 🚀" }).setTimestamp();
+      
+      const img = c.coverImage || c.imageUrl;
+      if (img) {
+        if (layout === "image_bottom") {
+          e.setImage(img);
+        } else if (layout === "thumbnail") {
+          e.setThumbnail(img);
+        } else if (layout === "image_top") {
+          const embedImg = new EmbedBuilder().setColor(campaignColor).setImage(img);
+          await channel.send({ content: pingText, embeds: [embedImg, e] });
+          await Campaign.updateOne({ _id: c._id }, { $set: { notifiedDiscord: true } });
+          console.log("[Auto] Sent campaign notification (top cover) & marked database for:", c.title);
+          continue;
+        }
+      }
+
+      await channel.send({ content: pingText, embeds: [e] });
       await Campaign.updateOne({ _id: c._id }, { $set: { notifiedDiscord: true } });
+      console.log("[Auto] Sent campaign notification & marked database for:", c.title);
     }
-  } catch (err) { console.error("[Auto] Campaign notif:", err.message); }
+  } catch (err) { console.error("[Auto] Campaign notif error:", err.message); }
 }
 
 async function autoNotifySubmissions() {
@@ -695,8 +766,11 @@ async function autoNotifySubmissions() {
         const dcUser = await client.users.fetch(user.discordId);
         const camp = await Campaign.findById(s.campaignId).lean();
         const isApproved = s.status === "approved";
+        const settings = await SiteSetting.findOne().lean();
+        const approvedColor = parseColor(settings?.discordApprovedColor, 0x2ECC71);
+        const rejectedColor = parseColor(settings?.discordRejectedColor, 0xED4245);
         const e = new EmbedBuilder()
-          .setColor(isApproved ? 0x2ECC71 : 0xED4245)
+          .setColor(isApproved ? approvedColor : rejectedColor)
           .setTitle(isApproved ? "✅ Submission Approved!" : "❌ Submission Rejected")
           .addFields(
             { name: "🎵 Campaign", value: camp?.title || "Unknown" },
@@ -858,7 +932,7 @@ const botTools = [
   },
   {
     name: "edit_campaign",
-    description: "Ubah data campaign (seperti status, budget, ratePerView).",
+    description: "Ubah data campaign (seperti status, totalBudget, ratePerMillionViews).",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -868,8 +942,8 @@ const botTools = [
           description: "Data baru yang ingin diterapkan",
           properties: {
             status: { type: "STRING", description: "Status baru: active, paused, ended" },
-            budget: { type: "NUMBER", description: "Budget baru (USD)" },
-            ratePerView: { type: "NUMBER", description: "Rate per view baru (USD)" },
+            totalBudget: { type: "NUMBER", description: "Budget baru (USD)" },
+            ratePerMillionViews: { type: "NUMBER", description: "Rate per 1M views baru (USD)" },
           }
         },
         reason: { type: "STRING", description: "Alasan pengubahan (wajib)" },
@@ -1030,7 +1104,7 @@ async function executeBotTool(name, args, authorId, authorUsername) {
         if (args.query) filter.title = { $regex: args.query, $options: "i" };
 
         const campaigns = await Campaign.find(filter)
-          .select("title status budget spent ratePerView")
+          .select("title status totalBudget budgetUsed ratePerMillionViews")
           .sort({ createdAt: -1 })
           .limit(args.limit || 10)
           .lean();
@@ -1042,7 +1116,7 @@ async function executeBotTool(name, args, authorId, authorUsername) {
         if (!campaign) return { error: "Campaign tidak ditemukan" };
 
         const { updates, reason } = args;
-        const allowedFields = ["status", "budget", "ratePerView"];
+        const allowedFields = ["status", "totalBudget", "ratePerMillionViews"];
         const appliedChanges = {};
 
         for (const field of allowedFields) {
@@ -1126,7 +1200,10 @@ async function runBotAIChat(settings, history, newMessage, systemInstruction, en
   let lastError = null;
   for (let i = 0; i < activeKeys.length; i++) {
     const currentKey = activeKeys[i];
-    const modelsToTry = [settings.geminiModel || "gemini-2.0-flash"];
+    const modelsToTry = [settings.geminiModel || "gemini-2.5-flash"];
+    if (settings.geminiModel && settings.geminiModel !== "gemini-2.5-flash") {
+      modelsToTry.push("gemini-2.5-flash");
+    }
     if (settings.geminiModel && settings.geminiModel !== "gemini-2.0-flash") {
       modelsToTry.push("gemini-2.0-flash");
     }
@@ -1293,7 +1370,7 @@ Waktu server saat ini adalah: ${new Date().toLocaleString("id-ID", { timeZone: "
       context += `- Daftar Campaign Aktif saat ini:\n`;
       if (activeCampaigns.length > 0) {
         activeCampaigns.forEach(c => {
-          context += `  * ${c.title} (Rate per view: $${c.ratePerView || 0}, Budget tersisa: $${(c.budget - (c.spent || 0)).toFixed(2)})\n`;
+          context += `  * ${c.title} (Rate per 1M views: $${c.ratePerMillionViews || 0}, Budget tersisa: $${((c.totalBudget - (c.budgetUsed || 0))).toFixed(2)})\n`;
         });
       } else {
         context += `  * Tidak ada campaign aktif saat ini.\n`;

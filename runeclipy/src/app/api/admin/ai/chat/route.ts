@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { runAIChat, getStoredAIConfig, ChatMessage } from "@/lib/gemini";
+import { getClientIP, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,10 +10,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
+    const ip = getClientIP(req);
+    const { limited } = rateLimit(`admin-ai:${session.userId}:${ip}`, 20, 60 * 1000);
+    if (limited) {
+      return NextResponse.json({ error: "Terlalu banyak request. Coba lagi sebentar." }, { status: 429 });
+    }
+
     const { message, history } = await req.json();
 
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
+    if (!message || typeof message !== "string" || message.trim().length > 4000) {
+      return NextResponse.json({ error: "Pesan tidak valid atau terlalu panjang" }, { status: 400 });
     }
 
     const { apiKey, apiKeys, model } = await getStoredAIConfig();
@@ -23,13 +30,20 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const chatHistory: ChatMessage[] = Array.isArray(history) ? history : [];
+    const chatHistory: ChatMessage[] = Array.isArray(history)
+      ? history.slice(-40).flatMap((item): ChatMessage[] => {
+          if (!item || (item.role !== "user" && item.role !== "model") || !Array.isArray(item.parts)) return [];
+          const text = item.parts[0]?.text;
+          if (typeof text !== "string") return [];
+          return [{ role: item.role, parts: [{ text: text.slice(0, 4000) }] }];
+        })
+      : [];
 
     const reply = await runAIChat(
       activeKeys,
       model,
       chatHistory,
-      message,
+      message.trim(),
       session.userId,
       session.username
     );

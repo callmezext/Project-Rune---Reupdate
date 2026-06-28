@@ -148,7 +148,7 @@ export async function PUT(req: NextRequest) {
         action: "change-email",
       });
 
-      console.log(`[OTP] Generated Email Change OTP for ${newEmail}: ${otp}`);
+      console.log(`[OTP] Generated Email Change OTP for ${newEmail}`);
 
       let mailSent = false;
       try {

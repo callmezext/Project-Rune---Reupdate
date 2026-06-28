@@ -54,8 +54,9 @@ export default function PublicCampaignPage({ params }: { params: Promise<{ id: s
     </div>
   );
 
+  const isBudgetUnlimited = campaign.totalBudget === 0;
   const budgetPct = campaign.totalBudget > 0 ? Math.round((campaign.budgetUsed / campaign.totalBudget) * 100) : 0;
-  const budgetRemaining = campaign.totalBudget - campaign.budgetUsed;
+  const budgetRemaining = isBudgetUnlimited ? 0 : campaign.totalBudget - campaign.budgetUsed;
   const typeEmoji: Record<string, string> = { music: "🎵", clipping: "🎬", logo: "🏷️", ugc: "📦" };
   const rankMedal = ["🥇", "🥈", "🥉"];
 
@@ -83,7 +84,7 @@ export default function PublicCampaignPage({ params }: { params: Promise<{ id: s
           <div className="flex flex-wrap gap-4 text-sm text-text-muted">
             <span>👥 {campaign.totalCreators} creators</span>
             <span>🎬 {campaign.totalSubmissions} submissions</span>
-            <span>💰 {formatCurrency(budgetRemaining)} remaining</span>
+            <span>💰 {isBudgetUnlimited ? "Unlimited budget" : `${formatCurrency(budgetRemaining)} remaining`}</span>
           </div>
         </div>
       </div>
@@ -117,10 +118,10 @@ export default function PublicCampaignPage({ params }: { params: Promise<{ id: s
               {[
                 { label: "Rate/1M Views", value: formatCurrency(campaign.ratePerMillionViews || 0), icon: "👁️", show: campaign.earningType !== "per_post" },
                 { label: "Fixed/Post", value: formatCurrency(campaign.fixedRatePerPost || 0), icon: "📝", show: campaign.earningType !== "per_view" && (campaign.fixedRatePerPost || 0) > 0 },
-                { label: "Max/Creator", value: formatCurrency(campaign.maxEarningsPerCreator || 0), icon: "💎", show: true },
-                { label: "Max/Post", value: formatCurrency(campaign.maxEarningsPerPost || 0), icon: "📊", show: true },
+                { label: "Max/Creator", value: campaign.maxEarningsPerCreator ? formatCurrency(campaign.maxEarningsPerCreator) : "Unlimited", icon: "💎", show: true },
+                { label: "Max/Post", value: campaign.maxEarningsPerPost ? formatCurrency(campaign.maxEarningsPerPost) : "Unlimited", icon: "📊", show: true },
                 { label: "Min Views", value: formatNumber(campaign.minViews || 0), icon: "👀", show: true },
-                { label: "Max Submissions", value: (campaign.maxSubmissionsPerAccount || 3).toString(), icon: "🎬", show: true },
+                { label: "Max Submissions", value: campaign.maxSubmissionsPerAccount ? campaign.maxSubmissionsPerAccount.toString() : "Unlimited", icon: "🎬", show: true },
                 { label: "Content Type", value: campaign.contentType || "both", icon: "📱", show: true },
                 { label: "Video Age", value: campaign.allowOldVideos ? "Any" : `< ${campaign.maxVideoAgeHours || 24}h`, icon: "⏰", show: true },
               ].filter(s => s.show).map((s) => (
@@ -136,16 +137,25 @@ export default function PublicCampaignPage({ params }: { params: Promise<{ id: s
             <div className="glass-card p-6">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-sm">💰 Budget</h3>
-                <span className="text-sm font-bold">{budgetPct}%</span>
+                <span className="text-sm font-bold">{isBudgetUnlimited ? "Unlimited" : `${budgetPct}%`}</span>
               </div>
-              <div className="w-full h-3 bg-bg-primary rounded-full overflow-hidden">
-                <div className={cn("h-full rounded-full transition-all", budgetPct > 90 ? "bg-error" : budgetPct > 70 ? "bg-warning" : "bg-accent")}
-                  style={{ width: `${budgetPct}%` }} />
-              </div>
-              <div className="flex justify-between mt-2 text-xs text-text-muted">
-                <span>{formatCurrency(campaign.budgetUsed)} used</span>
-                <span>{formatCurrency(budgetRemaining)} left</span>
-              </div>
+              {!isBudgetUnlimited && (
+                <>
+                  <div className="w-full h-3 bg-bg-primary rounded-full overflow-hidden">
+                    <div className={cn("h-full rounded-full transition-all", budgetPct > 90 ? "bg-error" : budgetPct > 70 ? "bg-warning" : "bg-accent")}
+                      style={{ width: `${budgetPct}%` }} />
+                  </div>
+                  <div className="flex justify-between mt-2 text-xs text-text-muted">
+                    <span>{formatCurrency(campaign.budgetUsed)} used</span>
+                    <span>{formatCurrency(budgetRemaining)} left</span>
+                  </div>
+                </>
+              )}
+              {isBudgetUnlimited && (
+                <div className="text-xs text-text-muted">
+                  <span>{formatCurrency(campaign.budgetUsed)} used</span>
+                </div>
+              )}
             </div>
 
             {/* Sounds */}
@@ -182,7 +192,7 @@ export default function PublicCampaignPage({ params }: { params: Promise<{ id: s
             )}
 
             {/* Submit CTA */}
-            {campaign.status === "active" && budgetRemaining > 0 && (
+            {campaign.status === "active" && (isBudgetUnlimited || budgetRemaining > 0) && (
               <div className="glass-card p-8 text-center bg-gradient-to-br from-accent/10 to-pink/10">
                 <h3 className="text-xl font-bold mb-2">Ready to earn? 🚀</h3>
                 <p className="text-sm text-text-muted mb-6">Submit your TikTok video using the required sound and start earning!</p>

@@ -81,10 +81,15 @@ async function checkBudgetAlerts() {
 }
 
 export async function GET(req: Request) {
-  // Simple auth via secret key
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return NextResponse.json({ error: "Cron is not configured" }, { status: 500 });
+  }
+
   const url = new URL(req.url);
-  const key = url.searchParams.get("key");
-  if (key !== process.env.CRON_SECRET && key !== "runeclipy-cron-2024") {
+  const auth = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const key = auth || url.searchParams.get("key");
+  if (key !== cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -211,7 +216,7 @@ export async function GET(req: Request) {
 
             if (campaign.earningType === "per_view" || campaign.earningType === "both") {
               const viewEarning = calculateEarning(newViews, campaign.ratePerMillionViews);
-              earned += Math.min(viewEarning, campaign.maxEarningsPerPost);
+              earned += campaign.maxEarningsPerPost > 0 ? Math.min(viewEarning, campaign.maxEarningsPerPost) : viewEarning;
             }
 
             if (campaign.earningType === "per_post" || campaign.earningType === "both") {
@@ -222,9 +227,20 @@ export async function GET(req: Request) {
             const diff = newEarned - (sub.earned || 0);
 
             if (diff !== 0) {
-              updateData.earned = newEarned;
-              // Update campaign budget
-              await Campaign.findByIdAndUpdate(sub.campaignId, { $inc: { budgetUsed: diff } });
+              let budgetDiff = diff;
+              let isBudgetFullyUsed = false;
+              if (campaign.totalBudget > 0) {
+                const remainingBudget = Math.max(0, campaign.totalBudget - campaign.budgetUsed);
+                budgetDiff = diff > 0 ? Math.min(diff, remainingBudget) : diff;
+                isBudgetFullyUsed = budgetDiff >= remainingBudget;
+              }
+              const cappedEarned = parseFloat(((sub.earned || 0) + budgetDiff).toFixed(2));
+
+              updateData.earned = cappedEarned;
+              await Campaign.findByIdAndUpdate(sub.campaignId, {
+                $inc: { budgetUsed: budgetDiff },
+                ...(isBudgetFullyUsed ? { status: "paused" } : {}),
+              });
             }
           }
         }

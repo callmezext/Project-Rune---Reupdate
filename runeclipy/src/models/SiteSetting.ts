@@ -28,6 +28,14 @@ export interface ISiteSetting extends Document {
   geminiApiKeys: string[];
   geminiModel: string;
 
+  // Discord Announcement Customizations
+  discordCampaignColor?: string;
+  discordCampaignLayout?: "image_top" | "image_bottom" | "thumbnail" | "no_image";
+  discordCampaignPing?: string;
+  discordCampaignTitle?: string;
+  discordApprovedColor?: string;
+  discordRejectedColor?: string;
+
   updatedAt: Date;
 }
 
@@ -48,6 +56,14 @@ const SiteSettingSchema = new Schema<ISiteSetting>(
     enableDiscordAIChat: { type: Boolean, default: false },
     discordBotToken: { type: String, default: "" },
     discordGuildId: { type: String, default: "" },
+
+    // Discord Announcement Customizations
+    discordCampaignColor: { type: String, default: "#00D4AA" },
+    discordCampaignLayout: { type: String, default: "image_bottom" },
+    discordCampaignPing: { type: String, default: "🎉 **Campaign Baru!** @everyone" },
+    discordCampaignTitle: { type: String, default: "🎵 New Campaign!" },
+    discordApprovedColor: { type: String, default: "#2ECC71" },
+    discordRejectedColor: { type: String, default: "#ED4245" },
 
     // General
     siteName: { type: String, default: "RuneClipy" },

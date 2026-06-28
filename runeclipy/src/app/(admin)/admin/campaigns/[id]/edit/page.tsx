@@ -176,7 +176,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
           <h3 className="font-bold mb-2">💰 Budget & Rates</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Total Budget ($)</label>
+              <label className="block text-sm text-text-secondary mb-1.5">Total Budget ($) <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
               <input type="number" value={f.totalBudget as number} onChange={(e) => setForm({ ...f, totalBudget: +e.target.value })} className="input-field" min={0} />
             </div>
             {(f.earningType === "per_view" || f.earningType === "both") && (
@@ -192,20 +192,20 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
               </div>
             )}
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Max / Creator ($)</label>
-              <input type="number" value={f.maxEarningsPerCreator as number} onChange={(e) => setForm({ ...f, maxEarningsPerCreator: +e.target.value })} className="input-field" />
+              <label className="block text-sm text-text-secondary mb-1.5">Max / Creator ($) <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={f.maxEarningsPerCreator as number} onChange={(e) => setForm({ ...f, maxEarningsPerCreator: +e.target.value })} className="input-field" min={0} />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Max / Post ($)</label>
-              <input type="number" value={f.maxEarningsPerPost as number} onChange={(e) => setForm({ ...f, maxEarningsPerPost: +e.target.value })} className="input-field" />
+              <label className="block text-sm text-text-secondary mb-1.5">Max / Post ($) <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={f.maxEarningsPerPost as number} onChange={(e) => setForm({ ...f, maxEarningsPerPost: +e.target.value })} className="input-field" min={0} />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Max Submissions / Account</label>
-              <input type="number" value={f.maxSubmissionsPerAccount as number} onChange={(e) => setForm({ ...f, maxSubmissionsPerAccount: +e.target.value })} className="input-field" />
+              <label className="block text-sm text-text-secondary mb-1.5">Max Submissions / Account <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={f.maxSubmissionsPerAccount as number} onChange={(e) => setForm({ ...f, maxSubmissionsPerAccount: +e.target.value })} className="input-field" min={0} />
             </div>
             <div>
               <label className="block text-sm text-text-secondary mb-1.5">Min Views Required</label>
-              <input type="number" value={f.minViews as number} onChange={(e) => setForm({ ...f, minViews: +e.target.value })} className="input-field" />
+              <input type="number" value={f.minViews as number} onChange={(e) => setForm({ ...f, minViews: +e.target.value })} className="input-field" min={0} />
             </div>
           </div>
         </div>

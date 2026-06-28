@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // Per view earning
         if (campaign.earningType === "per_view" || campaign.earningType === "both") {
           const viewEarning = calculateEarning(submission.views, campaign.ratePerMillionViews);
-          earned += Math.min(viewEarning, campaign.maxEarningsPerPost);
+          earned += campaign.maxEarningsPerPost > 0 ? Math.min(viewEarning, campaign.maxEarningsPerPost) : viewEarning;
         }
 
         // Per post fixed rate

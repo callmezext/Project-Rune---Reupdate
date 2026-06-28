@@ -116,22 +116,31 @@ export default function AdminCampaignsPage() {
 
       const orig = detailData.campaign;
       // Create duplicate with reset counters
-      const res = await fetch("/api/admin/campaigns", {
+      const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: `${orig.title} (Copy)`,
           description: orig.description || "",
           type: orig.type,
-          soundUrl: orig.soundUrl || "",
-          requirements: orig.requirements || "",
-          totalBudget: orig.totalBudget,
+          coverImage: orig.coverImage || "",
+          discordInviteUrl: orig.discordInviteUrl || "",
+          sounds: orig.sounds || [],
+          leaderboardBonuses: orig.leaderboardBonuses || [],
+          totalBudget: orig.totalBudget || 0,
           ratePerMillionViews: orig.ratePerMillionViews || 0,
+          maxEarningsPerCreator: orig.maxEarningsPerCreator || 0,
           maxEarningsPerPost: orig.maxEarningsPerPost || 0,
           earningType: orig.earningType || "per_view",
           fixedRatePerPost: orig.fixedRatePerPost || 0,
-          maxSubmissionsPerUser: orig.maxSubmissionsPerUser || 1,
+          maxSubmissionsPerAccount: orig.maxSubmissionsPerAccount || 0,
           status: "paused",
+          allowOldVideos: orig.allowOldVideos || false,
+          maxVideoAgeHours: orig.maxVideoAgeHours || 24,
+          minViews: orig.minViews || 0,
+          contentType: orig.contentType || "both",
+          autoApprove: orig.autoApprove || false,
+          minEngagementRate: orig.minEngagementRate || 2,
         }),
       });
       const data = await res.json();
@@ -225,17 +234,19 @@ export default function AdminCampaignsPage() {
                       <span className={`badge badge-${c.status} text-[10px]`}>{c.status}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
-                      <span>💰 {formatCurrency(c.totalBudget)}</span>
-                      <span>📊 {budgetPct}% used</span>
+                      <span>💰 {c.totalBudget > 0 ? formatCurrency(c.totalBudget) : "Unlimited"}</span>
+                      {c.totalBudget > 0 && <span>📊 {budgetPct}% used</span>}
                       <span>👥 {c.totalCreators || 0} creators</span>
                       <span>🎬 {c.totalSubmissions || 0} subs</span>
                     </div>
                     {/* Budget progress bar */}
-                    <div className="mt-2 w-full max-w-xs">
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${budgetPct}%` }} />
+                    {c.totalBudget > 0 && (
+                      <div className="mt-2 w-full max-w-xs">
+                        <div className="progress-bar">
+                          <div className="progress-fill" style={{ width: `${budgetPct}%` }} />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     {c.status !== "ended" && (

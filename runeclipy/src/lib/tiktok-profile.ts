@@ -374,7 +374,7 @@ export async function scrapeForVerification(
   username: string,
   verificationCode: string
 ): Promise<{ profile: TikTokProfile; codeFound: boolean; allBios: string[] }> {
-  console.log(`[Verify] ═══ Verification for @${username}, code: ${verificationCode} ═══`);
+  console.log(`[Verify] ═══ Verification for @${username} ═══`);
 
   const codeLower = verificationCode.toLowerCase();
   const allBiosCollected: string[] = [];

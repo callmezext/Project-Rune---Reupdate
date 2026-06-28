@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
       // Calculate view-based earning
       const viewEarning = calculateEarning(mockSubmission.views, mockCampaign.ratePerMillionViews);
       // Cap by maxEarningsPerPost
-      const calculatedEarned = parseFloat(Math.min(viewEarning, mockCampaign.maxEarningsPerPost).toFixed(2));
+      const calculatedEarned = parseFloat((mockCampaign.maxEarningsPerPost > 0 ? Math.min(viewEarning, mockCampaign.maxEarningsPerPost) : viewEarning).toFixed(2));
 
       // Apply approval mutations
       mockSubmission.status = "approved";

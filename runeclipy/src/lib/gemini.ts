@@ -1074,7 +1074,7 @@ export async function runAIChat(
 
     for (const currentModel of modelsToTry) {
       try {
-        console.log(`[AI Chat] Mencoba model ${currentModel} dengan API key index ke-${i} (dimulai dengan: ${currentKey.substring(0, 8)}...)`);
+        console.log(`[AI Chat] Mencoba model ${currentModel} dengan API key index ke-${i}`);
         const genAI = new GoogleGenerativeAI(currentKey);
         const model = genAI.getGenerativeModel({
           model: currentModel,

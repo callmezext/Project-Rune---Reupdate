@@ -43,25 +43,38 @@ function TypingIndicator() {
 function MessageBubble({ msg }: { msg: Message }) {
   const isUser = msg.role === "user";
 
-  // Simple markdown-like rendering
-  const renderContent = (text: string) => {
-    return text
-      .split("\n")
-      .map((line, i) => {
-        // Bold **text**
-        const boldLine = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        // Code `inline`
-        const codeLine = boldLine.replace(/`([^`]+)`/g, '<code class="bg-white/10 px-1 py-0.5 rounded text-[11px] font-mono text-accent-light">$1</code>');
-        // Bullet points
-        const bulletLine = codeLine.replace(/^[•\-]\s/, '<span class="text-accent-light mr-1">•</span>');
-
+  // Safe markdown-like rendering; never render raw HTML from AI output.
+  const renderInline = (line: string) => {
+    const parts = line.split(/(`[^`]+`|\*\*.*?\*\*)/g).filter(Boolean);
+    return parts.map((part, idx) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={idx}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith("`") && part.endsWith("`")) {
         return (
-          <span key={i}>
-            <span dangerouslySetInnerHTML={{ __html: bulletLine }} />
-            {i < text.split("\n").length - 1 && <br />}
-          </span>
+          <code key={idx} className="bg-white/10 px-1 py-0.5 rounded text-[11px] font-mono text-accent-light">
+            {part.slice(1, -1)}
+          </code>
         );
-      });
+      }
+      return <span key={idx}>{part}</span>;
+    });
+  };
+
+  const renderContent = (text: string) => {
+    const lines = text.split("\n");
+    return lines.map((line, i) => {
+      const isBullet = /^[•\-]\s/.test(line);
+      const content = isBullet ? line.replace(/^[•\-]\s/, "") : line;
+
+      return (
+        <span key={i}>
+          {isBullet && <span className="text-accent-light mr-1">•</span>}
+          {renderInline(content)}
+          {i < lines.length - 1 && <br />}
+        </span>
+      );
+    });
   };
 
   return (

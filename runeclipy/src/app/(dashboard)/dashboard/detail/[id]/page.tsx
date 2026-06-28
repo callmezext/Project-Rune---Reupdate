@@ -94,7 +94,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const budgetPercent = Math.round((campaign.budgetUsed / campaign.totalBudget) * 100);
+  const isBudgetUnlimited = campaign.totalBudget === 0;
+  const budgetPercent = isBudgetUnlimited ? 0 : Math.round((campaign.budgetUsed / campaign.totalBudget) * 100);
 
   const getTrophyIcon = (rank: number) => {
     if (rank === 1) return <span className="trophy-gold text-xl">🏆</span>;
@@ -135,7 +136,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Rate per 1M Views", value: formatCurrency(campaign.ratePerMillionViews), highlight: true },
-                { label: "Total Budget", value: formatCurrency(campaign.totalBudget) },
+                { label: "Total Budget", value: isBudgetUnlimited ? "Unlimited" : formatCurrency(campaign.totalBudget) },
                 { label: "Creators", value: formatNumber(campaign.totalCreators) },
                 { label: "Submissions", value: formatNumber(campaign.totalSubmissions) },
               ].map((stat) => (
@@ -147,15 +148,25 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {/* Budget Progress */}
-            <div className="px-6 pb-6">
-              <div className="flex justify-between text-xs text-text-muted mb-2">
-                <span>Budget Used</span>
-                <span>{budgetPercent}% — {formatCurrency(campaign.budgetUsed)} / {formatCurrency(campaign.totalBudget)}</span>
+            {!isBudgetUnlimited && (
+              <div className="px-6 pb-6">
+                <div className="flex justify-between text-xs text-text-muted mb-2">
+                  <span>Budget Used</span>
+                  <span>{budgetPercent}% — {formatCurrency(campaign.budgetUsed)} / {formatCurrency(campaign.totalBudget)}</span>
+                </div>
+                <div className="progress-bar !h-3 !rounded-lg">
+                  <div className="progress-fill !rounded-lg" style={{ width: `${budgetPercent}%` }} />
+                </div>
               </div>
-              <div className="progress-bar !h-3 !rounded-lg">
-                <div className="progress-fill !rounded-lg" style={{ width: `${budgetPercent}%` }} />
+            )}
+            {isBudgetUnlimited && (
+              <div className="px-6 pb-6">
+                <div className="flex justify-between text-xs text-text-muted mb-2">
+                  <span>Budget Used</span>
+                  <span>{formatCurrency(campaign.budgetUsed)} used (Unlimited budget)</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Description */}
@@ -194,9 +205,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               {[
                 { label: "Content Type", value: campaign.contentType },
                 { label: "Min. Views", value: formatNumber(campaign.minViews) },
-                { label: "Max Earnings / Creator", value: formatCurrency(campaign.maxEarningsPerCreator) },
-                { label: "Max Earnings / Post", value: formatCurrency(campaign.maxEarningsPerPost) },
-                { label: "Max Submissions / Account", value: campaign.maxSubmissionsPerAccount.toString() },
+                { label: "Max Earnings / Creator", value: campaign.maxEarningsPerCreator ? formatCurrency(campaign.maxEarningsPerCreator) : "Unlimited" },
+                { label: "Max Earnings / Post", value: campaign.maxEarningsPerPost ? formatCurrency(campaign.maxEarningsPerPost) : "Unlimited" },
+                { label: "Max Submissions / Account", value: campaign.maxSubmissionsPerAccount ? campaign.maxSubmissionsPerAccount.toString() : "Unlimited" },
                 { label: "Platforms", value: campaign.supportedPlatforms.join(", ") },
               ].map((req) => (
                 <div key={req.label} className="p-3 rounded-xl bg-bg-primary/50 border border-border">

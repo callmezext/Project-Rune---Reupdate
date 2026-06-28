@@ -141,8 +141,8 @@ export default function NewCampaignPage() {
           <h3 className="font-bold mb-2">💰 Budget & Rates</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Total Budget ($)</label>
-              <input type="number" value={form.totalBudget} onChange={(e) => setForm({ ...form, totalBudget: +e.target.value })} className="input-field" min={100} required />
+              <label className="block text-sm text-text-secondary mb-1.5">Total Budget ($) <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={form.totalBudget} onChange={(e) => setForm({ ...form, totalBudget: +e.target.value })} className="input-field" min={0} required />
             </div>
 
             {(form.earningType === "per_view" || form.earningType === "both") && (
@@ -160,17 +160,17 @@ export default function NewCampaignPage() {
             )}
 
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Max Earning / Creator ($)</label>
-              <input type="number" value={form.maxEarningsPerCreator} onChange={(e) => setForm({ ...form, maxEarningsPerCreator: +e.target.value })} className="input-field" />
+              <label className="block text-sm text-text-secondary mb-1.5">Max Earning / Creator ($) <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={form.maxEarningsPerCreator} onChange={(e) => setForm({ ...form, maxEarningsPerCreator: +e.target.value })} className="input-field" min={0} />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Max Earning / Post ($)</label>
-              <input type="number" value={form.maxEarningsPerPost} onChange={(e) => setForm({ ...form, maxEarningsPerPost: +e.target.value })} className="input-field" />
+              <label className="block text-sm text-text-secondary mb-1.5">Max Earning / Post ($) <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={form.maxEarningsPerPost} onChange={(e) => setForm({ ...form, maxEarningsPerPost: +e.target.value })} className="input-field" min={0} />
               <p className="text-[10px] text-text-muted mt-1">Cap earning per video (dari views). Tidak berlaku untuk fixed rate per post.</p>
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1.5">Max Submissions / Account</label>
-              <input type="number" value={form.maxSubmissionsPerAccount} onChange={(e) => setForm({ ...form, maxSubmissionsPerAccount: +e.target.value })} className="input-field" min={1} />
+              <label className="block text-sm text-text-secondary mb-1.5">Max Submissions / Account <span className="text-[10px] text-text-muted font-normal">(0 = Unlimited)</span></label>
+              <input type="number" value={form.maxSubmissionsPerAccount} onChange={(e) => setForm({ ...form, maxSubmissionsPerAccount: +e.target.value })} className="input-field" min={0} />
             </div>
             <div>
               <label className="block text-sm text-text-secondary mb-1.5">Min Views Required</label>

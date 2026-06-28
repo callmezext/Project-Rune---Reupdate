@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Check budget remaining
-    if (campaign.budgetUsed >= campaign.totalBudget) {
+    if (campaign.totalBudget > 0 && campaign.budgetUsed >= campaign.totalBudget) {
       return NextResponse.json({ error: "Campaign budget has been fully used" }, { status: 400 });
     }
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       userId: session.userId,
     });
 
-    if (existingCount >= campaign.maxSubmissionsPerAccount) {
+    if (campaign.maxSubmissionsPerAccount > 0 && existingCount >= campaign.maxSubmissionsPerAccount) {
       return NextResponse.json({
         error: `Max ${campaign.maxSubmissionsPerAccount} submissions per account for this campaign`,
       }, { status: 400 });
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (campaign.earningType === "per_view" || campaign.earningType === "both") {
         const { calculateEarning } = await import("@/lib/utils");
         const viewEarning = calculateEarning(videoData.stats.views, campaign.ratePerMillionViews);
-        earned += Math.min(viewEarning, campaign.maxEarningsPerPost);
+        earned += campaign.maxEarningsPerPost > 0 ? Math.min(viewEarning, campaign.maxEarningsPerPost) : viewEarning;
       }
       if (campaign.earningType === "per_post" || campaign.earningType === "both") {
         earned += campaign.fixedRatePerPost || 0;

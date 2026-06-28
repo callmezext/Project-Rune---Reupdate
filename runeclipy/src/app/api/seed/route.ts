@@ -4,8 +4,20 @@ import Campaign from "@/models/Campaign";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
+    const seedSecret = process.env.SEED_SECRET;
+    if (!seedSecret) {
+      return NextResponse.json({ error: "Seed is not configured" }, { status: 500 });
+    }
+
+    const url = new URL(req.url);
+    const auth = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+    const key = auth || url.searchParams.get("key");
+    if (key !== seedSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await connectDB();
 
     // Check if already seeded
@@ -15,13 +27,19 @@ export async function POST() {
     }
 
     // Create admin user
-    const hashedPassword = await bcrypt.hash("admin123", 12);
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "admin123");
+    const demoPasswordPlain = process.env.SEED_DEMO_PASSWORD || (process.env.NODE_ENV === "production" ? "" : "demo123");
+    if (!adminPassword || !demoPasswordPlain) {
+      return NextResponse.json({ error: "Seed passwords are not configured" }, { status: 500 });
+    }
+
+    const hashedPassword = await bcrypt.hash(adminPassword, 12);
     const adminUser = await User.findOneAndUpdate(
       { username: "admin" },
       {
         nickname: "Admin",
         username: "admin",
-        email: "gunturafandy5@gmail.com",
+        email: process.env.SEED_ADMIN_EMAIL || "gunturafandy5@gmail.com",
         password: hashedPassword,
         role: "admin",
         referralCode: "admin",
@@ -31,13 +49,13 @@ export async function POST() {
     );
 
     // Create demo user
-    const demoPassword = await bcrypt.hash("demo123", 12);
+    const demoPassword = await bcrypt.hash(demoPasswordPlain, 12);
     await User.findOneAndUpdate(
       { username: "demo" },
       {
         nickname: "Demo Creator",
         username: "demo",
-        email: "demo@runeclipy.com",
+        email: process.env.SEED_DEMO_EMAIL || "demo@runeclipy.com",
         password: demoPassword,
         role: "user",
         referralCode: "demo",
@@ -235,11 +253,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       message: "Database seeded successfully!",
-      data: {
-        campaigns: campaigns.length,
-        adminLogin: { email: "gunturafandy5@gmail.com", password: "admin123" },
-        demoLogin: { email: "demo@runeclipy.com", password: "demo123" },
-      },
+      data: { campaigns: campaigns.length },
     });
   } catch (error) {
     console.error("Seed error:", error);

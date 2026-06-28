@@ -5,7 +5,11 @@ import { cn } from "@/lib/utils";
 interface DiscordEmbed {
   id: string; title: string; description: string; color: number;
   thumbnail?: { url: string }; image?: { url: string };
-  footer?: { text: string; icon_url?: string }; content?: string;
+  footer?: { text?: string; icon_url?: string }; content?: string;
+  author?: { name?: string; icon_url?: string; url?: string };
+  fields?: { name?: string; value?: string; inline?: boolean }[];
+  timestamp?: string;
+  hasTimestamp?: boolean;
 }
 interface Channel { id: string; name: string; }
 interface DiscordSettings {
@@ -15,6 +19,12 @@ interface DiscordSettings {
   discordMatrixChannelId: string;
   discordChatChannelId: string;
   enableDiscordAIChat: boolean;
+  discordCampaignColor?: string;
+  discordCampaignLayout?: "image_top" | "image_bottom" | "thumbnail" | "no_image";
+  discordCampaignPing?: string;
+  discordCampaignTitle?: string;
+  discordApprovedColor?: string;
+  discordRejectedColor?: string;
 }
 type Toast = { message: string; type: "success"|"error"|"info" } | null;
 
@@ -106,7 +116,7 @@ function parseDiscordMarkdown(text: string): string {
 }
 
 export default function AdminDiscordPage() {
-  const [activeTab, setActiveTab] = useState<"bot"|"send"|"guide"|"users">("bot");
+  const [activeTab, setActiveTab] = useState<"send"|"bot"|"users">("send");
 
   // ── User Roles & Sync state ────────────────────────────────────────
   const [discordUsers, setDiscordUsers] = useState<DiscordUser[]>([]);
@@ -146,6 +156,12 @@ export default function AdminDiscordPage() {
     discordMatrixChannelId: "",
     discordChatChannelId: "",
     enableDiscordAIChat: false,
+    discordCampaignColor: "#00D4AA",
+    discordCampaignLayout: "image_bottom",
+    discordCampaignPing: "🎉 **Campaign Baru!** @everyone",
+    discordCampaignTitle: "🎵 New Campaign!",
+    discordApprovedColor: "#2ECC71",
+    discordRejectedColor: "#ED4245",
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
@@ -157,7 +173,123 @@ export default function AdminDiscordPage() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [sending, setSending] = useState(false);
   const [customColor, setCustomColor] = useState("#5865F2");
+  const [isJsonMode, setIsJsonMode] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
   const descRef = useRef<HTMLTextAreaElement>(null);
+
+  // Autocomplete mentions setup
+  const [roles, setRoles] = useState<any[]>([]);
+  const [mentionShow, setMentionShow] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionType, setMentionType] = useState<"channel" | "user" | null>(null);
+  const [activeInputId, setActiveInputId] = useState<"content" | "description" | "ping" | null>(null);
+  const [mentionCursor, setMentionCursor] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/admin/discord-roles")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) setRoles(d.roles || []);
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleTextInputChange = (text: string, cursor: number, inputId: "content" | "description" | "ping") => {
+    setActiveInputId(inputId);
+    setMentionCursor(cursor);
+
+    // Find the last index of '#' or '@' before the cursor
+    const lastHash = text.lastIndexOf("#", cursor - 1);
+    const lastAt = text.lastIndexOf("@", cursor - 1);
+    const lastSymbolIdx = Math.max(lastHash, lastAt);
+
+    if (lastSymbolIdx !== -1) {
+      const type = lastSymbolIdx === lastHash ? "channel" : "user";
+      // Ensure there are no spaces between the symbol and the cursor
+      const textAfterSymbol = text.substring(lastSymbolIdx + 1, cursor);
+      if (!textAfterSymbol.includes(" ")) {
+        setMentionType(type);
+        setMentionQuery(textAfterSymbol.toLowerCase());
+        setMentionShow(true);
+        return;
+      }
+    }
+    setMentionShow(false);
+  };
+
+  const selectMention = (val: string) => {
+    let text = "";
+    let updateFn: (val: string) => void = () => {};
+
+    if (activeInputId === "content") {
+      text = active.content || "";
+      updateFn = (v) => updateActive({ content: v });
+    } else if (activeInputId === "description") {
+      text = active.description || "";
+      updateFn = (v) => updateActive({ description: v });
+    } else if (activeInputId === "ping") {
+      text = discordSettings.discordCampaignPing || "";
+      updateFn = (v) => setDiscordSettings({ ...discordSettings, discordCampaignPing: v });
+    }
+
+    const symbolIdx = mentionType === "channel" ? text.lastIndexOf("#", mentionCursor - 1) : text.lastIndexOf("@", mentionCursor - 1);
+    if (symbolIdx !== -1) {
+      const before = text.substring(0, symbolIdx);
+      const after = text.substring(mentionCursor);
+      const inserted = val;
+      updateFn(before + inserted + after);
+    }
+    setMentionShow(false);
+  };
+
+  const renderMentionDropdown = () => {
+    if (!mentionShow) return null;
+    let items: { id: string; name: string; value: string }[] = [];
+
+    if (mentionType === "channel") {
+      items = channels
+        .filter(c => c.name.toLowerCase().includes(mentionQuery))
+        .map(c => ({ id: c.id, name: `#${c.name}`, value: `<#${c.id}>` }));
+    } else {
+      // Add special tags
+      const specials = [
+        { id: "everyone", name: "@everyone", value: "@everyone" },
+        { id: "here", name: "@here", value: "@here" }
+      ];
+      // Add roles
+      const filteredRoles = roles
+        .filter(r => r.name.toLowerCase().includes(mentionQuery))
+        .map(r => ({ id: r.id, name: `@${r.name}`, value: `<@&${r.id}>` }));
+      // Add users
+      const filteredUsers = discordUsers
+        .filter(u => (u.nickname || u.username).toLowerCase().includes(mentionQuery))
+        .map(u => ({ id: u.discordId || u._id, name: `@${u.nickname || u.username}`, value: u.discordId ? `<@${u.discordId}>` : `@${u.nickname || u.username}` }));
+
+      items = [...specials, ...filteredRoles, ...filteredUsers].filter(item => 
+        item.name.toLowerCase().includes(mentionQuery)
+      );
+    }
+
+    if (items.length === 0) return null;
+
+    return (
+      <div className="absolute z-[999] bg-[#2f3136] border border-white/10 rounded-lg shadow-2xl max-h-[200px] overflow-y-auto w-64 mt-1">
+        {items.slice(0, 8).map(item => (
+          <button
+            key={item.id}
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault(); // Prevents blur event
+              selectMention(item.value);
+            }}
+            className="w-full text-left px-3 py-1.5 text-xs text-text-secondary hover:bg-accent hover:text-white transition-all flex items-center gap-1.5"
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   const [toast, setToast] = useState<Toast>(null);
 
@@ -392,6 +524,59 @@ export default function AdminDiscordPage() {
     setEmbeds(prev => prev.filter((_, i) => i !== idx));
     setActiveIdx(Math.max(0, activeIdx - 1));
   };
+
+  const handleToggleJsonMode = () => {
+    if (isJsonMode) {
+      try {
+        const parsed = JSON.parse(jsonInput);
+        const newEmbeds = (Array.isArray(parsed) ? parsed : [parsed]).map((emb: any) => ({
+          id: emb.id || Math.random().toString(36).slice(2),
+          title: emb.title || "",
+          description: emb.description || "",
+          color: typeof emb.color === "number" ? emb.color : 0x5865F2,
+          content: emb.content || "",
+          thumbnail: emb.thumbnail || undefined,
+          image: emb.image || undefined,
+          footer: emb.footer || undefined,
+          author: emb.author || undefined,
+          fields: Array.isArray(emb.fields) ? emb.fields : [],
+          timestamp: emb.timestamp || undefined,
+          hasTimestamp: !!emb.timestamp || !!emb.hasTimestamp,
+        }));
+        setEmbeds(newEmbeds);
+        setActiveIdx(0);
+        setIsJsonMode(false);
+        showToast("JSON successfully loaded!");
+      } catch (err) {
+        showToast("Format JSON tidak valid!", "error");
+      }
+    } else {
+      const exportable = embeds.map(({ id, hasTimestamp, ...rest }) => ({
+        ...rest,
+        timestamp: hasTimestamp ? new Date().toISOString() : undefined,
+      }));
+      setJsonInput(JSON.stringify(exportable, null, 2));
+      setIsJsonMode(true);
+    }
+  };
+
+  const handleAddField = () => {
+    const currentFields = active.fields || [];
+    if (currentFields.length >= 25) return showToast("Maksimal 25 fields per embed!", "info");
+    updateActive({ fields: [...currentFields, { name: "", value: "", inline: false }] });
+  };
+
+  const handleUpdateField = (idx: number, patch: Partial<{ name: string; value: string; inline: boolean }>) => {
+    const currentFields = [...(active.fields || [])];
+    currentFields[idx] = { ...currentFields[idx], ...patch };
+    updateActive({ fields: currentFields });
+  };
+
+  const handleRemoveField = (idx: number) => {
+    const currentFields = (active.fields || []).filter((_, i) => i !== idx);
+    updateActive({ fields: currentFields });
+  };
+
   const insertFormat = (before: string, after: string) => {
     const ta = descRef.current;
     if (!ta) return;
@@ -402,19 +587,39 @@ export default function AdminDiscordPage() {
     updateActive({ description: newText });
     setTimeout(() => { ta.focus(); ta.setSelectionRange(start + before.length, end + before.length); }, 0);
   };
+
   const handleSend = async () => {
     if (!selectedChannel) return showToast("Pilih channel dulu!", "error");
-    if (!embeds.some(e => e.title || e.description)) return showToast("Minimal isi title atau description!", "error");
     setSending(true);
     try {
-      const payload = embeds.map(e => {
+      let payloadEmbeds = embeds;
+      if (isJsonMode) {
+        try {
+          const parsed = JSON.parse(jsonInput);
+          payloadEmbeds = Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+          setSending(false);
+          return showToast("Format JSON tidak valid!", "error");
+        }
+      }
+
+      if (!payloadEmbeds.some(e => e.title || e.description || e.content)) {
+        setSending(false);
+        return showToast("Minimal isi title, description, atau content!", "error");
+      }
+
+      const payload = payloadEmbeds.map(e => {
         const embed: Record<string, unknown> = { title: e.title || undefined, description: e.description || undefined, color: e.color };
         if (e.thumbnail?.url) embed.thumbnail = { url: e.thumbnail.url };
         if (e.image?.url) embed.image = { url: e.image.url };
         if (e.footer?.text) embed.footer = { text: e.footer.text, icon_url: e.footer.icon_url || undefined };
         if (e.content) embed.content = e.content;
+        if (e.author?.name) embed.author = { name: e.author.name, icon_url: e.author.icon_url || undefined, url: e.author.url || undefined };
+        if (e.fields?.length) embed.fields = e.fields.filter(f => f.name && f.value).map(f => ({ name: f.name, value: f.value, inline: !!f.inline }));
+        if (e.hasTimestamp || e.timestamp) embed.timestamp = e.timestamp || new Date().toISOString();
         return embed;
       });
+
       const res = await fetch("/api/admin/discord-send", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channelId: selectedChannel, embeds: payload }),
@@ -448,10 +653,9 @@ export default function AdminDiscordPage() {
   };
 
   const tabs = [
-    { id: "bot" as const, label: "Bot & Settings", icon: "🤖" },
     { id: "send" as const, label: "Send Message", icon: "📤" },
+    { id: "bot" as const, label: "Bot & Settings", icon: "🤖" },
     { id: "users" as const, label: "User Roles & Sync", icon: "👥" },
-    { id: "guide" as const, label: "Format Guide", icon: "📝" },
   ];
 
   return (
@@ -708,82 +912,201 @@ export default function AdminDiscordPage() {
             </div>
 
             {/* Embed Builder */}
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                {embeds.map((e, i) => (
-                  <button key={e.id} onClick={() => setActiveIdx(i)}
-                    className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                      i === activeIdx ? "bg-accent text-white" : "bg-bg-tertiary text-text-muted hover:text-text-primary"
-                    )}>
-                    Embed {i + 1}
-                    {embeds.length > 1 && (
-                      <span onClick={(ev) => { ev.stopPropagation(); removeEmbed(i); }}
-                        className="ml-1.5 text-[10px] hover:text-error cursor-pointer">✕</span>
+            <div className="glass-card p-4 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <h3 className="font-bold text-sm">🛠️ Embed Builder</h3>
+                <button type="button" onClick={handleToggleJsonMode}
+                  className="px-2.5 py-1 text-[10px] font-bold rounded bg-accent/20 text-accent hover:bg-accent/30 transition-all">
+                  {isJsonMode ? "📝 Switch to Form Editor" : "💻 Switch to JSON Editor"}
+                </button>
+              </div>
+
+              {isJsonMode ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-text-muted mb-1">Payload JSON (Embeds Array or Object)</label>
+                    <textarea value={jsonInput} onChange={e => setJsonInput(e.target.value)}
+                      className="input-field text-xs min-h-[350px] font-mono whitespace-pre" placeholder='[\n  {\n    "title": "My Embed",\n    "description": "Hello World"\n  }\n]' />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    {embeds.map((e, i) => (
+                      <button key={e.id} type="button" onClick={() => setActiveIdx(i)}
+                        className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                          i === activeIdx ? "bg-accent text-white" : "bg-bg-tertiary text-text-muted hover:text-text-primary"
+                        )}>
+                        Embed {i + 1}
+                        {embeds.length > 1 && (
+                          <span onClick={(ev) => { ev.stopPropagation(); removeEmbed(i); }}
+                            className="ml-1.5 text-[10px] hover:text-error cursor-pointer">✕</span>
+                        )}
+                      </button>
+                    ))}
+                    <button type="button" onClick={addEmbed} className="px-3 py-1.5 rounded-lg text-xs bg-bg-tertiary text-text-muted hover:text-accent transition-all">+ Add</button>
+                  </div>
+
+                  <div className="mb-3 relative">
+                    <label className="block text-xs text-text-muted mb-1">💬 Content (text biasa, opsional)</label>
+                    <input type="text" value={active.content || ""} 
+                      onChange={e => {
+                        const text = e.target.value;
+                        const cursor = e.target.selectionStart || 0;
+                        updateActive({ content: text });
+                        handleTextInputChange(text, cursor, "content");
+                      }}
+                      onBlur={() => setTimeout(() => setMentionShow(false), 200)}
+                      className="input-field text-sm" placeholder="Pesan text biasa di atas embed..." />
+                    {mentionShow && activeInputId === "content" && renderMentionDropdown()}
+                  </div>
+
+                  {/* Author Settings */}
+                  <div className="p-3 rounded-xl bg-bg-primary/30 border border-border/50 space-y-2">
+                    <div className="text-xs font-bold text-text-primary flex items-center gap-1">👤 Author Settings</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-text-muted mb-0.5">Author Name</label>
+                        <input type="text" value={active.author?.name || ""}
+                          onChange={e => updateActive({ author: { ...active.author, name: e.target.value } })}
+                          className="input-field text-xs !py-1.5" placeholder="Name..." />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-text-muted mb-0.5">Author Icon URL</label>
+                        <input type="url" value={active.author?.icon_url || ""}
+                          onChange={e => updateActive({ author: { ...active.author, icon_url: e.target.value } })}
+                          className="input-field text-xs !py-1.5" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-text-muted mb-0.5">Author URL</label>
+                        <input type="url" value={active.author?.url || ""}
+                          onChange={e => updateActive({ author: { ...active.author, url: e.target.value } })}
+                          className="input-field text-xs !py-1.5" placeholder="https://..." />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="block text-xs text-text-muted mb-1">📝 Title</label>
+                    <input type="text" value={active.title} onChange={e => updateActive({ title: e.target.value })}
+                      className="input-field text-sm font-semibold" placeholder="Judul embed..." />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs text-text-muted">📄 Description</label>
+                      <div className="flex items-center gap-1">
+                        {formatBtns.map(f => (
+                          <button key={f.label} type="button" title={f.title} onClick={() => insertFormat(f.b, f.a)}
+                            className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-bg-tertiary hover:bg-accent/20 hover:text-accent transition-all">{f.label}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <textarea ref={descRef} value={active.description} 
+                        onChange={e => {
+                          const text = e.target.value;
+                          const cursor = e.target.selectionStart || 0;
+                          updateActive({ description: text });
+                          handleTextInputChange(text, cursor, "description");
+                        }}
+                        onBlur={() => setTimeout(() => setMentionShow(false), 200)}
+                        className="input-field text-sm min-h-[100px] resize-y font-mono" placeholder="Isi pesan... (support markdown)" />
+                      {mentionShow && activeInputId === "description" && renderMentionDropdown()}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-text-muted mb-1.5">🎨 Color</label>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {COLORS.map(c => (
+                        <button key={c.val} type="button" title={c.name} onClick={() => { updateActive({ color: c.val }); setCustomColor(c.hex); }}
+                          className={cn("w-6 h-6 rounded-full border transition-all hover:scale-110",
+                            active.color === c.val ? "border-white scale-110" : "border-transparent"
+                          )} style={{ backgroundColor: c.hex }} />
+                      ))}
+                      <input type="color" value={customColor} onChange={e => {
+                        setCustomColor(e.target.value);
+                        updateActive({ color: parseInt(e.target.value.replace("#", ""), 16) });
+                      }} className="w-6 h-6 rounded cursor-pointer" title="Custom color" />
+                    </div>
+                  </div>
+
+                  {/* Custom Fields Builder */}
+                  <div className="p-3 rounded-xl bg-bg-primary/30 border border-border/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-text-primary flex items-center gap-1">📊 Custom Fields ({active.fields?.length || 0}/25)</span>
+                      <button type="button" onClick={handleAddField}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white hover:bg-accent/80 transition-all">+ Add Field</button>
+                    </div>
+                    {active.fields && active.fields.length > 0 ? (
+                      <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                        {active.fields.map((f, idx) => (
+                          <div key={idx} className="flex gap-2 items-center bg-bg-primary/50 p-2 rounded-lg border border-border/40 relative">
+                            <div className="flex-1 space-y-1">
+                              <input type="text" value={f.name} onChange={e => handleUpdateField(idx, { name: e.target.value })}
+                                className="input-field text-xs !py-1 !px-2 font-semibold" placeholder="Field Name" />
+                              <textarea value={f.value} onChange={e => handleUpdateField(idx, { value: e.target.value })}
+                                className="input-field text-xs !py-1 !px-2 font-mono min-h-[40px] resize-y" placeholder="Field Value" />
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                              <label className="flex items-center gap-1 cursor-pointer select-none">
+                                <input type="checkbox" checked={!!f.inline} onChange={e => handleUpdateField(idx, { inline: e.target.checked })}
+                                  className="rounded border-border text-accent focus:ring-0 w-3 h-3 bg-transparent" />
+                                <span className="text-[10px] text-text-muted">Inline</span>
+                              </label>
+                              <button type="button" onClick={() => handleRemoveField(idx)}
+                                className="p-1 rounded bg-error/10 text-error hover:bg-error/20 text-xs transition-all">🗑️</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-text-muted italic text-center py-1">Belum ada custom field.</p>
                     )}
-                  </button>
-                ))}
-                <button onClick={addEmbed} className="px-3 py-1.5 rounded-lg text-xs bg-bg-tertiary text-text-muted hover:text-accent transition-all">+ Add</button>
-              </div>
+                  </div>
 
-              <div className="mb-3">
-                <label className="block text-xs text-text-muted mb-1">💬 Content (text biasa, opsional)</label>
-                <input type="text" value={active.content || ""} onChange={e => updateActive({ content: e.target.value })}
-                  className="input-field text-sm" placeholder="Pesan text biasa di atas embed..." />
-              </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-text-muted mb-1">📐 Thumbnail URL</label>
+                      <input type="url" value={active.thumbnail?.url || ""} onChange={e => updateActive({ thumbnail: { url: e.target.value } })}
+                        className="input-field text-xs" placeholder="https://..." />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-text-muted mb-1">🖼️ Image URL</label>
+                      <input type="url" value={active.image?.url || ""} onChange={e => updateActive({ image: { url: e.target.value } })}
+                        className="input-field text-xs" placeholder="https://..." />
+                    </div>
+                  </div>
 
-              <div className="mb-3">
-                <label className="block text-xs text-text-muted mb-1">📝 Title</label>
-                <input type="text" value={active.title} onChange={e => updateActive({ title: e.target.value })}
-                  className="input-field text-sm font-semibold" placeholder="Judul embed..." />
-              </div>
-
-              <div className="flex items-center gap-1 mb-1 flex-wrap">
-                {formatBtns.map(f => (
-                  <button key={f.label} title={f.title} onClick={() => insertFormat(f.b, f.a)}
-                    className="px-2 py-1 rounded text-xs font-mono bg-bg-tertiary hover:bg-accent/20 hover:text-accent transition-all">{f.label}</button>
-                ))}
-              </div>
-
-              <div className="mb-3">
-                <label className="block text-xs text-text-muted mb-1">📄 Description</label>
-                <textarea ref={descRef} value={active.description} onChange={e => updateActive({ description: e.target.value })}
-                  className="input-field text-sm min-h-[120px] resize-y font-mono" placeholder="Isi pesan... (support markdown)" />
-              </div>
-
-              <div className="mb-3">
-                <label className="block text-xs text-text-muted mb-2">🎨 Color</label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {COLORS.map(c => (
-                    <button key={c.val} title={c.name} onClick={() => { updateActive({ color: c.val }); setCustomColor(c.hex); }}
-                      className={cn("w-7 h-7 rounded-full border-2 transition-all hover:scale-110",
-                        active.color === c.val ? "border-white scale-110" : "border-transparent"
-                      )} style={{ backgroundColor: c.hex }} />
-                  ))}
-                  <input type="color" value={customColor} onChange={e => {
-                    setCustomColor(e.target.value);
-                    updateActive({ color: parseInt(e.target.value.replace("#", ""), 16) });
-                  }} className="w-7 h-7 rounded cursor-pointer" title="Custom color" />
+                  {/* Footer Settings */}
+                  <div className="p-3 rounded-xl bg-bg-primary/30 border border-border/50 space-y-2">
+                    <div className="text-xs font-bold text-text-primary flex items-center gap-1">🔻 Footer Settings</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-text-muted mb-0.5">Footer Text</label>
+                        <input type="text" value={active.footer?.text || ""}
+                          onChange={e => updateActive({ footer: { ...active.footer, text: e.target.value } })}
+                          className="input-field text-xs !py-1.5" placeholder="Text..." />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-text-muted mb-0.5">Footer Icon URL</label>
+                        <input type="url" value={active.footer?.icon_url || ""}
+                          onChange={e => updateActive({ footer: { ...active.footer, icon_url: e.target.value } })}
+                          className="input-field text-xs !py-1.5" placeholder="https://..." />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/[0.03]">
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" checked={!!active.hasTimestamp}
+                          onChange={e => updateActive({ hasTimestamp: e.target.checked })}
+                          className="rounded border-border text-accent focus:ring-0 w-3.5 h-3.5 bg-transparent" />
+                        <span className="text-xs text-text-secondary font-medium">Show Timestamp</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">🖼️ Thumbnail URL</label>
-                  <input type="url" value={active.thumbnail?.url || ""} onChange={e => updateActive({ thumbnail: { url: e.target.value } })}
-                    className="input-field text-xs" placeholder="https://..." />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">🏞️ Image URL</label>
-                  <input type="url" value={active.image?.url || ""} onChange={e => updateActive({ image: { url: e.target.value } })}
-                    className="input-field text-xs" placeholder="https://..." />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs text-text-muted mb-1">🔻 Footer</label>
-                <input type="text" value={active.footer?.text || ""} onChange={e => updateActive({ footer: { ...active.footer, text: e.target.value } })}
-                  className="input-field text-xs" placeholder="Footer text..." />
-              </div>
+              )}
             </div>
 
             <button onClick={handleSend} disabled={sending || !selectedChannel}
@@ -817,6 +1140,19 @@ export default function AdminDiscordPage() {
                     {emb.content && <p className="text-sm mb-2" style={{ color: "#dcddde" }}>{emb.content}</p>}
                     <div className="flex rounded" style={{ borderLeft: `4px solid #${emb.color.toString(16).padStart(6, "0")}` }}>
                       <div className="flex-1 p-3">
+                        {emb.author?.name && (
+                          <div className="flex items-center gap-2 mb-1">
+                            {emb.author.icon_url && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={emb.author.icon_url} alt="author icon" className="w-5 h-5 rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            )}
+                            {emb.author.url ? (
+                              <a href={emb.author.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#00b0f4] hover:underline">{emb.author.name}</a>
+                            ) : (
+                              <span className="text-xs font-semibold text-white">{emb.author.name}</span>
+                            )}
+                          </div>
+                        )}
                         {emb.title && (
                           <p
                             className="font-bold text-sm mb-1"
@@ -831,13 +1167,33 @@ export default function AdminDiscordPage() {
                             dangerouslySetInnerHTML={{ __html: parseDiscordMarkdown(emb.description) }}
                           />
                         )}
+                        {emb.fields && emb.fields.length > 0 && (
+                          <div className="grid grid-cols-12 gap-2 mt-2">
+                            {emb.fields.map((f, fIdx) => (
+                              <div key={fIdx} className={cn("mt-1", f.inline ? "col-span-4" : "col-span-12")}>
+                                <div className="text-xs font-bold text-white">{f.name}</div>
+                                <div className="text-xs text-[#dcddde] whitespace-pre-wrap">{f.value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {emb.image?.url && (
                           <div className="mt-2 rounded overflow-hidden max-w-[300px]">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={emb.image.url} alt="embed" className="w-full h-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           </div>
                         )}
-                        {emb.footer?.text && <p className="text-[10px] mt-2" style={{ color: "#72767d" }}>{emb.footer.text}</p>}
+                        {(emb.footer?.text || emb.hasTimestamp) && (
+                          <div className="flex items-center gap-1.5 mt-2 text-[10px]" style={{ color: "#72767d" }}>
+                            {emb.footer?.icon_url && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={emb.footer.icon_url} alt="footer icon" className="w-4 h-4 rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            )}
+                            {emb.footer?.text && <span>{emb.footer.text}</span>}
+                            {emb.footer?.text && emb.hasTimestamp && <span>•</span>}
+                            {emb.hasTimestamp && <span>Today at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+                          </div>
+                        )}
                       </div>
                       {emb.thumbnail?.url && (
                         <div className="p-3 flex-shrink-0">
@@ -1183,31 +1539,7 @@ export default function AdminDiscordPage() {
         );
       })()}
 
-      {/* ═══ TAB: Format Guide ═══ */}
-      {activeTab === "guide" && (
-        <div className="max-w-2xl">
-          <div className="glass-card p-6">
-            <h3 className="font-bold mb-4">📝 Discord Markdown Format Guide</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {[
-                ["**bold**", "bold"],
-                ["*italic*", "italic"],
-                ["__underline__", "underline"],
-                ["~~strikethrough~~", "strikethrough"],
-                ["||spoiler||", "spoiler"],
-                ["`code`", "code"],
-                ["```code block```", "code block"],
-                ["> quote", "quote"],
-              ].map(([syntax, label]) => (
-                <div key={label} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-bg-primary/50 border border-border">
-                  <code className="text-accent-light text-xs font-mono bg-bg-tertiary px-2 py-1 rounded">{syntax}</code>
-                  <span className="text-text-secondary">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {toast && (
         <div className={cn("admin-toast",

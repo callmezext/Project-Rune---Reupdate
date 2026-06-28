@@ -78,7 +78,36 @@ export async function POST(req: NextRequest) {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://runeclipy.vercel.app";
         const deadline = campaign.endDate
           ? `<t:${Math.floor(new Date(campaign.endDate).getTime() / 1000)}:R>`
-          : "No deadline";
+          : "No deadline ⏰";
+
+        const stripHtml = (html: string) => (html || "").replace(/<[^>]*>/g, "").trim();
+        const desc = stripHtml(campaign.description);
+        const shortDesc = desc.length > 250 ? desc.substring(0, 250) + "..." : desc;
+
+        const rateVal = campaign.earningType === "per_post"
+          ? `$${campaign.fixedRatePerPost} / post`
+          : campaign.earningType === "both"
+            ? `$${campaign.ratePerMillionViews}/M views + $${campaign.fixedRatePerPost}/post`
+            : `$${campaign.ratePerMillionViews}/M views`;
+
+        const limitDetails = `• **Cap per Post:** ${campaign.maxEarningsPerPost > 0 ? `$${campaign.maxEarningsPerPost}` : "Unlimited"}\n• **Cap per Profile:** ${campaign.maxEarningsPerCreator > 0 ? `$${campaign.maxEarningsPerCreator}` : "Unlimited"}`;
+
+        const fields = [
+          { name: "💰 Earning Model & Rates", value: `• **Rate:** ${rateVal}\n${limitDetails}`, inline: false },
+          { name: "📊 Budget & Submissions", value: `• **Total Budget:** ${campaign.totalBudget > 0 ? `$${campaign.totalBudget}` : "Unlimited 💎"}\n• **Submission Limit:** ${campaign.maxSubmissionsPerAccount > 0 ? `${campaign.maxSubmissionsPerAccount} submissions` : "Unlimited 🚀"}\n• **Min. Views Required:** ${campaign.minViews?.toLocaleString() || "1,000"} views`, inline: false }
+        ];
+
+        if (campaign.sounds && campaign.sounds.length > 0) {
+          const soundList = campaign.sounds
+            .filter((s: any) => s.title)
+            .map((s: any) => `🎵 **${s.title}**${s.soundUrl ? ` • [Sound Link](${s.soundUrl})` : ""}${s.tiktokSoundId ? ` (ID: \`${s.tiktokSoundId}\`)` : ""}`)
+            .join("\n");
+          if (soundList) {
+            fields.push({ name: "🎧 Required Sound", value: soundList, inline: false });
+          }
+        }
+
+        fields.push({ name: "⏰ Deadline", value: deadline, inline: true });
 
         await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
           method: "POST",
@@ -86,15 +115,11 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             content: "🎉 **Campaign Baru!** @everyone",
             embeds: [{
-              title: `🎵 ${campaign.title}`,
-              description: campaign.description?.substring(0, 200) || "Campaign baru tersedia!",
+              title: `🎉 New Campaign: ${campaign.title}`,
+              description: shortDesc || "No description provided.",
               color: 0x00D4AA,
-              fields: [
-                { name: "💰 Rate", value: `$${campaign.ratePerMillionViews}/M views`, inline: true },
-                { name: "💵 Budget", value: `$${campaign.totalBudget}`, inline: true },
-                { name: "⏰ Deadline", value: deadline, inline: true },
-              ],
-              footer: { text: "Klik untuk submit video kamu! 🚀" },
+              fields: fields,
+              footer: { text: "Submit video kamu sekarang dan mulailah menghasilkan! 🚀" },
               url: `${appUrl}/campaign/${campaign._id}`,
               image: campaign.coverImage ? { url: campaign.coverImage } : undefined,
               timestamp: new Date().toISOString(),

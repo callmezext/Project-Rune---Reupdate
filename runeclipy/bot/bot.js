@@ -176,6 +176,12 @@ const TIER_ROLES = {
 
 function fmt(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+"M" : n >= 1000 ? (n/1000).toFixed(1)+"K" : String(n||0); }
 function fmtCurrency(n) { return "$" + Number(n||0).toFixed(2); }
+function parseColor(hex, defaultColor) {
+  if (!hex) return defaultColor;
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean, 16);
+  return isNaN(num) ? defaultColor : num;
+}
 function fmtUptime(ms) {
   const s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60), d=Math.floor(h/24);
   if(d>0) return `${d}d ${h%24}h`; if(h>0) return `${h}h ${m%60}m`; return `${m}m ${s%60}s`;
@@ -637,7 +643,9 @@ async function handleModal(interaction) {
       try {
         const dcUser = await client.users.fetch(user.discordId);
         const camp = await Campaign.findById(sub.campaignId).lean();
-        await dcUser.send({ embeds: [new EmbedBuilder().setColor(0xED4245).setTitle("❌ Submission Rejected")
+        const settings = await SiteSetting.findOne().lean();
+        const rejectedColor = parseColor(settings?.discordRejectedColor, 0xED4245);
+        await dcUser.send({ embeds: [new EmbedBuilder().setColor(rejectedColor).setTitle("❌ Submission Rejected")
           .addFields({ name: "🎵 Campaign", value: camp?.title||"Unknown" }, { name: "📝 Reason", value: reason }).setTimestamp()] });
       } catch {}
     }
@@ -657,7 +665,12 @@ async function autoNotifyCampaigns() {
     const newCampaigns = await Campaign.find({ status: "active", notifiedDiscord: { $ne: true } }).lean();
     for (const c of newCampaigns) {
       const deadline = c.deadline ? `<t:${Math.floor(new Date(c.deadline).getTime()/1000)}:R>` : "No deadline";
-      const e = new EmbedBuilder().setColor(0x00D4AA).setTitle("🎵 New Campaign!")
+      const campaignColor = parseColor(settings?.discordCampaignColor, 0x00D4AA);
+      const layout = settings?.discordCampaignLayout || "image_bottom";
+      const pingText = settings?.discordCampaignPing || "🎉 **Campaign Baru!** @everyone";
+      const campaignTitle = settings?.discordCampaignTitle || "🎵 New Campaign!";
+
+      const e = new EmbedBuilder().setColor(campaignColor).setTitle(campaignTitle)
         .setDescription(`**${c.title}**\n${c.description || ""}`)
         .addFields(
           { name: "💰 Rate", value: `${fmtCurrency(c.ratePerView)}/view`, inline: true },
@@ -665,8 +678,22 @@ async function autoNotifyCampaigns() {
           { name: "⏰ Deadline", value: deadline, inline: true },
         )
         .setFooter({ text: "Submit sekarang di web! 🚀" }).setTimestamp();
-      if (c.imageUrl) e.setThumbnail(c.imageUrl);
-      await channel.send({ embeds: [e] });
+
+      const img = c.imageUrl;
+      if (img) {
+        if (layout === "image_bottom") {
+          e.setImage(img);
+        } else if (layout === "thumbnail") {
+          e.setThumbnail(img);
+        } else if (layout === "image_top") {
+          const embedImg = new EmbedBuilder().setColor(campaignColor).setImage(img);
+          await channel.send({ content: pingText, embeds: [embedImg, e] });
+          await Campaign.updateOne({ _id: c._id }, { $set: { notifiedDiscord: true } });
+          continue;
+        }
+      }
+
+      await channel.send({ content: pingText, embeds: [e] });
       await Campaign.updateOne({ _id: c._id }, { $set: { notifiedDiscord: true } });
     }
   } catch (err) { console.error("[Auto] Campaign notif:", err.message); }
@@ -683,8 +710,11 @@ async function autoNotifySubmissions() {
         const dcUser = await client.users.fetch(user.discordId);
         const camp = await Campaign.findById(s.campaignId).lean();
         const isApproved = s.status === "approved";
+        const settings = await SiteSetting.findOne().lean();
+        const approvedColor = parseColor(settings?.discordApprovedColor, 0x2ECC71);
+        const rejectedColor = parseColor(settings?.discordRejectedColor, 0xED4245);
         const e = new EmbedBuilder()
-          .setColor(isApproved ? 0x2ECC71 : 0xED4245)
+          .setColor(isApproved ? approvedColor : rejectedColor)
           .setTitle(isApproved ? "✅ Submission Approved!" : "❌ Submission Rejected")
           .addFields(
             { name: "🎵 Campaign", value: camp?.title || "Unknown" },
