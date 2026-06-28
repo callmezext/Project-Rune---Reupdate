@@ -10,6 +10,7 @@ interface DiscordEmbed {
   fields?: { name?: string; value?: string; inline?: boolean }[];
   timestamp?: string;
   hasTimestamp?: boolean;
+  buttons?: { label: string; url: string; emoji?: string }[];
 }
 interface Channel { id: string; name: string; }
 interface DiscordSettings {
@@ -57,7 +58,7 @@ const COLORS = [
 ];
 
 function newEmbed(): DiscordEmbed {
-  return { id: Math.random().toString(36).slice(2), title: "", description: "", color: 0x5865F2, content: "" };
+  return { id: Math.random().toString(36).slice(2), title: "", description: "", color: 0x5865F2, content: "", buttons: [] };
 }
 
 function parseDiscordMarkdown(text: string): string {
@@ -540,6 +541,7 @@ export default function AdminDiscordPage() {
           footer: emb.footer || undefined,
           author: emb.author || undefined,
           fields: Array.isArray(emb.fields) ? emb.fields : [],
+          buttons: Array.isArray(emb.buttons) ? emb.buttons : [],
           timestamp: emb.timestamp || undefined,
           hasTimestamp: !!emb.timestamp || !!emb.hasTimestamp,
         }));
@@ -575,6 +577,23 @@ export default function AdminDiscordPage() {
   const handleRemoveField = (idx: number) => {
     const currentFields = (active.fields || []).filter((_, i) => i !== idx);
     updateActive({ fields: currentFields });
+  };
+
+  const handleAddButton = () => {
+    const currentButtons = active.buttons || [];
+    if (currentButtons.length >= 5) return showToast("Maksimal 5 tombol per pesan!", "info");
+    updateActive({ buttons: [...currentButtons, { label: "Link", url: "https://", emoji: "" }] });
+  };
+
+  const handleUpdateButton = (idx: number, patch: Partial<{ label: string; url: string; emoji: string }>) => {
+    const currentButtons = [...(active.buttons || [])];
+    currentButtons[idx] = { ...currentButtons[idx], ...patch };
+    updateActive({ buttons: currentButtons });
+  };
+
+  const handleRemoveButton = (idx: number) => {
+    const currentButtons = (active.buttons || []).filter((_, i) => i !== idx);
+    updateActive({ buttons: currentButtons });
   };
 
   const insertFormat = (before: string, after: string) => {
@@ -616,6 +635,7 @@ export default function AdminDiscordPage() {
         if (e.content) embed.content = e.content;
         if (e.author?.name) embed.author = { name: e.author.name, icon_url: e.author.icon_url || undefined, url: e.author.url || undefined };
         if (e.fields?.length) embed.fields = e.fields.filter(f => f.name && f.value).map(f => ({ name: f.name, value: f.value, inline: !!f.inline }));
+        if (e.buttons?.length) embed.buttons = e.buttons.filter(b => b.label && b.url).map(b => ({ label: b.label, url: b.url, emoji: b.emoji || undefined }));
         if (e.hasTimestamp || e.timestamp) embed.timestamp = e.timestamp || new Date().toISOString();
         return embed;
       });
@@ -1079,6 +1099,41 @@ export default function AdminDiscordPage() {
                     </div>
                   </div>
 
+                  {/* Custom Buttons Builder */}
+                  <div className="p-3 rounded-xl bg-bg-primary/30 border border-border/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-text-primary flex items-center gap-1">🔘 Message Buttons ({active.buttons?.length || 0}/5)</span>
+                      <button type="button" onClick={handleAddButton}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white hover:bg-accent/80 transition-all">+ Add Button</button>
+                    </div>
+                    {active.buttons && active.buttons.length > 0 ? (
+                      <div className="space-y-2">
+                        {active.buttons.map((b, idx) => (
+                          <div key={idx} className="flex gap-2 items-center bg-bg-primary/50 p-2 rounded-lg border border-border/40">
+                            <div className="grid grid-cols-3 gap-2 flex-1">
+                              <div>
+                                <label className="block text-[9px] text-text-muted mb-0.5">Label</label>
+                                <input type="text" value={b.label} onChange={e => handleUpdateButton(idx, { label: e.target.value })}
+                                  className="input-field text-xs !py-1 !px-2 font-semibold" placeholder="Label" />
+                              </div>
+                              <div className="col-span-2">
+                                <label className="block text-[9px] text-text-muted mb-0.5">URL</label>
+                                <input type="url" value={b.url} onChange={e => handleUpdateButton(idx, { url: e.target.value })}
+                                  className="input-field text-xs !py-1 !px-2 font-mono" placeholder="https://..." />
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-center gap-1 mt-3.5">
+                              <button type="button" onClick={() => handleRemoveButton(idx)}
+                                className="p-1 rounded bg-error/10 text-error hover:bg-error/20 text-xs transition-all">🗑️</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-text-muted italic text-center py-1">Belum ada custom button.</p>
+                    )}
+                  </div>
+
                   {/* Footer Settings */}
                   <div className="p-3 rounded-xl bg-bg-primary/30 border border-border/50 space-y-2">
                     <div className="text-xs font-bold text-text-primary flex items-center gap-1">🔻 Footer Settings</div>
@@ -1203,6 +1258,22 @@ export default function AdminDiscordPage() {
                         </div>
                       )}
                     </div>
+                    {emb.buttons && emb.buttons.length > 0 && (
+                      <div className="flex items-center gap-2 mt-3 flex-wrap">
+                        {emb.buttons.map((btn, btnIdx) => (
+                          <a
+                            key={btnIdx}
+                            href={btn.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold text-white bg-[#4f545c] hover:bg-[#686d73] transition-all select-none cursor-pointer"
+                          >
+                            <span>{btn.label || "Link"}</span>
+                            <span className="text-[10px] opacity-70">↗</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

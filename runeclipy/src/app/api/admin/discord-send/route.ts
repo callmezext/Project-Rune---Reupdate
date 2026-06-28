@@ -34,6 +34,24 @@ export async function POST(req: NextRequest) {
         payload.content = embed.content;
         delete embed.content;
       }
+      if (embed.buttons && Array.isArray(embed.buttons) && embed.buttons.length > 0) {
+        payload.components = [
+          {
+            type: 1,
+            components: embed.buttons.slice(0, 5).map((b: any) => {
+              const btn: Record<string, any> = {
+                type: 2,
+                style: 5,
+                label: b.label || "Link",
+                url: b.url || "https://google.com"
+              };
+              if (b.emoji) btn.emoji = { name: b.emoji };
+              return btn;
+            })
+          }
+        ];
+        delete embed.buttons;
+      }
 
       const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
         method: "POST",
