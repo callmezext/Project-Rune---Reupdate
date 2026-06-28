@@ -39,11 +39,15 @@ export async function POST(req: NextRequest) {
           {
             type: 1,
             components: embed.buttons.slice(0, 5).map((b: any) => {
+              let finalUrl = (b.url || "").trim() || "https://google.com";
+              if (!/^https?:\/\//i.test(finalUrl)) {
+                finalUrl = `https://${finalUrl}`;
+              }
               const btn: Record<string, any> = {
                 type: 2,
                 style: 5,
                 label: b.label || "Link",
-                url: b.url || "https://google.com"
+                url: finalUrl
               };
               if (b.emoji) btn.emoji = { name: b.emoji };
               return btn;
