@@ -8,14 +8,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   if (error || !code) {
     console.error("[RuneClipy] Google OAuth error:", error);
-    return NextResponse.redirect(new URL("/login?error=google_denied", req.url));
+    return NextResponse.redirect(new URL("/login?error=google_denied", appUrl));
   }
 
   try {
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/auth/google/callback`;
+    const redirectUri = `${appUrl}/api/auth/google/callback`;
 
     // Exchange code for tokens
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
 
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error("[RuneClipy] Google token exchange failed:", tokenData);
-      return NextResponse.redirect(new URL("/login?error=google_token_failed", req.url));
+      return NextResponse.redirect(new URL("/login?error=google_token_failed", appUrl));
     }
 
     // Get user info from Google
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
     const googleUser = await userInfoRes.json();
 
     if (!googleUser.email) {
-      return NextResponse.redirect(new URL("/login?error=google_no_email", req.url));
+      return NextResponse.redirect(new URL("/login?error=google_no_email", appUrl));
     }
 
     console.log(`[RuneClipy] Google OAuth: ${googleUser.email} (${googleUser.name})`);
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (user.isBanned) {
-        return NextResponse.redirect(new URL("/login?error=account_banned", req.url));
+        return NextResponse.redirect(new URL("/login?error=account_banned", appUrl));
       }
     } else {
       // Create new user
@@ -111,9 +112,9 @@ export async function GET(req: NextRequest) {
 
     console.log(`[RuneClipy] ✅ Google login success: @${user.username}`);
 
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/dashboard", appUrl));
   } catch (err) {
     console.error("[RuneClipy] Google OAuth callback error:", err);
-    return NextResponse.redirect(new URL("/login?error=google_failed", req.url));
+    return NextResponse.redirect(new URL("/login?error=google_failed", appUrl));
   }
 }

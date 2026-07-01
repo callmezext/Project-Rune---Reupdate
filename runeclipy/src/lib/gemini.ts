@@ -11,99 +11,99 @@ import BotStatus from "@/models/BotStatus";
 import ScheduledTask from "@/models/ScheduledTask";
 
 // ─── System Prompt ───────────────────────────────────────────────────────────
-export const SYSTEM_PROMPT = `Kamu adalah AI Admin Assistant untuk platform RuneClipy — sebuah platform TikTok creator marketing.
-Kamu membantu admin mengelola platform secara efisien dengan tingkat kecerdasan, ketajaman analisis, dan penalaran tingkat tinggi setara dengan Gemini 3.5 Pro / Claude 3.5 Sonnet.
+export const SYSTEM_PROMPT = `You are the AI Admin Assistant for the RuneClipy platform — a TikTok creator marketing platform.
+You help the admin manage the platform efficiently with high-level intelligence, analytical sharpness, and reasoning equivalent to Gemini 3.5 Pro / Claude 3.5 Sonnet.
 
-Kemampuanmu:
-- Mencari dan menganalisis data user, campaign, submission, transaksi, setting platform, log aktivitas, serta Discord Server (channel, role, member)
-- Mengedit data user (role, tier, balance, ban/unban)
-- Mengelola campaign (membuat campaign baru, menduplikasi campaign, melihat detail, edit status, budget, rate)
-- Approve/reject submission video
-- Memproses payout/penarikan dana user (menyetujui atau menolak payout)
-- Melihat dan mengubah setting platform (platform fee, minimum withdrawal, dll)
-- Memantau status bot dan mengontrol Discord Bot (start, stop, restart)
-- Berinteraksi dengan server Discord secara penuh:
-  * Mengambil daftar text channel aktif di server Discord ('get_discord_channels')
-  * Mengirim pesan teks kustom langsung ke channel Discord tertentu ('send_discord_message')
-  * Mengambil seluruh daftar role Discord guild ('get_discord_roles')
-  * Menambah atau menghapus role Discord seorang member secara langsung berdasarkan username/user ID platform ('manage_member_role')
-- Menjadwalkan tugas otomatis di masa depan, seperti mengirim pesan Discord pada waktu tertentu ('schedule_task')
-- Menganalisis statistik, performa keuangan, mendeteksi kecurangan/kejanggalan data secara proaktif, dan memberikan wawasan taktis bisnis
+Your capabilities:
+- Search and analyze user, campaign, submission, transaction, platform setting, activity log, and Discord Server (channels, roles, members) data
+- Edit user data (role, tier, balance, ban/unban)
+- Manage campaigns (create new campaigns, duplicate campaigns, view details, edit status, budget, rates)
+- Approve/reject video submissions
+- Process user payouts/withdrawals (approve or reject payouts)
+- View and modify platform settings (platform fee, minimum withdrawal, etc.)
+- Monitor bot status and control the Discord Bot (start, stop, restart)
+- Interact fully with the Discord server:
+  * Get list of active text channels in the Discord server ('get_discord_channels')
+  * Send custom text messages directly to a specific Discord channel ('send_discord_message')
+  * Get list of all roles in the Discord guild ('get_discord_roles')
+  * Add or remove Discord roles of a member directly based on platform username/user ID ('manage_member_role')
+- Schedule automated future tasks, such as sending a Discord message at a specific time ('schedule_task')
+- Analyze statistics, financial performance, proactively detect data anomalies/fraud, and provide tactical business insights
 
-Panduan Gaya Bicara & Perilaku Tingkat Tinggi (Claude-Level / Gemini 3.5-Level):
-1. PENALARAN RIGOROUS & LOGIS: Berpikirlah secara mendalam, kritis, strategis, dan analitis. Lakukan analisis step-by-step sebelum menyimpulkan data. Jika mendeteksi anomali (misal: user dengan tier tinggi tapi view rendah, atau submission video yang tidak realistis), laporkan ke admin dan beri usulan solusi mitigasi secara proaktif.
-2. TO THE POINT: Berikan jawaban yang langsung ke inti masalah, singkat, padat, profesional, dan berbobot tinggi. HILANGKAN kata-kata basa-basi, sapaan santai berlebih, atau kalimat pengantar/penutup yang tidak berguna.
-3. PROSEDUR KONFIRMASI WAJIB (SEBELUM EKSEKUSI): Untuk semua aksi memodifikasi data, bersifat sensitif, atau berbahaya (seperti 'edit_user', 'edit_campaign', 'create_campaign', 'duplicate_campaign', 'update_submission', 'process_payout', 'edit_site_settings', 'send_bot_command', 'send_discord_message', 'manage_member_role', 'schedule_task'):
-   - Kamu TIDAK BOLEH langsung memanggil/mengeksekusi tool tersebut pada request pertama admin.
-   - Kamu wajib menjawab terlebih dahulu secara to-the-point: sebutkan aksi apa yang akan dilakukan, parameternya, dampaknya secara ringkas, dan meminta konfirmasi eksplisit dari admin (misal: 'Saya akan memproses payout senilai $50.00 untuk user @guntur menjadi Completed. Apakah Anda yakin? Jawab Ya atau Tidak').
-   - Hanya setelah admin membalas 'Ya', 'Ya, silakan', atau persetujuan eksplisit sejenisnya pada percakapan berikutnya, kamu diperbolehkan memanggil tool yang bersangkutan.
-   - JANGAN memanggil tool pengubah data sebelum admin mengonfirmasi 'Ya' di riwayat pesan sebelumnya!
-4. Sajikan data menggunakan format Markdown yang rapi (list, tabel jika relevan).
+High-Level Tone & Behavior Guidelines (Claude-Level / Gemini 3.5-Level):
+1. RIGOROUS & LOGICAL REASONING: Think deeply, critically, strategically, and analytically. Perform step-by-step analysis before concluding data. If you detect anomalies (e.g. user with a high tier but low views, or unrealistic video submissions), report to the admin and proactively suggest mitigation solutions.
+2. TO THE POINT: Provide responses that directly address the core issue, concise, dense, professional, and of high value. REMOVE pleasantries, overly casual greetings, or useless intro/outro sentences.
+3. MANDATORY CONFIRMATION PROCEDURE (BEFORE EXECUTION): For all data modifying, sensitive, or dangerous actions (such as 'edit_user', 'edit_campaign', 'create_campaign', 'duplicate_campaign', 'update_submission', 'process_payout', 'edit_site_settings', 'send_bot_command', 'send_discord_message', 'manage_member_role', 'schedule_task'):
+   - You MUST NOT immediately call/execute the tool on the admin's first request.
+   - You must answer first to-the-point: state what action will be taken, its parameters, its brief impact, and ask for explicit confirmation from the admin (e.g. 'I will process a payout of $50.00 for user @guntur to Completed. Are you sure? Answer Yes or No').
+   - Only after the admin replies 'Yes', 'Yes, please', or similar explicit approval in the next message, you are allowed to call the corresponding tool.
+   - DO NOT call data-modifying tools before the admin confirms 'Yes' in the message history!
+4. Present data using clean Markdown formatting (lists, tables where relevant).
 
 Platform context:
-- User memiliki tier: bronze, silver, gold, diamond
-- User memiliki role: user, moderator, admin  
-- Campaign memiliki status: active, paused, ended
+- User tiers: bronze, silver, gold, diamond
+- User roles: user, moderator, admin  
+- Campaign status: active, paused, ended
 - Submission status: pending, approved, rejected, paid_out
-- Transaksi payout status: pending, completed, failed, rejected
-- Mata uang: USD ($)`;
+- Payout transaction status: pending, completed, failed, rejected
+- Currency: USD ($)`;
 
 // ─── Function Declarations (Tools) ────────────────────────────────────────────
 export const tools: FunctionDeclaration[] = [
   {
     name: "search_users",
-    description: "Cari user berdasarkan username, email, role, tier, atau status ban. Gunakan untuk menemukan user tertentu.",
+    description: "Search users by username, email, role, tier, or ban status. Use to find a specific user.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        query: { type: SchemaType.STRING, description: "Kata kunci pencarian (username atau email)" },
-        role: { type: SchemaType.STRING, description: "Filter berdasarkan role: user, moderator, admin" },
-        tier: { type: SchemaType.STRING, description: "Filter berdasarkan tier: bronze, silver, gold, diamond" },
-        isBanned: { type: SchemaType.BOOLEAN, description: "Filter user yang di-ban (true) atau tidak (false)" },
-        limit: { type: SchemaType.NUMBER, description: "Jumlah maksimal hasil (default: 10)" },
+        query: { type: SchemaType.STRING, description: "Search keyword (username or email)" },
+        role: { type: SchemaType.STRING, description: "Filter by role: user, moderator, admin" },
+        tier: { type: SchemaType.STRING, description: "Filter by tier: bronze, silver, gold, diamond" },
+        isBanned: { type: SchemaType.BOOLEAN, description: "Filter users who are banned (true) or not (false)" },
+        limit: { type: SchemaType.NUMBER, description: "Maximum number of results (default: 10)" },
       },
       required: [],
     },
   },
   {
     name: "get_user_detail",
-    description: "Ambil detail lengkap satu user berdasarkan ID atau username, termasuk stats dan balance.",
+    description: "Get complete details of a user by ID or username, including stats and balance.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        userId: { type: SchemaType.STRING, description: "MongoDB ObjectId user" },
-        username: { type: SchemaType.STRING, description: "Username user" },
+        userId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the user" },
+        username: { type: SchemaType.STRING, description: "Username of the user" },
       },
       required: [],
     },
   },
   {
     name: "edit_user",
-    description: "Edit data user: role, tier, balance campaign, balance referral, ban/unban. TIDAK bisa delete.",
+    description: "Edit user data: role, tier, campaign balance, referral balance, ban/unban. CANNOT delete.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        userId: { type: SchemaType.STRING, description: "MongoDB ObjectId user yang akan diedit" },
-        username: { type: SchemaType.STRING, description: "Username user (alternatif dari userId)" },
+        userId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the user to edit" },
+        username: { type: SchemaType.STRING, description: "Username of the user (alternative to userId)" },
         updates: {
           type: SchemaType.OBJECT,
-          description: "Data yang ingin diubah",
+          description: "Data to modify",
           properties: {
-            role: { type: SchemaType.STRING, description: "Role baru: user, moderator, admin" },
-            tier: { type: SchemaType.STRING, description: "Tier baru: bronze, silver, gold, diamond" },
-            campaignBalance: { type: SchemaType.NUMBER, description: "Campaign balance baru (USD)" },
-            referralBalance: { type: SchemaType.NUMBER, description: "Referral balance baru (USD)" },
-            isBanned: { type: SchemaType.BOOLEAN, description: "true untuk ban, false untuk unban" },
+            role: { type: SchemaType.STRING, description: "New role: user, moderator, admin" },
+            tier: { type: SchemaType.STRING, description: "New tier: bronze, silver, gold, diamond" },
+            campaignBalance: { type: SchemaType.NUMBER, description: "New campaign balance (USD)" },
+            referralBalance: { type: SchemaType.NUMBER, description: "New referral balance (USD)" },
+            isBanned: { type: SchemaType.BOOLEAN, description: "true to ban, false to unban" },
           },
         },
-        reason: { type: SchemaType.STRING, description: "Alasan perubahan untuk audit log" },
+        reason: { type: SchemaType.STRING, description: "Reason for change for the audit log" },
       },
       required: ["updates"],
     },
   },
   {
     name: "get_platform_stats",
-    description: "Ambil statistik platform: total user, revenue, campaign aktif, submission pending, dll.",
+    description: "Get platform statistics: total users, revenue, active campaigns, pending submissions, etc.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {},
@@ -112,95 +112,95 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "search_campaigns",
-    description: "Cari campaign berdasarkan judul, status, atau tipe.",
+    description: "Search campaigns by title, status, or type.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        query: { type: SchemaType.STRING, description: "Kata kunci judul campaign" },
+        query: { type: SchemaType.STRING, description: "Campaign title keyword" },
         status: { type: SchemaType.STRING, description: "Filter status: active, paused, ended" },
-        type: { type: SchemaType.STRING, description: "Filter tipe: music, clipping, logo, ugc" },
-        limit: { type: SchemaType.NUMBER, description: "Jumlah maksimal hasil (default: 10)" },
+        type: { type: SchemaType.STRING, description: "Filter type: music, clipping, logo, ugc" },
+        limit: { type: SchemaType.NUMBER, description: "Maximum number of results (default: 10)" },
       },
       required: [],
     },
   },
   {
     name: "edit_campaign",
-    description: "Edit campaign: ubah status (active/paused/ended), budget, atau rate.",
+    description: "Edit campaign: change status (active/paused/ended), budget, or rate.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId campaign" },
-        slug: { type: SchemaType.STRING, description: "Slug campaign (alternatif dari campaignId)" },
+        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the campaign" },
+        slug: { type: SchemaType.STRING, description: "Campaign slug (alternative to campaignId)" },
         updates: {
           type: SchemaType.OBJECT,
-          description: "Data yang ingin diubah",
+          description: "Data to modify",
           properties: {
-            status: { type: SchemaType.STRING, description: "Status baru: active, paused, ended" },
-            totalBudget: { type: SchemaType.NUMBER, description: "Total budget baru (USD)" },
-            ratePerMillionViews: { type: SchemaType.NUMBER, description: "Rate per 1M views baru (USD)" },
+            status: { type: SchemaType.STRING, description: "New status: active, paused, ended" },
+            totalBudget: { type: SchemaType.NUMBER, description: "New total budget (USD)" },
+            ratePerMillionViews: { type: SchemaType.NUMBER, description: "New rate per 1M views (USD)" },
           },
         },
-        reason: { type: SchemaType.STRING, description: "Alasan perubahan" },
+        reason: { type: SchemaType.STRING, description: "Reason for change" },
       },
       required: ["updates"],
     },
   },
   {
     name: "search_submissions",
-    description: "Cari submission berdasarkan status, campaign, atau user.",
+    description: "Search submissions by status, campaign, or user.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
         status: { type: SchemaType.STRING, description: "Filter status: pending, approved, rejected, paid_out" },
-        campaignId: { type: SchemaType.STRING, description: "Filter berdasarkan campaign ID" },
-        userId: { type: SchemaType.STRING, description: "Filter berdasarkan user ID" },
-        limit: { type: SchemaType.NUMBER, description: "Jumlah maksimal hasil (default: 10)" },
+        campaignId: { type: SchemaType.STRING, description: "Filter by campaign ID" },
+        userId: { type: SchemaType.STRING, description: "Filter by user ID" },
+        limit: { type: SchemaType.NUMBER, description: "Maximum number of results (default: 10)" },
       },
       required: [],
     },
   },
   {
     name: "update_submission",
-    description: "Approve atau reject sebuah submission.",
+    description: "Approve or reject a submission.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        submissionId: { type: SchemaType.STRING, description: "MongoDB ObjectId submission" },
-        action: { type: SchemaType.STRING, description: "Aksi: approved atau rejected" },
-        rejectReason: { type: SchemaType.STRING, description: "Alasan reject (wajib jika action=rejected)" },
+        submissionId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the submission" },
+        action: { type: SchemaType.STRING, description: "Action: approved or rejected" },
+        rejectReason: { type: SchemaType.STRING, description: "Reason for rejection (required if action=rejected)" },
       },
       required: ["submissionId", "action"],
     },
   },
   {
     name: "get_transactions",
-    description: "Ambil daftar transaksi dengan filter opsional.",
+    description: "Get transaction list with optional filters.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        userId: { type: SchemaType.STRING, description: "Filter berdasarkan user ID" },
-        type: { type: SchemaType.STRING, description: "Filter tipe: campaign_earning, referral_earning, payout, refund" },
+        userId: { type: SchemaType.STRING, description: "Filter by user ID" },
+        type: { type: SchemaType.STRING, description: "Filter type: campaign_earning, referral_earning, payout, refund" },
         status: { type: SchemaType.STRING, description: "Filter status: pending, completed, failed, rejected" },
-        limit: { type: SchemaType.NUMBER, description: "Jumlah maksimal hasil (default: 10)" },
+        limit: { type: SchemaType.NUMBER, description: "Maximum number of results (default: 10)" },
       },
       required: [],
     },
   },
   {
     name: "get_recent_activity",
-    description: "Ambil log aktivitas admin terbaru.",
+    description: "Get recent admin activity logs.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        limit: { type: SchemaType.NUMBER, description: "Jumlah maksimal hasil (default: 10)" },
+        limit: { type: SchemaType.NUMBER, description: "Maximum number of results (default: 10)" },
       },
       required: [],
     },
   },
   {
     name: "get_site_settings",
-    description: "Ambil pengaturan situs / platform (platform fee, minimum withdrawal, support email, dll).",
+    description: "Get site/platform settings (platform fee, minimum withdrawal, support email, etc.).",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {},
@@ -209,19 +209,19 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "edit_site_settings",
-    description: "Ubah pengaturan situs / platform (seperti platformFeePercent, minCampaignWithdrawal, minReferralWithdrawal, referralCommissionPercent, supportEmail).",
+    description: "Modify site/platform settings (such as platformFeePercent, minCampaignWithdrawal, minReferralWithdrawal, referralCommissionPercent, supportEmail).",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
         updates: {
           type: SchemaType.OBJECT,
-          description: "Pengaturan baru yang ingin disimpan",
+          description: "New settings to save",
           properties: {
-            platformFeePercent: { type: SchemaType.NUMBER, description: "Fee platform dalam persen (misal: 3)" },
-            minCampaignWithdrawal: { type: SchemaType.NUMBER, description: "Minimal penarikan campaign dalam USD" },
-            minReferralWithdrawal: { type: SchemaType.NUMBER, description: "Minimal penarikan referral dalam USD" },
-            referralCommissionPercent: { type: SchemaType.NUMBER, description: "Komisi referral dalam persen (misal: 5)" },
-            supportEmail: { type: SchemaType.STRING, description: "Email dukungan/support baru" },
+            platformFeePercent: { type: SchemaType.NUMBER, description: "Platform fee in percent (e.g. 3)" },
+            minCampaignWithdrawal: { type: SchemaType.NUMBER, description: "Minimum campaign withdrawal in USD" },
+            minReferralWithdrawal: { type: SchemaType.NUMBER, description: "Minimum referral withdrawal in USD" },
+            referralCommissionPercent: { type: SchemaType.NUMBER, description: "Referral commission in percent (e.g. 5)" },
+            supportEmail: { type: SchemaType.STRING, description: "New support email" },
           },
         },
       },
@@ -230,7 +230,7 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "get_bot_status",
-    description: "Ambil status dan statistik Discord Bot (online, ping, server count, heartbeat).",
+    description: "Get Discord Bot status and statistics (online, ping, server count, heartbeat).",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {},
@@ -239,7 +239,7 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "get_discord_channels",
-    description: "Ambil daftar text channel aktif dari server Discord guild/RuneClipy.",
+    description: "Get active text channels list from Discord guild/RuneClipy.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {},
@@ -248,19 +248,19 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "send_discord_message",
-    description: "Kirim pesan teks kustom ke channel Discord tertentu menggunakan Discord Bot.",
+    description: "Send a custom text message to a specific Discord channel using Discord Bot.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        channelId: { type: SchemaType.STRING, description: "ID channel Discord tujuan" },
-        content: { type: SchemaType.STRING, description: "Pesan teks yang ingin dikirim" },
+        channelId: { type: SchemaType.STRING, description: "Target Discord channel ID" },
+        content: { type: SchemaType.STRING, description: "Text message to send" },
       },
       required: ["channelId", "content"],
     },
   },
   {
     name: "get_discord_roles",
-    description: "Ambil daftar seluruh role aktif beserta ID-nya di server Discord guild/RuneClipy.",
+    description: "Get list of all active roles and their IDs in the Discord guild/RuneClipy server.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {},
@@ -269,40 +269,40 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "manage_member_role",
-    description: "Tambahkan atau hapus role Discord dari seorang member berdasarkan username/user ID di platform.",
+    description: "Add or remove Discord roles of a member based on username/user ID on the platform.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        userId: { type: SchemaType.STRING, description: "MongoDB ObjectId user di platform (opsional)" },
-        username: { type: SchemaType.STRING, description: "Username user di platform (opsional)" },
-        roleId: { type: SchemaType.STRING, description: "ID role Discord yang ingin dikelola" },
-        action: { type: SchemaType.STRING, description: "Aksi: add (tambah role) atau remove (hapus role)" },
+        userId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the user on the platform (optional)" },
+        username: { type: SchemaType.STRING, description: "Username of the user on the platform (optional)" },
+        roleId: { type: SchemaType.STRING, description: "Discord role ID to manage" },
+        action: { type: SchemaType.STRING, description: "Action: add (add role) or remove (remove role)" },
       },
       required: ["roleId", "action"],
     },
   },
   {
     name: "schedule_task",
-    description: "Jadwalkan tugas otomatis di masa depan, seperti mengirim pesan Discord.",
+    description: "Schedule an automated task in the future, such as sending a Discord message.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
         taskType: {
           type: SchemaType.STRING,
-          description: "Jenis tugas yang dijadwalkan. Saat ini hanya mendukung: 'send_discord_message'",
+          description: "Type of task scheduled. Currently only supports: 'send_discord_message'",
         },
         payload: {
           type: SchemaType.OBJECT,
-          description: "Data/payload yang dibutuhkan untuk tugas tersebut. Untuk 'send_discord_message' wajib berisi { channelId, content }",
+          description: "Payload required for the task. For 'send_discord_message', it must contain { channelId, content }",
           properties: {
-            channelId: { type: SchemaType.STRING, description: "ID channel Discord tujuan" },
-            content: { type: SchemaType.STRING, description: "Pesan teks yang ingin dikirim" },
+            channelId: { type: SchemaType.STRING, description: "Target Discord channel ID" },
+            content: { type: SchemaType.STRING, description: "Text message to send" },
           },
           required: ["channelId", "content"],
         },
         executeAt: {
           type: SchemaType.STRING,
-          description: "Waktu eksekusi tugas dalam format string tanggal ISO (ISO 8601 string, misalnya '2026-05-24T10:00:00Z')",
+          description: "Task execution time as an ISO date string (ISO 8601 string, e.g., '2026-05-24T10:00:00Z')",
         },
       },
       required: ["taskType", "payload", "executeAt"],
@@ -310,58 +310,58 @@ export const tools: FunctionDeclaration[] = [
   },
   {
     name: "create_campaign",
-    description: "Buat campaign baru untuk platform.",
+    description: "Create a new campaign for the platform.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        title: { type: SchemaType.STRING, description: "Judul campaign" },
-        type: { type: SchemaType.STRING, description: "Tipe campaign: music, clipping, logo, ugc" },
-        totalBudget: { type: SchemaType.NUMBER, description: "Total budget campaign (USD)" },
+        title: { type: SchemaType.STRING, description: "Campaign title" },
+        type: { type: SchemaType.STRING, description: "Campaign type: music, clipping, logo, ugc" },
+        totalBudget: { type: SchemaType.NUMBER, description: "Total campaign budget (USD)" },
         ratePerMillionViews: { type: SchemaType.NUMBER, description: "Rate per 1M views (USD, default: 1000)" },
-        description: { type: SchemaType.STRING, description: "Deskripsi campaign (opsional, teks HTML atau biasa)" },
-        coverImage: { type: SchemaType.STRING, description: "URL gambar cover (opsional)" },
-        soundTitle: { type: SchemaType.STRING, description: "Judul lagu/sound (opsional)" },
-        tiktokSoundId: { type: SchemaType.STRING, description: "TikTok Sound ID (opsional)" },
-        soundUrl: { type: SchemaType.STRING, description: "URL lagu/sound di TikTok (opsional)" },
+        description: { type: SchemaType.STRING, description: "Campaign description (optional, HTML or plain text)" },
+        coverImage: { type: SchemaType.STRING, description: "Cover image URL (optional)" },
+        soundTitle: { type: SchemaType.STRING, description: "Song/sound title (optional)" },
+        tiktokSoundId: { type: SchemaType.STRING, description: "TikTok Sound ID (optional)" },
+        soundUrl: { type: SchemaType.STRING, description: "Song/sound URL on TikTok (optional)" },
       },
       required: ["title", "type", "totalBudget", "ratePerMillionViews"],
     },
   },
   {
     name: "process_payout",
-    description: "Proses permintaan payout (penarikan saldo) dari user, baik disetujui (completed) maupun ditolak (rejected).",
+    description: "Process a payout request (balance withdrawal) from a user, either approved (completed) or rejected (rejected).",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        transactionId: { type: SchemaType.STRING, description: "MongoDB ObjectId transaksi payout" },
-        action: { type: SchemaType.STRING, description: "Aksi: completed (setujui/selesai) atau rejected (tolak)" },
-        note: { type: SchemaType.STRING, description: "Catatan atau alasan (terutama jika ditolak)" },
+        transactionId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the payout transaction" },
+        action: { type: SchemaType.STRING, description: "Action: completed (approve/complete) or rejected (reject)" },
+        note: { type: SchemaType.STRING, description: "Note or reason (especially if rejected)" },
       },
       required: ["transactionId", "action"],
     },
   },
   {
     name: "get_campaign_detail",
-    description: "Ambil detail lengkap satu campaign berdasarkan ID atau slug.",
+    description: "Get complete details of a campaign by ID or slug.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId campaign" },
-        slug: { type: SchemaType.STRING, description: "Slug campaign" },
+        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the campaign" },
+        slug: { type: SchemaType.STRING, description: "Campaign slug" },
       },
       required: [],
     },
   },
   {
     name: "duplicate_campaign",
-    description: "Duplikasi campaign yang sudah ada untuk membuat campaign baru dengan pengaturan yang sama.",
+    description: "Duplicate an existing campaign to create a new campaign with the same settings.",
     parameters: {
       type: SchemaType.OBJECT,
       properties: {
-        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId campaign yang akan diduplikasi" },
-        slug: { type: SchemaType.STRING, description: "Slug campaign yang akan diduplikasi (alternatif)" },
-        newTitle: { type: SchemaType.STRING, description: "Judul baru untuk campaign hasil duplikasi (opsional)" },
-        newBudget: { type: SchemaType.NUMBER, description: "Budget baru untuk campaign hasil duplikasi (opsional)" },
+        campaignId: { type: SchemaType.STRING, description: "MongoDB ObjectId of the campaign to duplicate" },
+        slug: { type: SchemaType.STRING, description: "Slug of the campaign to duplicate (alternative)" },
+        newTitle: { type: SchemaType.STRING, description: "New title for the duplicated campaign (optional)" },
+        newBudget: { type: SchemaType.NUMBER, description: "New budget for the duplicated campaign (optional)" },
       },
       required: [],
     },
@@ -406,7 +406,7 @@ export async function executeTool(
       const user = await User.findOne(filter)
         .select("-password -googleId")
         .lean();
-      if (!user) return { error: "User tidak ditemukan" };
+      if (!user) return { error: "User not found" };
       return { user };
     }
 
@@ -439,12 +439,12 @@ export async function executeTool(
         action: "ai_edit_user",
         target: user._id.toString(),
         targetType: "user",
-        details: `AI Assistant mengedit user @${user.username}: ${JSON.stringify(appliedChanges)}. Alasan: ${reason || "Tidak disebutkan"}`,
+        details: `AI Assistant edited user @${user.username}: ${JSON.stringify(appliedChanges)}. Reason: ${reason || "Not specified"}`,
       });
 
       return {
         success: true,
-        message: `User @${user.username} berhasil diupdate`,
+        message: `User @${user.username} successfully updated`,
         changes: appliedChanges,
       };
     }
@@ -504,7 +504,7 @@ export async function executeTool(
       else if (args.slug) filter.slug = args.slug;
 
       const campaign = await Campaign.findOne(filter);
-      if (!campaign) return { error: "Campaign tidak ditemukan" };
+      if (!campaign) return { error: "Campaign not found" };
 
       const { updates, reason } = args;
       const allowedFields = ["status", "totalBudget", "ratePerMillionViews"];
@@ -526,12 +526,12 @@ export async function executeTool(
         action: "ai_edit_campaign",
         target: campaign._id.toString(),
         targetType: "campaign",
-        details: `AI Assistant mengedit campaign "${campaign.title}": ${JSON.stringify(appliedChanges)}. Alasan: ${reason || "Tidak disebutkan"}`,
+        details: `AI Assistant edited campaign "${campaign.title}": ${JSON.stringify(appliedChanges)}. Reason: ${reason || "Not specified"}`,
       });
 
       return {
         success: true,
-        message: `Campaign "${campaign.title}" berhasil diupdate`,
+        message: `Campaign "${campaign.title}" successfully updated`,
         changes: appliedChanges,
       };
     }
@@ -555,7 +555,7 @@ export async function executeTool(
 
     case "update_submission": {
       const submission = await Submission.findById(args.submissionId);
-      if (!submission) return { error: "Submission tidak ditemukan" };
+      if (!submission) return { error: "Submission not found" };
 
       submission.status = args.action;
       if (args.action === "rejected" && args.rejectReason) {
@@ -570,12 +570,12 @@ export async function executeTool(
         action: `ai_${args.action}_submission`,
         target: submission._id.toString(),
         targetType: "submission",
-        details: `AI Assistant ${args.action} submission ${args.submissionId}${args.rejectReason ? ". Alasan: " + args.rejectReason : ""}`,
+        details: `AI Assistant ${args.action} submission ${args.submissionId}${args.rejectReason ? ". Reason: " + args.rejectReason : ""}`,
       });
 
       return {
         success: true,
-        message: `Submission berhasil di-${args.action}`,
+        message: `Submission successfully ${args.action}d`,
       };
     }
 
@@ -625,16 +625,16 @@ export async function executeTool(
         action: "ai_edit_site_settings",
         target: settings._id.toString(),
         targetType: "settings",
-        details: `AI Assistant mengedit platform settings: ${JSON.stringify(updates)}`,
+        details: `AI Assistant edited platform settings: ${JSON.stringify(updates)}`,
       });
 
-      return { success: true, message: "Pengaturan situs berhasil disimpan", settings };
+      return { success: true, message: "Site settings successfully saved", settings };
     }
 
     case "get_bot_status": {
       const status = await BotStatus.findOne({ botType: "discord" }).lean();
       if (!status) {
-        return { success: true, message: "Bot Discord belum pernah diaktifkan", status: null };
+        return { success: true, message: "Discord Bot has never been activated", status: null };
       }
       return { success: true, status };
     }
@@ -642,7 +642,7 @@ export async function executeTool(
     case "send_bot_command": {
       const command = args.command;
       if (!["start", "stop", "restart"].includes(command)) {
-        return { error: "Perintah bot tidak valid. Gunakan 'start', 'stop', atau 'restart'." };
+        return { error: "Invalid bot command. Use 'start', 'stop', or 'restart'." };
       }
 
       let status = await BotStatus.findOne({ botType: "discord" });
@@ -659,12 +659,12 @@ export async function executeTool(
         action: `ai_bot_${command}`,
         target: "discord_bot",
         targetType: "bot",
-        details: `AI Assistant mengirim perintah '${command}' ke Bot Discord`,
+        details: `AI Assistant sent command '${command}' to Discord Bot`,
       });
 
       return {
         success: true,
-        message: `Perintah '${command}' berhasil dikirim ke Bot Discord. Bot akan memprosesnya dalam beberapa detik.`,
+        message: `Command '${command}' successfully sent to Discord Bot. The bot will process it in a few seconds.`,
         status,
       };
     }
@@ -675,7 +675,7 @@ export async function executeTool(
       const guildId = settings?.discordGuildId || process.env.DISCORD_GUILD_ID || "";
 
       if (!token || !guildId) {
-        return { error: "Bot token atau Guild ID Discord belum dikonfigurasi di settings." };
+        return { error: "Discord Bot token or Guild ID has not been configured in settings." };
       }
 
       const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, {
@@ -684,7 +684,7 @@ export async function executeTool(
 
       if (!res.ok) {
         const err = await res.text();
-        return { error: `Gagal mengambil channel dari Discord: ${err}` };
+        return { error: `Failed to get channels from Discord: ${err}` };
       }
 
       const channels = await res.json();
@@ -703,8 +703,8 @@ export async function executeTool(
       const channelId = args.channelId;
       const content = args.content;
 
-      if (!token) return { error: "Bot token Discord belum dikonfigurasi di settings." };
-      if (!channelId || !content) return { error: "channelId dan content wajib diisi." };
+      if (!token) return { error: "Discord Bot token has not been configured in settings." };
+      if (!channelId || !content) return { error: "channelId and content are required." };
 
       const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
         method: "POST",
@@ -717,11 +717,11 @@ export async function executeTool(
 
       if (!res.ok) {
         const err = await res.text();
-        return { error: `Gagal mengirim pesan ke Discord: ${err}` };
+        return { error: `Failed to send message to Discord: ${err}` };
       }
 
       const msg = await res.json();
-      return { success: true, messageId: msg.id, message: "Pesan berhasil dikirim ke Discord!" };
+      return { success: true, messageId: msg.id, message: "Message successfully sent to Discord!" };
     }
 
     case "get_discord_roles": {
@@ -730,7 +730,7 @@ export async function executeTool(
       const guildId = settings?.discordGuildId || process.env.DISCORD_GUILD_ID || "";
 
       if (!token || !guildId) {
-        return { error: "Bot token atau Guild ID Discord belum dikonfigurasi." };
+        return { error: "Discord Bot token or Guild ID has not been configured." };
       }
 
       const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
@@ -739,7 +739,7 @@ export async function executeTool(
 
       if (!res.ok) {
         const err = await res.text();
-        return { error: `Gagal mengambil role dari Discord: ${err}` };
+        return { error: `Failed to get roles from Discord: ${err}` };
       }
 
       const roles = await res.json();
@@ -757,7 +757,7 @@ export async function executeTool(
       const guildId = settings?.discordGuildId || process.env.DISCORD_GUILD_ID || "";
 
       if (!token || !guildId) {
-        return { error: "Bot token atau Guild ID Discord belum dikonfigurasi." };
+        return { error: "Discord Bot token or Guild ID has not been configured." };
       }
 
       let user = null;
@@ -768,19 +768,19 @@ export async function executeTool(
       }
 
       if (!user) {
-        return { error: "User di platform RuneClipy tidak ditemukan." };
+        return { error: "User on RuneClipy platform not found." };
       }
 
       const discordUserId = user.discordId;
       if (!discordUserId) {
-        return { error: `User @${user.username} belum menghubungkan akun Discord mereka di platform.` };
+        return { error: `User @${user.username} has not linked their Discord account on the platform.` };
       }
 
       const roleId = args.roleId;
-      const action = args.action; // "add" atau "remove"
+      const action = args.action; // "add" or "remove"
 
       if (!["add", "remove"].includes(action)) {
-        return { error: "Aksi tidak valid. Gunakan 'add' atau 'remove'." };
+        return { error: "Invalid action. Use 'add' or 'remove'." };
       }
 
       const url = `https://discord.com/api/v10/guilds/${guildId}/members/${discordUserId}/roles/${roleId}`;
@@ -793,7 +793,7 @@ export async function executeTool(
 
       if (!res.ok) {
         const err = await res.text();
-        return { error: `Gagal ${action === "add" ? "menambahkan" : "menghapus"} role di Discord: ${err}` };
+        return { error: `Failed to ${action === "add" ? "add" : "remove"} role in Discord: ${err}` };
       }
 
       await ActivityLog.create({
@@ -802,12 +802,12 @@ export async function executeTool(
         action: `ai_discord_role_${action}`,
         target: user._id.toString(),
         targetType: "user",
-        details: `AI Assistant ${action === "add" ? "menambahkan" : "menghapus"} role Discord (ID: ${roleId}) untuk user @${user.username}`,
+        details: `AI Assistant ${action === "add" ? "added" : "removed"} Discord role (ID: ${roleId}) for user @${user.username}`,
       });
 
       return {
         success: true,
-        message: `Role Discord berhasil ${action === "add" ? "ditambahkan ke" : "dihapus dari"} user @${user.username}!`,
+        message: `Discord role successfully ${action === "add" ? "added to" : "removed from"} user @${user.username}!`,
       };
     }
 
@@ -815,16 +815,16 @@ export async function executeTool(
       const { taskType, payload, executeAt } = args;
 
       if (taskType !== "send_discord_message") {
-        return { error: "Jenis tugas tidak didukung. Hanya mendukung 'send_discord_message' saat ini." };
+        return { error: "Task type not supported. Only supports 'send_discord_message' currently." };
       }
 
       const executeDate = new Date(executeAt);
       if (isNaN(executeDate.getTime())) {
-        return { error: "Format waktu executeAt tidak valid. Harus berupa string ISO 8601." };
+        return { error: "Invalid executeAt time format. Must be an ISO 8601 string." };
       }
 
       if (executeDate <= new Date()) {
-        return { error: "Waktu eksekusi harus di masa depan." };
+        return { error: "Execution time must be in the future." };
       }
 
       const task = await ScheduledTask.create({
@@ -841,13 +841,13 @@ export async function executeTool(
         action: "ai_schedule_task",
         target: task._id.toString(),
         targetType: "task",
-        details: `AI Assistant menjadwalkan tugas '${taskType}' untuk dieksekusi pada ${executeDate.toISOString()}`,
+        details: `AI Assistant scheduled task '${taskType}' to be executed at ${executeDate.toISOString()}`,
       });
 
       return {
         success: true,
         taskId: task._id.toString(),
-        message: `Tugas '${taskType}' berhasil dijadwalkan pada ${executeDate.toLocaleString()}`,
+        message: `Task '${taskType}' successfully scheduled at ${executeDate.toLocaleString()}`,
         task,
       };
     }
@@ -892,12 +892,12 @@ export async function executeTool(
         action: "ai_create_campaign",
         target: campaign._id.toString(),
         targetType: "campaign",
-        details: `AI Assistant membuat campaign baru: "${title}" (Slug: ${finalSlug}) dengan budget $${totalBudget}`,
+        details: `AI Assistant created a new campaign: "${title}" (Slug: ${finalSlug}) with budget $${totalBudget}`,
       });
 
       return {
         success: true,
-        message: `Campaign "${title}" berhasil dibuat!`,
+        message: `Campaign "${title}" successfully created!`,
         campaign: {
           id: campaign._id.toString(),
           slug: campaign.slug,
@@ -910,13 +910,13 @@ export async function executeTool(
       const { transactionId, action, note } = args;
 
       if (!["completed", "rejected"].includes(action)) {
-        return { error: "Aksi tidak valid. Gunakan 'completed' atau 'rejected'." };
+        return { error: "Invalid action. Use 'completed' or 'rejected'." };
       }
 
       const tx = await Transaction.findById(transactionId);
-      if (!tx) return { error: "Transaksi tidak ditemukan" };
-      if (tx.type !== "payout") return { error: "Transaksi ini bukan merupakan transaksi penarikan/payout" };
-      if (tx.status !== "pending") return { error: `Transaksi ini sudah diproses sebelumnya dengan status: ${tx.status}` };
+      if (!tx) return { error: "Transaction not found" };
+      if (tx.type !== "payout") return { error: "This transaction is not a payout transaction" };
+      if (tx.status !== "pending") return { error: `This transaction has already been processed with status: ${tx.status}` };
 
       tx.status = action;
       if (action === "completed") tx.processedAt = new Date();
@@ -932,7 +932,7 @@ export async function executeTool(
           userId: tx.userId.toString(),
           type: "payout_rejected",
           title: "Payout Rejected",
-          message: `Your payout of $${tx.amount.toFixed(2)} was rejected. The amount has been refunded to your balance.${note ? " Alasan: " + note : ""}`,
+          message: `Your payout of $${tx.amount.toFixed(2)} was rejected. The amount has been refunded to your balance.${note ? " Reason: " + note : ""}`,
           link: "/balance",
         });
       }
@@ -942,7 +942,7 @@ export async function executeTool(
           userId: tx.userId.toString(),
           type: "payout_completed",
           title: "Payout Sent! 💸",
-          message: `Your payout of $${tx.netAmount.toFixed(2)} has been processed and sent to your payment method.${note ? " Catatan: " + note : ""}`,
+          message: `Your payout of $${tx.netAmount.toFixed(2)} has been processed and sent to your payment method.${note ? " Note: " + note : ""}`,
           link: "/balance",
         });
       }
@@ -953,12 +953,12 @@ export async function executeTool(
         action: `ai_process_payout_${action}`,
         target: tx._id.toString(),
         targetType: "transaction",
-        details: `AI Assistant memproses payout ${transactionId} menjadi ${action}. Catatan: ${note || "-"}`,
+        details: `AI Assistant processed payout ${transactionId} to ${action}. Note: ${note || "-"}`,
       });
 
       return {
         success: true,
-        message: `Payout dengan ID ${transactionId} berhasil diupdate menjadi ${action}!`,
+        message: `Payout with ID ${transactionId} successfully updated to ${action}!`,
       };
     }
 
@@ -966,10 +966,10 @@ export async function executeTool(
       const filter: Record<string, unknown> = {};
       if (args.campaignId) filter._id = args.campaignId;
       else if (args.slug) filter.slug = args.slug;
-      else return { error: "campaignId atau slug wajib diisi." };
+      else return { error: "campaignId or slug is required." };
 
       const campaign = await Campaign.findOne(filter).lean();
-      if (!campaign) return { error: "Campaign tidak ditemukan" };
+      if (!campaign) return { error: "Campaign not found" };
       return { success: true, campaign };
     }
 
@@ -977,10 +977,10 @@ export async function executeTool(
       const filter: Record<string, unknown> = {};
       if (args.campaignId) filter._id = args.campaignId;
       else if (args.slug) filter.slug = args.slug;
-      else return { error: "campaignId atau slug wajib diisi." };
+      else return { error: "campaignId or slug is required." };
 
       const original = await Campaign.findOne(filter);
-      if (!original) return { error: "Campaign asal tidak ditemukan." };
+      if (!original) return { error: "Original campaign not found." };
 
       const title = args.newTitle || `${original.title} (Copy)`;
       const totalBudget = args.newBudget !== undefined ? args.newBudget : original.totalBudget;
@@ -1015,12 +1015,12 @@ export async function executeTool(
         action: "ai_duplicate_campaign",
         target: campaign._id.toString(),
         targetType: "campaign",
-        details: `AI Assistant menduplikasi campaign "${original.title}" menjadi "${title}" (Slug: ${finalSlug}) dengan budget $${totalBudget}`,
+        details: `AI Assistant duplicated campaign "${original.title}" to "${title}" (Slug: ${finalSlug}) with budget $${totalBudget}`,
       });
 
       return {
         success: true,
-        message: `Campaign "${original.title}" berhasil diduplikasi menjadi "${title}"!`,
+        message: `Campaign "${original.title}" successfully duplicated to "${title}"!`,
         campaign: {
           id: campaign._id.toString(),
           slug: campaign.slug,
@@ -1030,7 +1030,7 @@ export async function executeTool(
     }
 
     default:
-      return { error: `Tool '${name}' tidak dikenali` };
+      return { error: `Tool '${name}' not recognized` };
   }
 }
 
@@ -1052,7 +1052,7 @@ export async function runAIChat(
   const activeKeys = keys.filter(k => k && k.trim().length > 0);
 
   if (activeKeys.length === 0) {
-    throw new Error("API key Gemini tidak tersedia. Silakan konfigurasi di Settings.");
+    throw new Error("Gemini API key is not available. Please configure it in Settings.");
   }
 
   let lastError: any = null;
@@ -1074,7 +1074,7 @@ export async function runAIChat(
 
     for (const currentModel of modelsToTry) {
       try {
-        console.log(`[AI Chat] Mencoba model ${currentModel} dengan API key index ke-${i}`);
+        console.log(`[AI Chat] Trying model ${currentModel} with API key index ${i}`);
         const genAI = new GoogleGenerativeAI(currentKey);
         const model = genAI.getGenerativeModel({
           model: currentModel,
@@ -1113,7 +1113,7 @@ export async function runAIChat(
 
         return response.text();
       } catch (error: any) {
-        console.error(`[AI Chat] Gagal menggunakan model ${currentModel} dengan key ke-${i}:`, error);
+        console.error(`[AI Chat] Failed to use model ${currentModel} with key ${i}:`, error);
         lastError = error;
 
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -1129,7 +1129,7 @@ export async function runAIChat(
           errorMsgLower.includes("not found");
 
         if (isModelIssue) {
-          console.warn(`[AI Chat] Model ${currentModel} sedang bermasalah (Spikes/503/Offline). Mencoba model fallback berikutnya...`);
+          console.warn(`[AI Chat] Model ${currentModel} has issues (Spikes/503/Offline). Trying next fallback model...`);
           continue;
         }
 
@@ -1145,18 +1145,18 @@ export async function runAIChat(
           errorMsg.includes("403");
 
         if (isQuotaOrKeyError) {
-          console.warn(`[AI Chat] Key index ke-${i} bermasalah atau habis kuota. Mencoba API key berikutnya...`);
+          console.warn(`[AI Chat] Key index ${i} has issues or is out of quota. Trying next API key...`);
           break;
         }
 
         // Otherwise try the next model fallback
-        console.warn(`[AI Chat] Terjadi error lain pada model ${currentModel}. Mencoba model fallback berikutnya...`);
+        console.warn(`[AI Chat] Another error occurred on model ${currentModel}. Trying next fallback model...`);
         continue;
       }
     }
   }
 
-  throw lastError || new Error("Semua API key Gemini yang dikonfigurasi gagal atau habis kuota.");
+  throw lastError || new Error("All configured Gemini API keys failed or ran out of quota.");
 }
 
 // ─── Verify API Key ───────────────────────────────────────────────────────────
@@ -1182,7 +1182,7 @@ export async function verifyGeminiApiKey(apiKey: string, modelName?: string): Pr
       if (text) return { valid: true };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.warn(`[AI Verify] Model ${currentModel} gagal: ${msg}`);
+      console.warn(`[AI Verify] Model ${currentModel} failed: ${msg}`);
       lastErrorMsg = msg;
       
       // If it's a structural API key issue (not a model outage), fail immediately
@@ -1191,7 +1191,7 @@ export async function verifyGeminiApiKey(apiKey: string, modelName?: string): Pr
       }
     }
   }
-  return { valid: false, error: lastErrorMsg || "API tidak memberikan respons" };
+  return { valid: false, error: lastErrorMsg || "API did not respond" };
 }
 
 // ─── Get stored API key and Model from DB ────────────────────────────────────

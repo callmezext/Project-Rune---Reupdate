@@ -134,7 +134,7 @@ export default function AdminSettingsPage() {
   const handleVerifyKeyAtIndex = async (index: number) => {
     const targetKey = settings.geminiApiKeys[index];
     if (!targetKey?.trim()) {
-      showToast("Masukkan API key terlebih dahulu", "error");
+      showToast("Please enter the API key first", "error");
       return;
     }
     setVerifyingIndex(index);
@@ -151,11 +151,11 @@ export default function AdminSettingsPage() {
         showToast(`✅ API key #${index + 1} valid!`);
       } else {
         setKeyStatuses(prev => ({ ...prev, [index]: "invalid" }));
-        showToast(data.error || `API key #${index + 1} tidak valid`, "error");
+        showToast(data.error || `API key #${index + 1} is invalid`, "error");
       }
     } catch {
       setKeyStatuses(prev => ({ ...prev, [index]: "invalid" }));
-      showToast(`Gagal memverifikasi API key #${index + 1}`, "error");
+      showToast(`Failed to verify API key #${index + 1}`, "error");
     } finally {
       setVerifyingIndex(null);
     }
@@ -270,7 +270,7 @@ export default function AdminSettingsPage() {
                 onChange={(e) => setSettings({ ...settings, siteLogoUrl: e.target.value })}
                 className="input-field" placeholder="https://example.com/logo.png" />
               <p className="text-[10px] text-text-muted mt-1.5">
-                Masukkan URL logo kustom Anda. Biarkan kosong untuk menggunakan logo default SVG premium.
+                Enter your custom logo URL. Leave empty to use the default premium SVG logo.
               </p>
             </div>
           </div>
@@ -369,11 +369,11 @@ export default function AdminSettingsPage() {
                 onClick={handleAddKey}
                 className="w-full py-2 border border-dashed border-border/85 hover:border-accent/40 rounded-xl text-xs font-semibold text-text-secondary hover:text-accent hover:bg-accent/5 transition-all"
               >
-                ➕ Tambah API Key Lainnya
+                ➕ Add Another API Key
               </button>
 
               <p className="text-[11px] text-text-muted mt-1.5">
-                API key disimpan di database. Jika satu key habis limit, sistem akan mencoba key berikutnya. Setelah disave, AI chat akan aktif.
+                API keys are saved in the database. If one key reaches its limit, the system will try the next key. Once saved, the AI chat will be active.
               </p>
             </div>
 
@@ -390,29 +390,29 @@ export default function AdminSettingsPage() {
                   }}
                   className="input-field w-full text-sm bg-bg-primary pr-10 border border-border/80 focus:border-accent/40 rounded-xl py-2 px-3 focus:outline-none appearance-none"
                 >
-                  <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Sangat Cepat &amp; Hemat - Default)</option>
-                  <option value="gemini-2.0-pro-exp-02-05">🧠 Gemini 2.0 Pro Experimental (Sangat Pintar &amp; Akurat)</option>
-                  <option value="gemini-2.5-flash">🌀 Gemini 2.5 Flash (Terbaru, Seimbang &amp; Cepat)</option>
-                  <option value="gemini-2.5-pro">👑 Gemini 2.5 Pro (Tercanggih, Penalaran Tingkat Tinggi)</option>
-                  <option value="gemini-3.5-flash">✨ Gemini 3.5 Flash (Next-Gen, Kecepatan &amp; Efisiensi Tinggi)</option>
-                  <option value="gemini-3.5-pro">🔮 Gemini 3.5 Pro (Next-Gen, Penalaran &amp; Akurasi Puncak)</option>
+                  <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Very Fast &amp; Cost-Effective - Default)</option>
+                  <option value="gemini-2.0-pro-exp-02-05">🧠 Gemini 2.0 Pro Experimental (Very Smart &amp; Accurate)</option>
+                  <option value="gemini-2.5-flash">🌀 Gemini 2.5 Flash (Latest, Balanced &amp; Fast)</option>
+                  <option value="gemini-2.5-pro">👑 Gemini 2.5 Pro (Most Advanced, High-Level Reasoning)</option>
+                  <option value="gemini-3.5-flash">✨ Gemini 3.5 Flash (Next-Gen, High Speed &amp; Efficiency)</option>
+                  <option value="gemini-3.5-pro">🔮 Gemini 3.5 Pro (Next-Gen, Reasoning &amp; Peak Accuracy)</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-muted">
                   ▼
                 </div>
               </div>
               <p className="text-[11px] text-text-muted mt-1.5">
-                Pilih model Gemini yang sesuai dengan kebutuhan Anda. Model Flash (seperti 2.0/2.5/3.5 Flash) sangat cepat dan efisien, sementara model Pro menawarkan kemampuan penalaran dan akurasi puncak.
+                Choose the Gemini model that suits your needs. Flash models (like 2.0/2.5/3.5 Flash) are very fast and efficient, while Pro models offer peak reasoning capabilities and accuracy.
               </p>
             </div>
 
             <div className="p-3 rounded-xl bg-bg-primary/40 border border-border/50 text-[11px] text-text-muted space-y-1">
-              <div className="font-semibold text-text-secondary mb-1">🎯 Kemampuan AI Assistant:</div>
-              <div>• Cari &amp; edit user (role, tier, balance, ban/unban)</div>
-              <div>• Kelola campaign (status, budget, rates)</div>
-              <div>• Approve / reject submission</div>
-              <div>• Analisa statistik platform</div>
-              <div>• Lihat transaksi &amp; activity log</div>
+              <div className="font-semibold text-text-secondary mb-1">🎯 AI Assistant Capabilities:</div>
+              <div>• Search &amp; edit users (role, tier, balance, ban/unban)</div>
+              <div>• Manage campaigns (status, budget, rates)</div>
+              <div>• Approve / reject submissions</div>
+              <div>• Analyze platform statistics</div>
+              <div>• View transactions &amp; activity logs</div>
             </div>
           </div>
 

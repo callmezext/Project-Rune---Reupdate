@@ -9,15 +9,15 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   const error = searchParams.get("error");
   const state = searchParams.get("state") || "login"; // "login" or "bind"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   if (error || !code) {
     console.error("[RuneClipy] Discord OAuth error:", error);
     const dest = state === "bind" ? "/profile?error=discord_denied" : "/login?error=discord_denied";
-    return NextResponse.redirect(new URL(dest, req.url));
+    return NextResponse.redirect(new URL(dest, appUrl));
   }
 
   try {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const redirectUri = `${appUrl}/api/auth/discord/callback`;
 
     // Exchange code for tokens
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error("[RuneClipy] Discord token exchange failed:", tokenData);
       const dest = state === "bind" ? "/profile?error=discord_token_failed" : "/login?error=discord_token_failed";
-      return NextResponse.redirect(new URL(dest, req.url));
+      return NextResponse.redirect(new URL(dest, appUrl));
     }
 
     // Get user info from Discord
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
 
     if (!discordUser.id) {
       const dest = state === "bind" ? "/profile?error=discord_no_user" : "/login?error=discord_no_user";
-      return NextResponse.redirect(new URL(dest, req.url));
+      return NextResponse.redirect(new URL(dest, appUrl));
     }
 
     console.log(`[RuneClipy] Discord OAuth: ${discordUser.username}#${discordUser.discriminator} (${discordUser.id})`);
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       // Check if this Discord ID is already bound to another user
       const existing = await User.findOne({ discordId: discordUser.id, _id: { $ne: session.userId } });
       if (existing) {
-        return NextResponse.redirect(new URL("/profile?error=discord_already_bound", req.url));
+        return NextResponse.redirect(new URL("/profile?error=discord_already_bound", appUrl));
       }
 
       await User.updateOne(
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       );
 
       console.log(`[RuneClipy] ✅ Discord linked to @${session.username}`);
-      return NextResponse.redirect(new URL("/profile?success=discord_linked", req.url));
+      return NextResponse.redirect(new URL("/profile?success=discord_linked", appUrl));
     }
 
     // ═══ LOGIN/REGISTER MODE ═══
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (user.isBanned) {
-        return NextResponse.redirect(new URL("/login?error=account_banned", req.url));
+        return NextResponse.redirect(new URL("/login?error=account_banned", appUrl));
       }
     } else {
       // Create new user from Discord
@@ -145,10 +145,10 @@ export async function GET(req: NextRequest) {
 
     console.log(`[RuneClipy] ✅ Discord login success: @${user.username}`);
 
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/dashboard", appUrl));
   } catch (err) {
     console.error("[RuneClipy] Discord OAuth callback error:", err);
     const dest = state === "bind" ? "/profile?error=discord_failed" : "/login?error=discord_failed";
-    return NextResponse.redirect(new URL(dest, req.url));
+    return NextResponse.redirect(new URL(dest, appUrl));
   }
 }

@@ -2,6 +2,37 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 
+interface DiscordComponent {
+  id: string;
+  type: number; // 2 = Button, 3 = Select Menu
+  label?: string;
+  style?: number;
+  url?: string;
+  customId?: string;
+  placeholder?: string;
+  actionType?: "url" | "modal" | "cmd" | "custom";
+  popupTitle?: string;
+  popupFieldLabel?: string;
+  popupPlaceholder?: string;
+  popupLogChannelId?: string;
+  cmdName?: string;
+  selectResponseType?: "ephemeral" | "msg";
+  options?: {
+    id: string;
+    label: string;
+    description?: string;
+    actionType: "text" | "cmd" | "modal";
+    value: string;
+    popupTitle?: string;
+    popupFieldLabel?: string;
+    popupPlaceholder?: string;
+    popupLogChannelId?: string;
+    cmdName?: string;
+    emoji?: string;
+  }[];
+  emoji?: string;
+}
+
 interface DiscordEmbed {
   id: string; title: string; description: string; color: number;
   thumbnail?: { url: string }; image?: { url: string };
@@ -10,7 +41,8 @@ interface DiscordEmbed {
   fields?: { name?: string; value?: string; inline?: boolean }[];
   timestamp?: string;
   hasTimestamp?: boolean;
-  buttons?: { label: string; url: string; emoji?: string }[];
+  buttons?: { label: string; url: string; style?: number; customId?: string; emoji?: string }[];
+  components?: DiscordComponent[];
 }
 interface Channel { id: string; name: string; }
 interface DiscordSettings {
@@ -58,7 +90,7 @@ const COLORS = [
 ];
 
 function newEmbed(): DiscordEmbed {
-  return { id: Math.random().toString(36).slice(2), title: "", description: "", color: 0x5865F2, content: "", buttons: [] };
+  return { id: Math.random().toString(36).slice(2), title: "", description: "", color: 0x5865F2, content: "", buttons: [], components: [] };
 }
 
 function parseDiscordMarkdown(text: string): string {
@@ -117,7 +149,37 @@ function parseDiscordMarkdown(text: string): string {
 }
 
 export default function AdminDiscordPage() {
-  const [activeTab, setActiveTab] = useState<"send"|"bot"|"users">("send");
+  const [activeTab, setActiveTab] = useState<"send"|"bot"|"users"|"submissions">("send");
+  const [formSubmissions, setFormSubmissions] = useState<any[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+  const loadFormSubmissions = async () => {
+    setLoadingSubmissions(true);
+    try {
+      const res = await fetch("/api/admin/form-submissions");
+      const d = await res.json();
+      if (d.success) setFormSubmissions(d.submissions);
+    } catch {
+      showToast("Gagal memuat form submissions", "error");
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
+
+  const handleDeleteFormSubmission = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/form-submissions?id=${id}`, { method: "DELETE" });
+      const d = await res.json();
+      if (d.success) {
+        showToast("Form submission dihapus");
+        setFormSubmissions(prev => prev.filter(s => s._id !== id));
+      } else {
+        showToast(d.error || "Gagal menghapus", "error");
+      }
+    } catch {
+      showToast("Gagal menghapus", "error");
+    }
+  };
 
   // ── User Roles & Sync state ────────────────────────────────────────
   const [discordUsers, setDiscordUsers] = useState<DiscordUser[]>([]);
@@ -542,6 +604,7 @@ export default function AdminDiscordPage() {
           author: emb.author || undefined,
           fields: Array.isArray(emb.fields) ? emb.fields : [],
           buttons: Array.isArray(emb.buttons) ? emb.buttons : [],
+          components: Array.isArray(emb.components) ? emb.components : [],
           timestamp: emb.timestamp || undefined,
           hasTimestamp: !!emb.timestamp || !!emb.hasTimestamp,
         }));
@@ -582,10 +645,10 @@ export default function AdminDiscordPage() {
   const handleAddButton = () => {
     const currentButtons = active.buttons || [];
     if (currentButtons.length >= 5) return showToast("Maksimal 5 tombol per pesan!", "info");
-    updateActive({ buttons: [...currentButtons, { label: "Link", url: "https://", emoji: "" }] });
+    updateActive({ buttons: [...currentButtons, { label: "Link", url: "", style: 5, customId: "", emoji: "" }] });
   };
 
-  const handleUpdateButton = (idx: number, patch: Partial<{ label: string; url: string; emoji: string }>) => {
+  const handleUpdateButton = (idx: number, patch: Partial<{ label: string; url: string; style: number; customId: string; emoji: string }>) => {
     const currentButtons = [...(active.buttons || [])];
     currentButtons[idx] = { ...currentButtons[idx], ...patch };
     updateActive({ buttons: currentButtons });
@@ -594,6 +657,59 @@ export default function AdminDiscordPage() {
   const handleRemoveButton = (idx: number) => {
     const currentButtons = (active.buttons || []).filter((_, i) => i !== idx);
     updateActive({ buttons: currentButtons });
+  };
+
+  const handleAddComponent = (type: number) => {
+    const currentComponents = active.components || [];
+    if (currentComponents.length >= 5) return showToast("Maksimal 5 komponen per pesan!", "info");
+    
+    let newComp: DiscordComponent;
+    if (type === 2) {
+      newComp = { id: Math.random().toString(36).slice(2), type: 2, label: "🔗 Kunjungi Link", style: 5, url: "https://", customId: "", actionType: "url" };
+    } else if (type === 4) {
+      newComp = { id: Math.random().toString(36).slice(2), type: 2, label: "💬 Isi Formulir", style: 1, url: "", customId: "", actionType: "modal", popupTitle: "Form Input", popupFieldLabel: "Isi Data", popupPlaceholder: "Tulis di sini..." };
+    } else {
+      newComp = { id: Math.random().toString(36).slice(2), type: 3, placeholder: "Pilih opsi...", selectResponseType: "ephemeral", options: [{ id: Math.random().toString(36).slice(2), label: "Opsi 1", value: "Halo!", actionType: "text" }] };
+    }
+      
+    updateActive({ components: [...currentComponents, newComp] });
+  };
+
+  const handleUpdateComponent = (idx: number, patch: Partial<DiscordComponent>) => {
+    const currentComponents = [...(active.components || [])];
+    currentComponents[idx] = { ...currentComponents[idx], ...patch };
+    updateActive({ components: currentComponents });
+  };
+
+  const handleRemoveComponent = (idx: number) => {
+    const currentComponents = (active.components || []).filter((_, i) => i !== idx);
+    updateActive({ components: currentComponents });
+  };
+
+  const handleAddSelectOption = (compIdx: number) => {
+    const comp = active.components?.[compIdx];
+    if (!comp) return;
+    const currentOptions = comp.options || [];
+    if (currentOptions.length >= 25) return showToast("Maksimal 25 opsi per dropdown!", "info");
+    
+    handleUpdateComponent(compIdx, {
+      options: [...currentOptions, { id: Math.random().toString(36).slice(2), label: "Opsi Baru", value: "Teks balasan...", actionType: "text" }]
+    });
+  };
+
+  const handleUpdateSelectOption = (compIdx: number, optIdx: number, patch: any) => {
+    const comp = active.components?.[compIdx];
+    if (!comp) return;
+    const currentOptions = [...(comp.options || [])];
+    currentOptions[optIdx] = { ...currentOptions[optIdx], ...patch };
+    handleUpdateComponent(compIdx, { options: currentOptions });
+  };
+
+  const handleRemoveSelectOption = (compIdx: number, optIdx: number) => {
+    const comp = active.components?.[compIdx];
+    if (!comp) return;
+    const currentOptions = (comp.options || []).filter((_, i) => i !== optIdx);
+    handleUpdateComponent(compIdx, { options: currentOptions });
   };
 
   const insertFormat = (before: string, after: string) => {
@@ -627,6 +743,60 @@ export default function AdminDiscordPage() {
         return showToast("Minimal isi title, description, atau content!", "error");
       }
 
+      // Frontend Validation for components
+      const currentComponents = active.components || [];
+      for (let i = 0; i < currentComponents.length; i++) {
+        const comp = currentComponents[i];
+        if (comp.type === 2) {
+          if (!comp.label || !comp.label.trim()) {
+            setSending(false);
+            return showToast(`Tombol #${i + 1} wajib memiliki label!`, "error");
+          }
+          if (comp.actionType === "url") {
+            const url = (comp.url || "").trim();
+            if (!url || url === "https://" || url === "http://") {
+              setSending(false);
+              return showToast(`URL untuk tombol "${comp.label}" wajib diisi dengan benar!`, "error");
+            }
+          } else if (comp.actionType === "modal") {
+            if (!comp.popupTitle || !comp.popupTitle.trim()) {
+              setSending(false);
+              return showToast(`Judul Pop-up untuk tombol "${comp.label}" wajib diisi!`, "error");
+            }
+            if (!comp.popupFieldLabel || !comp.popupFieldLabel.trim()) {
+              setSending(false);
+              return showToast(`Label kolom input untuk tombol "${comp.label}" wajib diisi!`, "error");
+            }
+          }
+        } else if (comp.type === 3) {
+          if (!comp.options || comp.options.length === 0) {
+            setSending(false);
+            return showToast(`Dropdown Menu #${i + 1} wajib memiliki minimal 1 opsi!`, "error");
+          }
+          for (let j = 0; j < comp.options.length; j++) {
+            const opt = comp.options[j];
+            if (!opt.label || !opt.label.trim()) {
+              setSending(false);
+              return showToast(`Opsi #${j + 1} pada Dropdown #${i + 1} wajib memiliki label!`, "error");
+            }
+            if (opt.actionType === "text" && (!opt.value || !opt.value.trim() || opt.value === "Halo!")) {
+              setSending(false);
+              return showToast(`Respon teks untuk opsi "${opt.label}" wajib diisi!`, "error");
+            }
+            if (opt.actionType === "modal") {
+              if (!opt.popupTitle || !opt.popupTitle.trim()) {
+                setSending(false);
+                return showToast(`Judul Pop-up untuk opsi "${opt.label}" wajib diisi!`, "error");
+              }
+              if (!opt.popupFieldLabel || !opt.popupFieldLabel.trim()) {
+                setSending(false);
+                return showToast(`Label input untuk opsi "${opt.label}" wajib diisi!`, "error");
+              }
+            }
+          }
+        }
+      }
+
       const payload = payloadEmbeds.map(e => {
         const embed: Record<string, unknown> = { title: e.title || undefined, description: e.description || undefined, color: e.color };
         if (e.thumbnail?.url) embed.thumbnail = { url: e.thumbnail.url };
@@ -635,14 +805,94 @@ export default function AdminDiscordPage() {
         if (e.content) embed.content = e.content;
         if (e.author?.name) embed.author = { name: e.author.name, icon_url: e.author.icon_url || undefined, url: e.author.url || undefined };
         if (e.fields?.length) embed.fields = e.fields.filter(f => f.name && f.value).map(f => ({ name: f.name, value: f.value, inline: !!f.inline }));
-        if (e.buttons?.length) embed.buttons = e.buttons.filter(b => b.label && b.url).map(b => ({ label: b.label, url: b.url, emoji: b.emoji || undefined }));
+        if (e.buttons?.length) embed.buttons = e.buttons.filter(b => b.label).map(b => ({ label: b.label, url: b.url, style: b.style || 5, customId: b.customId || undefined, emoji: b.emoji || undefined }));
         if (e.hasTimestamp || e.timestamp) embed.timestamp = e.timestamp || new Date().toISOString();
         return embed;
       });
 
+       // Group components into standard Discord components structure
+       const discordComponents: any[] = [];
+       let currentButtonRow: any[] = [];
+      
+      for (const comp of currentComponents) {
+        if (comp.type === 2) {
+          const style = comp.style || 5;
+          const btn: any = {
+            type: 2,
+            style: style,
+            label: comp.label || "Button"
+          };
+          if (style === 5) {
+            btn.url = comp.url || "";
+          } else {
+            if (comp.actionType === "modal") {
+              const title = (comp.popupTitle || "Form").trim().replace(/ /g, "-");
+              const label = (comp.popupFieldLabel || "Input").trim().replace(/ /g, "-");
+              const ch = comp.popupLogChannelId || "";
+              const ph = (comp.popupPlaceholder || "").trim().replace(/ /g, "-");
+              btn.custom_id = `modal_${title}_${label}${ch ? `_${ch}` : ""}${ph ? `_${ph}` : ""}`;
+            } else if (comp.actionType === "cmd") {
+              btn.custom_id = `cmd_${comp.cmdName || "help"}`;
+            } else {
+              btn.custom_id = comp.customId || `btn_${Math.random().toString(36).slice(2)}`;
+            }
+          }
+          if (comp.emoji) btn.emoji = { name: comp.emoji };
+          
+          currentButtonRow.push(btn);
+          if (currentButtonRow.length === 5) {
+            discordComponents.push({ type: 1, components: currentButtonRow });
+            currentButtonRow = [];
+          }
+        } else if (comp.type === 3) {
+          if (currentButtonRow.length > 0) {
+            discordComponents.push({ type: 1, components: currentButtonRow });
+            currentButtonRow = [];
+          }
+          
+          const selectOptions = (comp.options || []).map((opt: any) => {
+            let finalValue = opt.value || "";
+            if (opt.actionType === "cmd") {
+              finalValue = `cmd_${opt.cmdName || "help"}`;
+            } else if (opt.actionType === "modal") {
+              const title = (opt.popupTitle || "Form").trim().replace(/ /g, "-");
+              const label = (opt.popupFieldLabel || "Input").trim().replace(/ /g, "-");
+              const ch = opt.popupLogChannelId || "";
+              const ph = (opt.popupPlaceholder || "").trim().replace(/ /g, "-");
+              finalValue = `modal_${title}_${label}${ch ? `_${ch}` : ""}${ph ? `_${ph}` : ""}`;
+            }
+            return {
+              label: opt.label || "Opsi",
+              value: finalValue.substring(0, 100),
+              description: opt.description || undefined,
+              emoji: opt.emoji ? { name: opt.emoji } : undefined
+            };
+          });
+          
+          const titleSlug = (comp.placeholder || "menu").trim().replace(/ /g, "-");
+          const customId = `select_${comp.selectResponseType || "ephemeral"}_${titleSlug}`;
+          
+          discordComponents.push({
+            type: 1,
+            components: [{
+              type: 3,
+              custom_id: customId,
+              placeholder: comp.placeholder || "Pilih opsi...",
+              min_values: 1,
+              max_values: 1,
+              options: selectOptions
+            }]
+          });
+        }
+      }
+      
+      if (currentButtonRow.length > 0) {
+        discordComponents.push({ type: 1, components: currentButtonRow });
+      }
+
       const res = await fetch("/api/admin/discord-send", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channelId: selectedChannel, embeds: payload }),
+        body: JSON.stringify({ channelId: selectedChannel, embeds: payload, components: discordComponents }),
       });
       const data = await res.json();
       if (data.success) showToast(`✅ ${data.results.length} pesan terkirim!`);
@@ -674,6 +924,7 @@ export default function AdminDiscordPage() {
 
   const tabs = [
     { id: "send" as const, label: "Send Message", icon: "📤" },
+    { id: "submissions" as const, label: "Form Submissions", icon: "📝" },
     { id: "bot" as const, label: "Bot & Settings", icon: "🤖" },
     { id: "users" as const, label: "User Roles & Sync", icon: "👥" },
   ];
@@ -706,6 +957,7 @@ export default function AdminDiscordPage() {
           <button key={tab.id} onClick={() => {
             setActiveTab(tab.id);
             if (tab.id === "users" && discordUsers.length === 0) loadDiscordUsers();
+            if (tab.id === "submissions") loadFormSubmissions();
           }}
             className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
               activeTab === tab.id ? "bg-accent text-white shadow-lg shadow-accent/20" : "text-text-muted hover:text-text-primary hover:bg-bg-tertiary"
@@ -968,7 +1220,7 @@ export default function AdminDiscordPage() {
                   </div>
 
                   <div className="mb-3 relative">
-                    <label className="block text-xs text-text-muted mb-1">💬 Content (text biasa, opsional)</label>
+                    <label className="block text-xs text-text-muted mb-1">💬 Content (plain text, optional)</label>
                     <input type="text" value={active.content || ""} 
                       onChange={e => {
                         const text = e.target.value;
@@ -977,7 +1229,7 @@ export default function AdminDiscordPage() {
                         handleTextInputChange(text, cursor, "content");
                       }}
                       onBlur={() => setTimeout(() => setMentionShow(false), 200)}
-                      className="input-field text-sm" placeholder="Pesan text biasa di atas embed..." />
+                      className="input-field text-sm" placeholder="Plain text message above embed..." />
                     {mentionShow && activeInputId === "content" && renderMentionDropdown()}
                   </div>
 
@@ -1009,7 +1261,7 @@ export default function AdminDiscordPage() {
                   <div className="mb-3">
                     <label className="block text-xs text-text-muted mb-1">📝 Title</label>
                     <input type="text" value={active.title} onChange={e => updateActive({ title: e.target.value })}
-                      className="input-field text-sm font-semibold" placeholder="Judul embed..." />
+                      className="input-field text-sm font-semibold" placeholder="Embed title..." />
                   </div>
 
                   <div>
@@ -1031,7 +1283,7 @@ export default function AdminDiscordPage() {
                           handleTextInputChange(text, cursor, "description");
                         }}
                         onBlur={() => setTimeout(() => setMentionShow(false), 200)}
-                        className="input-field text-sm min-h-[100px] resize-y font-mono" placeholder="Isi pesan... (support markdown)" />
+                        className="input-field text-sm min-h-[100px] resize-y font-mono" placeholder="Message content... (supports markdown)" />
                       {mentionShow && activeInputId === "description" && renderMentionDropdown()}
                     </div>
                   </div>
@@ -1082,7 +1334,7 @@ export default function AdminDiscordPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[10px] text-text-muted italic text-center py-1">Belum ada custom field.</p>
+                      <p className="text-[10px] text-text-muted italic text-center py-1">No custom fields yet.</p>
                     )}
                   </div>
 
@@ -1099,38 +1351,304 @@ export default function AdminDiscordPage() {
                     </div>
                   </div>
 
-                  {/* Custom Buttons Builder */}
-                  <div className="p-3 rounded-xl bg-bg-primary/30 border border-border/50 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-text-primary flex items-center gap-1">🔘 Message Buttons ({active.buttons?.length || 0}/5)</span>
-                      <button type="button" onClick={handleAddButton}
-                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent text-white hover:bg-accent/80 transition-all">+ Add Button</button>
+                  {/* Advanced Components Builder */}
+                  <div className="p-4 rounded-xl bg-bg-primary/30 border border-border/50 space-y-3">
+                    <div className="flex items-center justify-between border-b border-border/30 pb-2">
+                      <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">🔌 Advanced Components ({active.components?.length || 0}/5)</span>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <button type="button" onClick={() => handleAddComponent(2)}
+                          className="px-2 py-1 rounded text-[10px] font-bold bg-accent text-white hover:bg-accent/80 transition-all flex items-center gap-1">🔗 + Link Button</button>
+                        <button type="button" onClick={() => handleAddComponent(4)}
+                          className="px-2 py-1 rounded text-[10px] font-bold bg-success text-white hover:bg-success/80 transition-all flex items-center gap-1">💬 + Popup Form</button>
+                        <button type="button" onClick={() => handleAddComponent(3)}
+                          className="px-2 py-1 rounded text-[10px] font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all flex items-center gap-1">📁 + Dropdown</button>
+                      </div>
                     </div>
-                    {active.buttons && active.buttons.length > 0 ? (
-                      <div className="space-y-2">
-                        {active.buttons.map((b, idx) => (
-                          <div key={idx} className="flex gap-2 items-center bg-bg-primary/50 p-2 rounded-lg border border-border/40">
-                            <div className="grid grid-cols-3 gap-2 flex-1">
-                              <div>
-                                <label className="block text-[9px] text-text-muted mb-0.5">Label</label>
-                                <input type="text" value={b.label} onChange={e => handleUpdateButton(idx, { label: e.target.value })}
-                                  className="input-field text-xs !py-1 !px-2 font-semibold" placeholder="Label" />
-                              </div>
-                              <div className="col-span-2">
-                                <label className="block text-[9px] text-text-muted mb-0.5">URL</label>
-                                <input type="url" value={b.url} onChange={e => handleUpdateButton(idx, { url: e.target.value })}
-                                  className="input-field text-xs !py-1 !px-2 font-mono" placeholder="https://..." />
-                              </div>
+                    
+                    {active.components && active.components.length > 0 ? (
+                      <div className="space-y-3">
+                        {active.components.map((c, compIdx) => (
+                          <div key={c.id} className="p-3 rounded-xl bg-bg-primary/50 border border-border/40 space-y-3 relative">
+                            {/* Component Header */}
+                            <div className="flex justify-between items-center border-b border-white/[0.03] pb-1.5">
+                              <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                                {c.type === 2 
+                                  ? (c.actionType === "modal" ? `💬 Popup Form Button #${compIdx + 1}` : `🔗 Link Button #${compIdx + 1}`) 
+                                  : `📁 Dropdown Menu #${compIdx + 1}`}
+                              </span>
+                              <button type="button" onClick={() => handleRemoveComponent(compIdx)}
+                                className="p-1 rounded text-[10px] bg-error/10 text-error hover:bg-error/25 transition-all">✕ Delete Component</button>
                             </div>
-                            <div className="flex flex-col items-center gap-1 mt-3.5">
-                              <button type="button" onClick={() => handleRemoveButton(idx)}
-                                className="p-1 rounded bg-error/10 text-error hover:bg-error/20 text-xs transition-all">🗑️</button>
-                            </div>
+
+                             {/* Button Component Config */}
+                             {c.type === 2 && (
+                               <div className="space-y-2">
+                                 <div className="grid grid-cols-2 gap-2">
+                                   <div>
+                                     <label className="block text-[9px] text-text-secondary font-bold mb-0.5">
+                                       Button Label <span className="text-error">*</span>
+                                     </label>
+                                     <input type="text" value={c.label || ""} onChange={e => handleUpdateComponent(compIdx, { label: e.target.value })}
+                                       className={cn("input-field text-xs !py-1 !px-2 font-semibold", !c.label && "border-error/50 focus:border-error")} 
+                                       placeholder="e.g. Visit Link / Fill Form" />
+                                     {!c.label && <span className="text-[8px] text-error font-semibold mt-0.5 block">⚠️ Label is required</span>}
+                                   </div>
+                                   <div>
+                                     <label className="block text-[9px] text-text-secondary font-bold mb-0.5">Button Color / Style</label>
+                                     {c.actionType === "url" ? (
+                                       <select value={5} disabled
+                                         className="input-field text-xs !py-1 !px-2 bg-bg-secondary/50 border border-border/50 rounded font-semibold text-text-muted cursor-not-allowed">
+                                         <option value={5}>🔗 Link (Grey with Link icon)</option>
+                                       </select>
+                                     ) : (
+                                       <select value={c.style === 5 ? 1 : (c.style || 1)} onChange={e => handleUpdateComponent(compIdx, { style: parseInt(e.target.value) })}
+                                         className="input-field text-xs !py-1 !px-2 bg-bg-secondary border border-border rounded font-semibold text-text-primary">
+                                         <option value={1}>🟣 Primary (Blurple)</option>
+                                         <option value={2}>⚫ Secondary (Grey)</option>
+                                         <option value={3}>🟢 Success (Green)</option>
+                                         <option value={4}>🔴 Danger (Red)</option>
+                                       </select>
+                                     )}
+                                   </div>
+                                 </div>
+
+                                 {/* Action Configuration */}
+                                 {c.actionType === "url" ? (
+                                   <div>
+                                     <label className="block text-[9px] text-text-secondary font-bold mb-0.5">
+                                       Redirect URL <span className="text-error">*</span>
+                                     </label>
+                                     <input type="url" value={c.url || ""} onChange={e => handleUpdateComponent(compIdx, { url: e.target.value })}
+                                       className={cn("input-field text-xs !py-1 !px-2 font-mono", !c.url && "border-error/50 focus:border-error")} 
+                                       placeholder="https://example.com" />
+                                     {!c.url && <span className="text-[8px] text-error font-semibold mt-0.5 block">⚠️ URL is required</span>}
+                                   </div>
+                                 ) : c.actionType === "modal" ? (
+                                   <div className="p-3 rounded-lg bg-bg-primary/40 border border-border/20 space-y-2">
+                                     <div className="text-[9px] font-extrabold uppercase tracking-wider text-accent-light">💬 Popup Form Settings</div>
+                                     <div className="grid grid-cols-2 gap-2">
+                                       <div>
+                                         <label className="block text-[8px] text-text-secondary font-semibold mb-0.5">
+                                           Popup Title <span className="text-error">*</span>
+                                         </label>
+                                         <input type="text" value={c.popupTitle || ""} onChange={e => handleUpdateComponent(compIdx, { popupTitle: e.target.value })}
+                                           className={cn("input-field text-[11px] !py-1 !px-2", !c.popupTitle && "border-error/50 focus:border-error")} 
+                                           placeholder="e.g. Report Bug" />
+                                         {!c.popupTitle && <span className="text-[8px] text-error mt-0.5 block">⚠️ Title is required</span>}
+                                       </div>
+                                       <div>
+                                         <label className="block text-[8px] text-text-secondary font-semibold mb-0.5">
+                                           Field Input Label <span className="text-error">*</span>
+                                         </label>
+                                         <input type="text" value={c.popupFieldLabel || ""} onChange={e => handleUpdateComponent(compIdx, { popupFieldLabel: e.target.value })}
+                                           className={cn("input-field text-[11px] !py-1 !px-2", !c.popupFieldLabel && "border-error/50 focus:border-error")} 
+                                           placeholder="e.g. Bug Description" />
+                                         {!c.popupFieldLabel && <span className="text-[8px] text-error mt-0.5 block">⚠️ Label is required</span>}
+                                       </div>
+                                     </div>
+                                     <div className="grid grid-cols-2 gap-2">
+                                       <div>
+                                         <label className="block text-[8px] text-text-muted mb-0.5">Input Placeholder</label>
+                                         <input type="text" value={c.popupPlaceholder || ""} onChange={e => handleUpdateComponent(compIdx, { popupPlaceholder: e.target.value })}
+                                           className="input-field text-[11px] !py-1 !px-2" placeholder="Write answer..." />
+                                       </div>
+                                       <div>
+                                         <label className="block text-[8px] text-text-muted mb-0.5">Log Channel ID (Optional)</label>
+                                         <input type="text" value={c.popupLogChannelId || ""} onChange={e => handleUpdateComponent(compIdx, { popupLogChannelId: e.target.value })}
+                                           className="input-field text-[11px] !py-1 !px-2 font-mono" placeholder="Same channel if empty" />
+                                       </div>
+                                     </div>
+                                   </div>
+                                 ) : (
+                                   /* Other triggers (cmd, custom, etc.) */
+                                   <div className="space-y-2">
+                                     <div>
+                                       <label className="block text-[9px] text-text-muted mb-0.5">Action Type</label>
+                                       <select value={c.actionType || "custom"} onChange={e => handleUpdateComponent(compIdx, { actionType: e.target.value as any })}
+                                         className="input-field text-xs !py-1 !px-2 bg-bg-secondary border border-border rounded font-semibold text-text-primary">
+                                         <option value="custom">Custom ID (Advanced)</option>
+                                         <option value="cmd">🤖 Bot Command Trigger</option>
+                                       </select>
+                                     </div>
+                                     {c.actionType === "custom" && (
+                                       <div>
+                                         <label className="block text-[9px] text-text-secondary font-bold mb-0.5">
+                                           Custom ID <span className="text-error">*</span>
+                                         </label>
+                                         <input type="text" value={c.customId || ""} onChange={e => handleUpdateComponent(compIdx, { customId: e.target.value })}
+                                           className={cn("input-field text-xs !py-1 !px-2 font-mono", !c.customId && "border-error/50 focus:border-error")} 
+                                           placeholder="button_action_id" />
+                                         {!c.customId && <span className="text-[8px] text-error mt-0.5 block">⚠️ Custom ID is required</span>}
+                                       </div>
+                                     )}
+                                     {c.actionType === "cmd" && (
+                                       <div>
+                                         <label className="block text-[9px] text-text-muted mb-0.5">Trigger Bot Command</label>
+                                         <select value={c.cmdName || "campaigns"} onChange={e => handleUpdateComponent(compIdx, { cmdName: e.target.value })}
+                                           className="input-field text-xs !py-1 !px-2 bg-bg-secondary border border-border rounded font-semibold text-text-primary">
+                                           <option value="help">📖 /help</option>
+                                           <option value="campaigns">🎵 /campaigns</option>
+                                           <option value="leaderboard">🏆 /leaderboard</option>
+                                           <option value="profile">👤 /profile</option>
+                                           <option value="balance">💵 /balance</option>
+                                           <option value="referral">👥 /referral</option>
+                                           <option value="stats">📊 /stats</option>
+                                         </select>
+                                       </div>
+                                     )}
+                                   </div>
+                                 )}
+                               </div>
+                             )}
+
+                            {/* Dropdown Component Config */}
+                            {c.type === 3 && (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-[9px] text-text-muted mb-0.5">Dropdown Placeholder</label>
+                                    <input type="text" value={c.placeholder || ""} onChange={e => handleUpdateComponent(compIdx, { placeholder: e.target.value })}
+                                      className="input-field text-xs !py-1 !px-2" placeholder="e.g. Select support option..." />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[9px] text-text-muted mb-0.5">Response Type</label>
+                                    <select value={c.selectResponseType || "ephemeral"} onChange={e => handleUpdateComponent(compIdx, { selectResponseType: e.target.value as any })}
+                                      className="input-field text-xs !py-1 !px-2 bg-bg-secondary border border-border rounded font-semibold text-text-primary">
+                                      <option value="ephemeral">Private (Only visible to user)</option>
+                                      <option value="msg">Public Message (Visible to everyone)</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {/* Options Builder */}
+                                <div className="space-y-2 border-t border-white/[0.03] pt-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-[9px] font-bold text-text-secondary">📋 Dropdown Options ({c.options?.length || 0}/25)</span>
+                                    <button type="button" onClick={() => handleAddSelectOption(compIdx)}
+                                      className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-accent text-white hover:bg-accent/80 transition-all">+ Add Option</button>
+                                  </div>
+
+                                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                                    {c.options && c.options.length > 0 ? (
+                                      c.options.map((opt, optIdx) => (
+                                        <div key={opt.id || optIdx} className="p-2.5 rounded-lg bg-bg-primary/60 border border-border/20 space-y-2 relative">
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[8px] font-bold text-accent-light uppercase tracking-wider">Option #{optIdx + 1}</span>
+                                            <button type="button" onClick={() => handleRemoveSelectOption(compIdx, optIdx)}
+                                              className="text-[9px] text-error hover:text-error/80 font-bold">✕ Remove Option</button>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-1.5">
+                                            <div>
+                                              <label className="block text-[8px] text-text-secondary font-semibold mb-0.5">
+                                                Option Label <span className="text-error">*</span>
+                                              </label>
+                                              <input type="text" value={opt.label || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { label: e.target.value })}
+                                                className={cn("input-field text-[11px] !py-0.5 !px-1.5 font-semibold", !opt.label && "border-error/50 focus:border-error")} 
+                                                placeholder="e.g. How it Works" />
+                                              {!opt.label && <span className="text-[7px] text-error mt-0.5 block">⚠️ Label is required</span>}
+                                            </div>
+                                            <div>
+                                              <label className="block text-[8px] text-text-muted mb-0.5">Option Description</label>
+                                              <input type="text" value={opt.description || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { description: e.target.value })}
+                                                className="input-field text-[11px] !py-0.5 !px-1.5" placeholder="e.g. Short description" />
+                                            </div>
+                                          </div>
+
+                                          {/* Option action type selection */}
+                                          <div className="space-y-1.5">
+                                            <div>
+                                              <label className="block text-[8px] text-text-secondary font-semibold mb-0.5">Option Action</label>
+                                              <select value={opt.actionType || "text"} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { actionType: e.target.value as any })}
+                                                className="input-field text-[10px] !py-0.5 bg-bg-secondary border border-border rounded font-semibold text-text-primary">
+                                                <option value="text">💬 Reply Plain Text</option>
+                                                <option value="cmd">🤖 Bot Command Trigger</option>
+                                                <option value="modal">💬 Popup Form (Modal)</option>
+                                              </select>
+                                            </div>
+
+                                            {opt.actionType === "text" && (
+                                              <div>
+                                                <label className="block text-[8px] text-text-secondary font-semibold mb-0.5">
+                                                  Text Response Content <span className="text-error">*</span>
+                                                </label>
+                                                <input type="text" value={opt.value || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { value: e.target.value })}
+                                                  className={cn("input-field text-[11px] !py-0.5 !px-1.5", !opt.value && "border-error/50 focus:border-error")} 
+                                                  placeholder="Write reply text..." />
+                                                {!opt.value && <span className="text-[7px] text-error mt-0.5 block">⚠️ Reply content is required</span>}
+                                              </div>
+                                            )}
+
+                                            {opt.actionType === "cmd" && (
+                                              <div>
+                                                <label className="block text-[8px] text-text-muted mb-0.5">Trigger Bot Command</label>
+                                                <select value={opt.cmdName || "campaigns"} onChange={e => {
+                                                  const val = e.target.value;
+                                                  handleUpdateSelectOption(compIdx, optIdx, { cmdName: val, value: `cmd_${val}` });
+                                                }}
+                                                  className="input-field text-[10px] !py-0.5 bg-bg-secondary border border-border rounded font-semibold text-text-primary">
+                                                  <option value="help">📖 /help</option>
+                                                  <option value="campaigns">🎵 /campaigns</option>
+                                                  <option value="leaderboard">🏆 /leaderboard</option>
+                                                  <option value="profile">👤 /profile</option>
+                                                  <option value="balance">💵 /balance</option>
+                                                  <option value="referral">👥 /referral</option>
+                                                  <option value="stats">📊 /stats</option>
+                                                </select>
+                                              </div>
+                                            )}
+
+                                            {opt.actionType === "modal" && (
+                                              <div className="p-2 rounded bg-bg-primary/40 border border-border/20 space-y-1.5">
+                                                <div className="text-[8px] font-extrabold uppercase tracking-wider text-accent-light">💬 Option Popup Form Settings</div>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                  <div>
+                                                    <label className="block text-[7px] text-text-secondary font-semibold mb-0.5">
+                                                      Popup Title <span className="text-error">*</span>
+                                                    </label>
+                                                    <input type="text" value={opt.popupTitle || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { popupTitle: e.target.value })}
+                                                      className={cn("input-field text-[10px] !py-0.5 !px-1.5", !opt.popupTitle && "border-error/50 focus:border-error")} 
+                                                      placeholder="e.g. Admin Support" />
+                                                    {!opt.popupTitle && <span className="text-[7px] text-error mt-0.5 block">⚠️ Title is required</span>}
+                                                  </div>
+                                                  <div>
+                                                    <label className="block text-[7px] text-text-secondary font-semibold mb-0.5">
+                                                      Field Input Label <span className="text-error">*</span>
+                                                    </label>
+                                                    <input type="text" value={opt.popupFieldLabel || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { popupFieldLabel: e.target.value })}
+                                                      className={cn("input-field text-[10px] !py-0.5 !px-1.5", !opt.popupFieldLabel && "border-error/50 focus:border-error")} 
+                                                      placeholder="e.g. Enter question" />
+                                                    {!opt.popupFieldLabel && <span className="text-[7px] text-error mt-0.5 block">⚠️ Label is required</span>}
+                                                  </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                  <div>
+                                                    <label className="block text-[7px] text-text-muted mb-0.5">Input Placeholder</label>
+                                                    <input type="text" value={opt.popupPlaceholder || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { popupPlaceholder: e.target.value })}
+                                                      className="input-field text-[10px] !py-0.5 !px-1.5" placeholder="Write answer..." />
+                                                  </div>
+                                                  <div>
+                                                    <label className="block text-[7px] text-text-muted mb-0.5">Log Channel ID (Optional)</label>
+                                                    <input type="text" value={opt.popupLogChannelId || ""} onChange={e => handleUpdateSelectOption(compIdx, optIdx, { popupLogChannelId: e.target.value })}
+                                                      className="input-field text-[10px] !py-0.5 !px-1.5 font-mono" placeholder="Same channel if empty" />
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <p className="text-[10px] text-text-muted italic text-center py-1">No dropdown options yet.</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[10px] text-text-muted italic text-center py-1">Belum ada custom button.</p>
+                      <p className="text-[10px] text-text-muted italic text-center py-2">Belum ada komponen kustom (tombol/dropdown).</p>
                     )}
                   </div>
 
@@ -1166,7 +1684,7 @@ export default function AdminDiscordPage() {
 
             <button onClick={handleSend} disabled={sending || !selectedChannel}
               className="btn-gradient w-full !rounded-xl !py-3 disabled:opacity-50 text-base font-semibold" id="discord-send-btn">
-              {sending ? "⏳ Mengirim..." : "📤 Kirim ke Discord"}
+              {sending ? "⏳ Sending..." : "📤 Send to Discord"}
             </button>
           </div>
 
@@ -1609,6 +2127,75 @@ export default function AdminDiscordPage() {
           </div>
         );
       })()}
+
+      {/* ═══ TAB: Form Submissions ═══ */}
+      {activeTab === "submissions" && (
+        <div className="glass-card p-6 border border-white/[0.04] animate-fadeIn">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="font-bold text-lg text-white">📝 Custom Form Submissions</h3>
+              <p className="text-xs text-text-muted mt-1">Daftar jawaban form pop-up Discord yang diisi oleh user</p>
+            </div>
+            <button onClick={loadFormSubmissions} disabled={loadingSubmissions}
+              className="admin-btn admin-btn--accent text-xs flex items-center gap-1.5 !px-4">
+              🔄 {loadingSubmissions ? "Loading..." : "Refresh Data"}
+            </button>
+          </div>
+
+          {loadingSubmissions ? (
+            <div className="py-16 text-center text-text-muted text-sm font-semibold">
+              <span className="inline-block animate-spin mr-2">🔄</span> Memuat data dari database...
+            </div>
+          ) : formSubmissions.length === 0 ? (
+            <div className="py-16 text-center text-text-muted italic bg-bg-primary/20 rounded-xl border border-border/20">
+              📭 Belum ada user yang mengisi form pop-up.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-border/40 bg-bg-primary/20">
+              <table className="admin-table w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-border/40 text-text-secondary uppercase text-[10px] tracking-wider bg-bg-secondary/40">
+                    <th className="py-3 px-4">User</th>
+                    <th className="py-3 px-4">Form / Judul</th>
+                    <th className="py-3 px-4">Field / Input</th>
+                    <th className="py-3 px-4">Jawaban / Isi</th>
+                    <th className="py-3 px-4">Tanggal</th>
+                    <th className="py-3 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formSubmissions.map((s) => (
+                    <tr key={s._id} className="border-b border-border/20 hover:bg-white/[0.015] transition-colors duration-150">
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-white text-sm">@{s.username}</div>
+                        <div className="text-[10px] text-text-muted font-mono mt-0.5">{s.userId}</div>
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-accent-light text-sm">
+                        {s.formTitle}
+                      </td>
+                      <td className="py-3 px-4 text-text-secondary font-medium">
+                        {s.fieldName}
+                      </td>
+                      <td className="py-3 px-4 text-white text-xs whitespace-pre-wrap max-w-xs break-words font-mono bg-bg-secondary/20 rounded px-2 py-1">
+                        {s.inputValue}
+                      </td>
+                      <td className="py-3 px-4 text-text-muted whitespace-nowrap">
+                        {new Date(s.createdAt).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button onClick={() => handleDeleteFormSubmission(s._id)}
+                          className="px-3 py-1.5 rounded-lg bg-error/15 text-error hover:bg-error/25 text-[10px] font-bold transition-all uppercase tracking-wider">
+                          🗑️ Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
 
 

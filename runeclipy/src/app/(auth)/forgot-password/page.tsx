@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
         Reset <span className="gradient-text">Password</span>
       </h1>
       <p className="text-xs sm:text-sm text-text-secondary text-center mb-6 max-w-xs mx-auto">
-        Jangan khawatir! Kami akan membantu memulihkan akses ke akun RuneClipy Anda dengan cepat.
+        Don't worry! We will help you recover access to your RuneClipy account quickly.
       </p>
 
       {/* Step Indicator */}

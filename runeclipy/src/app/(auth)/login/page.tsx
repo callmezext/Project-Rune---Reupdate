@@ -6,11 +6,38 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  const [step, setStep] = useState<"identifier" | "credentials" | "otp">("identifier");
   const [form, setForm] = useState({ email: "", password: "" });
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleCheckIdentifier = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.email.trim()) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: form.email.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Verification failed");
+
+      if (data.exists) {
+        setStep("credentials");
+      } else {
+        router.push(`/register?email=${encodeURIComponent(form.email.trim())}`);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,10 +94,10 @@ export default function LoginPage() {
   return (
     <div className="glass-card p-5 sm:p-8 animate-fadeInUp">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-center mb-2 tracking-tight">
-        Selamat Datang <span className="gradient-text">Kembali</span>
+        Welcome <span className="gradient-text">Back</span>
       </h1>
       <p className="text-xs sm:text-sm text-text-secondary text-center mb-8 max-w-xs mx-auto">
-        Masuk ke akun RuneClipy Anda untuk terus menghasilkan cuan dari konten short video!
+        Sign in to your RuneClipy account to keep earning from your short video content!
       </p>
 
       {error && (
@@ -79,8 +106,8 @@ export default function LoginPage() {
         </div>
       )}
 
-      {step === "credentials" ? (
-        <form onSubmit={handleLogin} className="space-y-4">
+      {step === "identifier" && (
+        <form onSubmit={handleCheckIdentifier} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1.5">Email or Username</label>
             <input
@@ -90,6 +117,29 @@ export default function LoginPage() {
               className="input-field"
               placeholder="you@email.com"
               required
+              autoFocus
+            />
+          </div>
+          <button type="submit" disabled={loading} className="btn-gradient w-full !rounded-xl text-sm !py-3 disabled:opacity-50">
+            {loading ? "Checking..." : "Continue"}
+          </button>
+        </form>
+      )}
+
+      {step === "credentials" && (
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-text-secondary">Email or Username</label>
+              <button type="button" onClick={() => setStep("identifier")} className="text-xs text-accent-light hover:text-accent font-medium">
+                Change
+              </button>
+            </div>
+            <input
+              type="text"
+              value={form.email}
+              disabled
+              className="input-field opacity-60 cursor-not-allowed"
             />
           </div>
           <div>
@@ -101,6 +151,7 @@ export default function LoginPage() {
               className="input-field"
               placeholder="••••••••"
               required
+              autoFocus
             />
           </div>
           <div className="flex justify-end">
@@ -112,7 +163,9 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-      ) : (
+      )}
+
+      {step === "otp" && (
         <form onSubmit={handleVerifyOTP} className="space-y-4">
           <p className="text-sm text-text-secondary text-center mb-2">
             We sent a 6-digit code to <strong className="text-text-primary">{form.email}</strong>

@@ -108,6 +108,15 @@ const ActivityLogSchema = new mongoose.Schema({
   notifiedMatrix: { type: Boolean, default: false },
 }, { timestamps: true, strict: false });
 
+const FormSubmissionSchema = new mongoose.Schema({
+  userId: String,
+  username: String,
+  formTitle: String,
+  fieldName: String,
+  inputValue: String,
+  channelId: String,
+}, { timestamps: true, strict: false });
+
 const BotStatus = mongoose.models.BotStatus || mongoose.model("BotStatus", BotStatusSchema, "botstatuses");
 const SiteSetting = mongoose.models.SiteSetting || mongoose.model("SiteSetting", SiteSettingSchema, "sitesettings");
 const Campaign = mongoose.models.Campaign || mongoose.model("Campaign", CampaignSchema, "campaigns");
@@ -118,6 +127,7 @@ const Transaction = mongoose.models.Transaction || mongoose.model("Transaction",
 const Referral = mongoose.models.Referral || mongoose.model("Referral", ReferralSchema, "referrals");
 const LinkToken = mongoose.models.LinkToken || mongoose.model("LinkToken", LinkTokenSchema, "linktokens");
 const ActivityLog = mongoose.models.ActivityLog || mongoose.model("ActivityLog", ActivityLogSchema, "activitylogs");
+const FormSubmission = mongoose.models.FormSubmission || mongoose.model("FormSubmission", FormSubmissionSchema, "formsubmissions");
 
 async function getGuildId() {
   const s = await SiteSetting.findOne().lean();
@@ -587,6 +597,37 @@ async function handleButton(interaction) {
     await interaction.deferUpdate();
     await sendReviewEmbed(interaction, skip);
   }
+
+  else if (id.startsWith("modal_")) {
+    const parts = id.split("_");
+    const title = (parts[1] || "Form Input").replace(/-/g, " ");
+    const fieldLabel = (parts[2] || "Isi Data").replace(/-/g, " ");
+    
+    const modal = new ModalBuilder()
+      .setCustomId(`submit_generic_${id}`)
+      .setTitle(title.substring(0, 45));
+      
+    modal.addComponents(new ActionRowBuilder().addComponents(
+      new TextInputBuilder()
+        .setCustomId("input_val")
+        .setLabel(fieldLabel.substring(0, 45))
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder("Tulis jawaban Anda di sini...")
+        .setRequired(true)
+    ));
+    return interaction.showModal(modal);
+  }
+
+  else if (id.startsWith("cmd_")) {
+    const cmdName = id.replace("cmd_", "");
+    const cmdInteraction = new Proxy(interaction, {
+      get(target, prop) {
+        if (prop === "commandName") return cmdName;
+        return target[prop];
+      }
+    });
+    return handleCommand(cmdInteraction);
+  }
 }
 
 // ─── Select Menu Handler ─────────────────────────────────
@@ -623,6 +664,50 @@ async function handleSelect(interaction) {
       ).setFooter({ text: `Status: ${c.status}` }).setTimestamp();
     if (c.imageUrl) e.setThumbnail(c.imageUrl);
     return interaction.reply({ embeds: [e], ephemeral: true });
+  }
+
+  if (interaction.customId.startsWith("select_")) {
+    const value = interaction.values[0];
+    const id = interaction.customId;
+    const parts = id.split("_");
+    const replyType = parts[1] || "ephemeral"; // "msg" or "ephemeral"
+    
+    if (value.startsWith("cmd_")) {
+      const cmdName = value.replace("cmd_", "");
+      const cmdInteraction = new Proxy(interaction, {
+        get(target, prop) {
+          if (prop === "commandName") return cmdName;
+          return target[prop];
+        }
+      });
+      return handleCommand(cmdInteraction);
+    }
+    
+    if (value.startsWith("modal_")) {
+      const partsVal = value.split("_");
+      const title = (partsVal[1] || "Form Input").replace(/-/g, " ");
+      const fieldLabel = (partsVal[2] || "Isi Data").replace(/-/g, " ");
+      
+      const modal = new ModalBuilder()
+        .setCustomId(`submit_generic_${value}`)
+        .setTitle(title.substring(0, 45));
+        
+      modal.addComponents(new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("input_val")
+          .setLabel(fieldLabel.substring(0, 45))
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder("Tulis jawaban Anda di sini...")
+          .setRequired(true)
+      ));
+      return interaction.showModal(modal);
+    }
+
+    const payload = { content: value };
+    if (replyType === "ephemeral") {
+      payload.ephemeral = true;
+    }
+    return interaction.reply(payload);
   }
 }
 
@@ -667,6 +752,60 @@ async function handleModal(interaction) {
       } catch {}
     }
     return interaction.reply({ content: `❌ Rejected \`${subId}\`. Reason: ${reason}`, ephemeral: true });
+  }
+
+  if (interaction.customId.startsWith("submit_generic_")) {
+    const inputVal = interaction.fields.getTextInputValue("input_val");
+    const fullId = interaction.customId.replace("submit_generic_modal_", "").replace("submit_generic_", "");
+    const parts = fullId.split("_");
+    const title = (parts[1] || "Form Input").replace(/-/g, " ");
+    const fieldLabel = (parts[2] || "Isi Data").replace(/-/g, " ");
+    const logChannelId = parts[3];
+
+    // Response to the user
+    const userEmbed = new EmbedBuilder()
+      .setColor(0x2ECC71)
+      .setTitle(`✅ ${title} Terkirim!`)
+      .setDescription(`Terima kasih telah mengisi form ini.`)
+      .addFields({ name: fieldLabel, value: inputVal.substring(0, 1024) })
+      .setTimestamp();
+      
+    await interaction.reply({ embeds: [userEmbed], ephemeral: true });
+
+    // Save to Database
+    try {
+      await FormSubmission.create({
+        userId: interaction.user.id,
+        username: interaction.user.tag || interaction.user.username,
+        formTitle: title,
+        fieldName: fieldLabel,
+        inputValue: inputVal,
+        channelId: interaction.channelId
+      });
+    } catch (dbErr) {
+      console.error("[Bot] Failed to save form submission to DB:", dbErr.message);
+    }
+
+    // Send payload to logging channel or same channel
+    const targetChannelId = logChannelId || interaction.channelId;
+    if (targetChannelId) {
+      try {
+        const targetChannel = await client.channels.fetch(targetChannelId).catch(() => null);
+        if (targetChannel && typeof targetChannel.send === "function") {
+          const logEmbed = new EmbedBuilder()
+            .setColor(0x3498DB)
+            .setTitle(`📝 Form Submission: ${title}`)
+            .setDescription(`Submission baru oleh ${interaction.user} (\`@${interaction.user.username}\`)`)
+            .addFields({ name: fieldLabel, value: inputVal })
+            .setFooter({ text: `User ID: ${interaction.user.id}` })
+            .setTimestamp();
+          await targetChannel.send({ embeds: [logEmbed] });
+        }
+      } catch (err) {
+        console.error("[Bot] Failed to log generic modal submission:", err.message);
+      }
+    }
+    return;
   }
 }
 

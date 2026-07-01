@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Rate limit: 10 submissions per hour per user
     const rl = rateLimit(`submit:${session.userId}`, RATE_LIMITS.submit.max, RATE_LIMITS.submit.window);
     if (rl.limited) {
-      return NextResponse.json({ error: `Terlalu banyak submit. Coba lagi dalam ${Math.ceil(rl.resetIn / 60000)} menit.` }, { status: 429 });
+      return NextResponse.json({ error: `Too many submissions. Try again in ${Math.ceil(rl.resetIn / 60000)} minutes.` }, { status: 429 });
     }
 
     await connectDB();
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (verifiedAccounts.length === 0) {
       return NextResponse.json({
-        error: "Kamu belum menghubungkan akun TikTok. Verifikasi akun TikTok kamu dulu di halaman Connected Accounts.",
+        error: "You have not connected a TikTok account. Please verify your TikTok account first on the Connected Accounts page.",
         code: "NO_VERIFIED_ACCOUNT",
       }, { status: 403 });
     }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Check duplicate video URL (across all campaigns)
     const duplicateAnyCampaign = await Submission.findOne({ videoUrl });
     if (duplicateAnyCampaign) {
-      return NextResponse.json({ error: "Video ini sudah pernah di-submit (di campaign ini atau campaign lain)." }, { status: 400 });
+      return NextResponse.json({ error: "This video has already been submitted (to this campaign or another campaign)." }, { status: 400 });
     }
 
     // ═══════════════════════════════════════════════════
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     } catch (scrapeErr) {
       console.error("[RuneClipy:Submit] Scrape failed:", scrapeErr);
       return NextResponse.json({
-        error: "Gagal mengambil data video. Cek URL dan coba lagi.",
+        error: "Failed to fetch video data. Check the URL and try again.",
       }, { status: 400 });
     }
 
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!connectedUsernames.includes(videoAuthor)) {
       console.log(`[RuneClipy:Submit] ❌ Owner mismatch: video by @${videoAuthor}, connected: [${connectedUsernames.join(", ")}]`);
       return NextResponse.json({
-        error: `Video ini milik @${videoAuthor}, tapi akun TikTok yang kamu hubungkan adalah @${connectedUsernames.join(", @")}. Kamu hanya bisa submit video dari akun yang sudah diverifikasi.`,
+        error: `This video belongs to @${videoAuthor}, but the TikTok account you connected is @${connectedUsernames.join(", @")}. You can only submit videos from accounts that have been verified.`,
         code: "OWNER_MISMATCH",
       }, { status: 403 });
     }
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (!soundCheck.matched) {
       return NextResponse.json({
-        error: "Sound tidak cocok dengan campaign ini.",
+        error: "Sound does not match this campaign.",
         details: soundCheck.reason,
         detected: { title: videoData.music.title, author: videoData.music.author },
       }, { status: 400 });
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (videoAge > maxAgeMs) {
         const hoursAgo = Math.round(videoAge / (60 * 60 * 1000));
         return NextResponse.json({
-          error: `Video terlalu lama (${hoursAgo} jam lalu). Campaign ini hanya menerima video ${campaign.maxVideoAgeHours || 24} jam terakhir.`,
+          error: `Video is too old (${hoursAgo} hours ago). This campaign only accepts videos from the last ${campaign.maxVideoAgeHours || 24} hours.`,
         }, { status: 400 });
       }
     }
@@ -128,31 +128,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Check minimum views
     if (campaign.minViews > 0 && videoData.stats.views < campaign.minViews) {
       return NextResponse.json({
-        error: `Video perlu minimal ${campaign.minViews.toLocaleString()} views. Saat ini: ${videoData.stats.views.toLocaleString()}`,
+        error: `Video needs at least ${campaign.minViews.toLocaleString()} views. Current views: ${videoData.stats.views.toLocaleString()}`,
       }, { status: 400 });
     }
 
     // ═══════════════════════════════════════════════════
     //  ANTI-CHEAT: ENGAGEMENT RATIO CHECK
     // ═══════════════════════════════════════════════════
-    let suspiciousFlags: string[] = [];
+    const suspiciousFlags: string[] = [];
 
     if (videoData.stats.views > 5000) {
       const engagementRate = ((videoData.stats.likes + videoData.stats.comments) / videoData.stats.views) * 100;
 
       // Very low engagement = likely bought views
       if (engagementRate < 0.5) {
-        suspiciousFlags.push(`Engagement sangat rendah (${engagementRate.toFixed(2)}%)`);
+        suspiciousFlags.push(`Very low engagement (${engagementRate.toFixed(2)}%)`);
       }
-
-      // Zero likes with high views = highly suspicious
       if (videoData.stats.likes === 0 && videoData.stats.views > 1000) {
-        suspiciousFlags.push("0 likes dengan views tinggi");
+        suspiciousFlags.push("0 likes with high views");
       }
-
-      // Abnormal like-to-comment ratio (too many likes, 0 comments on popular video)
       if (videoData.stats.views > 10000 && videoData.stats.comments === 0 && videoData.stats.likes > 100) {
-        suspiciousFlags.push("Tidak ada komentar di video populer");
+        suspiciousFlags.push("No comments on a popular video");
       }
     }
 
@@ -224,10 +220,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({
       success: true,
       message: canAutoApprove
-        ? `Video auto-approved! ✅ Kamu langsung dapat $${earned.toFixed(2)}!`
+        ? `Video auto-approved! ✅ You earned $${earned.toFixed(2)}!`
         : isSuspicious
-          ? "Video submitted, tapi ada indikasi mencurigakan. Admin akan review."
-          : "Video submitted! Sound verified ✅ — Menunggu review.",
+          ? "Video submitted, but suspicious indicators were detected. An admin will review it."
+          : "Video submitted! Sound verified ✅ — Waiting for review.",
       submission: {
         id: submission._id,
         status: submission.status,

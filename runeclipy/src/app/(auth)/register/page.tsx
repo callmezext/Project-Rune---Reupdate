@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,16 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [agreedTerms, setAgreedTerms] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      if (emailParam) {
+        setForm((prev) => ({ ...prev, email: emailParam }));
+      }
+    }
+  }, []);
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();

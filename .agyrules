@@ -1,0 +1,6 @@
+# UI/UX Engineering Skill Rules
+- DILARANG keras menghasilkan kode visual acak-acakan (AI slop).
+- Semua komponen UI wajib bersifat modular, reusable, dan mengikuti aturan Atomic Design.
+- Gunakan Tailwind CSS Grid dan Flexbox untuk mengatur tata letak responsif.
+- Selalu pisahkan antara file Layout (`layouts/`) dan file Konten/Komponen (`components/`).
+- Wajib menggunakan komponen dari `@/components/ui/` (Shadcn UI) sebagai fondasi utama.
